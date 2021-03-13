@@ -2,7 +2,7 @@
   "name": "@light-town/api",
   "version": "0.0.1",
   "description": "",
-  "private": true,
+  "main": "dist/main.js",
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "nest build",
