@@ -1,7 +1,7 @@
 module.exports = {
   moduleFileExtensions: ['js', 'json', 'ts'],
   rootDir: './',
-  testRegex: '.unit.ts$',
+  testRegex: '.test.ts$',
   transform: {
     '^.+\\.ts$': 'ts-jest',
   },
