@@ -4,7 +4,7 @@ import { UserEntity } from '~/db/entities/user.entity';
 import { AccountsService } from '../accounts.service';
 import { Repository } from 'typeorm';
 import { AccountEntity } from '~/db/entities/account.entity';
-import { createTestingModule } from './helpers/createTestModule.helper';
+import { createTestingModule } from './helpers/createTestingModule';
 import { UsersService } from '~/modules/users/users.service';
 
 describe('[Auth Module] ...', () => {
@@ -35,6 +35,8 @@ describe('[Auth Module] ...', () => {
     const TEST_ACCOUNT: AccountEntity = {
       id: faker.random.uuid(),
       userId: TEST_USER.id,
+      salt: faker.random.word(),
+      verifier: faker.random.word(),
       updatedAt: new Date(),
       createdAt: new Date(),
       isDeleted: false,
@@ -43,7 +45,11 @@ describe('[Auth Module] ...', () => {
     jest.spyOn(usersService, 'findOne').mockResolvedValueOnce(TEST_USER);
     jest.spyOn(acoountsRepository, 'save').mockResolvedValueOnce(TEST_ACCOUNT);
 
-    const account: AccountEntity = await accountsService.create(TEST_USER.id);
+    const account: AccountEntity = await accountsService.create({
+      userId: TEST_USER.id,
+      salt: TEST_ACCOUNT.salt,
+      verifier: TEST_ACCOUNT.verifier,
+    });
 
     expect(account).toStrictEqual(TEST_ACCOUNT);
   });

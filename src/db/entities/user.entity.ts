@@ -1,7 +1,7 @@
 import { Column, Entity } from 'typeorm';
 import { IEntity } from './entity.interface';
 
-@Entity()
+@Entity('users')
 export class UserEntity extends IEntity {
   @Column({ length: 256 })
   public name: string;

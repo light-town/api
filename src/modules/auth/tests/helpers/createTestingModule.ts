@@ -1,22 +1,25 @@
 import { Test } from '@nestjs/testing';
-import { getRepositoryToken } from '@nestjs/typeorm';
+import { getConnectionToken, getRepositoryToken } from '@nestjs/typeorm';
 import { UserEntity } from '~/db/entities/user.entity';
-import { UsersService } from '~/modules/users/users.service';
-import { mockRepository } from '../__mocks__/mockRepository';
-import { mockUsersService } from '../__mocks__/mockUsersService';
-import { AccountsModule } from '~/modules/accounts/accounts.module';
+import { mockRepository } from '~/../test/__mocks__/mockRepository';
 import { AccountEntity } from '~/db/entities/account.entity';
+import { AuthModule } from '~/modules/auth/auth.module';
 
 export const createTestingModule = () =>
   Test.createTestingModule({
-    imports: [AccountsModule],
+    imports: [AuthModule],
   })
     .overrideProvider(getRepositoryToken(UserEntity))
     .useFactory({ factory: mockRepository })
     .overrideProvider(getRepositoryToken(AccountEntity))
     .useFactory({ factory: mockRepository })
-    .overrideProvider(UsersService)
-    .useFactory({ factory: mockUsersService })
+    .overrideProvider(getConnectionToken())
+    .useFactory({
+      factory: jest.fn(() => ({
+        manager: jest.fn(),
+        transaction: jest.fn(),
+      })),
+    })
     .compile();
 
 export default createTestingModule;

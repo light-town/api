@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { AccountEntity } from '~/db/entities/account.entity';
 import { UserEntity } from '~/db/entities/user.entity';
 import { UsersService } from '../users/users.service';
+import { CreateAccountDTO } from './accounts.dto';
 
 @Injectable()
 export class AccountsService {
@@ -13,7 +14,11 @@ export class AccountsService {
     private readonly usersService: UsersService
   ) {}
 
-  public async create(userId: string) {
+  public async create({
+    userId,
+    salt,
+    verifier,
+  }: CreateAccountDTO): Promise<any> {
     const user: UserEntity = await this.usersService.findOne({
       select: ['id'],
       where: { id: userId },
@@ -24,6 +29,8 @@ export class AccountsService {
     return await this.accountsRepository.save(
       this.accountsRepository.create({
         userId: user.id,
+        salt,
+        verifier,
       })
     );
   }

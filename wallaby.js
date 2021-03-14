@@ -2,7 +2,7 @@ module.exports = () => {
   return {
     autoDetect: true,
     testFramework: {
-      configFile: './jest.config.unit.js',
+      configFile: './jest.config.js',
     },
   };
 };

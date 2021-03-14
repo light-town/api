@@ -7,6 +7,6 @@
     "**/*spec.ts",
     "**/*test.ts",
     "./wallaby*",
-    "./jest.config*"
+    "./jest*"
   ]
 }
