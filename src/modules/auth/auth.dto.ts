@@ -4,7 +4,7 @@ export class SignUpDTO {
   verifier: string;
 
   username: string;
-  avatarURL?: string;
+  avatarUrl?: string;
 
   deviceId?: string;
   op?: string; // operating system
@@ -14,10 +14,11 @@ export class SignUpDTO {
 
 export class SignInDTO {
   accountKey: string;
+  deviceId: string;
 }
 
 export class StartSessionDTO {
-  accountKey: string;
-  clientPubicEphemeral: string;
-  clientSessionProof: string;
+  sessionId: string;
+  clientPubicEphemeralKey: string;
+  clientSessionProofKey: string;
 }

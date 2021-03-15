@@ -4,6 +4,8 @@ import { UserEntity } from '~/db/entities/user.entity';
 import { mockRepository } from '~/../test/__mocks__/mockRepository';
 import { AccountEntity } from '~/db/entities/account.entity';
 import { AuthModule } from '~/modules/auth/auth.module';
+import { DeviceEntity } from '~/db/entities/device.entity';
+import { SessionEntity } from '~/db/entities/session.entity';
 
 export const createTestingModule = () =>
   Test.createTestingModule({
@@ -12,6 +14,10 @@ export const createTestingModule = () =>
     .overrideProvider(getRepositoryToken(UserEntity))
     .useFactory({ factory: mockRepository })
     .overrideProvider(getRepositoryToken(AccountEntity))
+    .useFactory({ factory: mockRepository })
+    .overrideProvider(getRepositoryToken(DeviceEntity))
+    .useFactory({ factory: mockRepository })
+    .overrideProvider(getRepositoryToken(SessionEntity))
     .useFactory({ factory: mockRepository })
     .overrideProvider(getConnectionToken())
     .useFactory({
