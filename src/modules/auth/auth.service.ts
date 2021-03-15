@@ -1,5 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { SignUpDTO, SignInDTO, StartSessionDTO } from './auth.dto';
+import {
+  SignUpPayload,
+  SignInPayload,
+  StartSessionPayload,
+  StartSessionResponse,
+  SignInResponse,
+} from './auth.dto';
 import core from '@light-town/core';
 import { AccountsService } from '../accounts/accounts.service';
 import { UsersService } from '../users/users.service';
@@ -23,7 +29,7 @@ export class AuthService {
     private readonly connection: Connection
   ) {}
 
-  public async signUp(options: SignUpDTO): Promise<void> {
+  public async signUp(options: SignUpPayload): Promise<void> {
     await this.connection.transaction(async () => {
       const user = await this.usersService.create(options.username, {
         avatarURL: options.avatarUrl,
@@ -44,7 +50,7 @@ export class AuthService {
     });
   }
 
-  public async signIn(options: SignInDTO) {
+  public async signIn(options: SignInPayload): Promise<SignInResponse> {
     const { accountKey } = options;
 
     const account = await this.accountsService.findOne({
@@ -80,7 +86,9 @@ export class AuthService {
       }));
   }
 
-  public async startSession(options: StartSessionDTO) {
+  public async startSession(
+    options: StartSessionPayload
+  ): Promise<StartSessionResponse> {
     const sessionEntity = await this.sessionsService.findOne({
       select: ['id', 'secret', 'accountId'],
       where: { id: options.sessionId },

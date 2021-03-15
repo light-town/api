@@ -1,7 +1,7 @@
 import { AuthService } from '../auth.service';
 import { createTestingModule } from './helpers/createTestingModule';
 import { srp, common } from '@light-town/core';
-import { SignInDTO, SignUpDTO, StartSessionDTO } from '../auth.dto';
+import { SignInPayload, SignUpPayload, StartSessionPayload } from '../auth.dto';
 import * as faker from 'faker';
 import * as uuid from 'uuid';
 import * as dotenv from 'dotenv';
@@ -55,11 +55,13 @@ describe('[Auth Module] ...', () => {
     );
     const USERNAME = faker.internet.userName();
 
-    const payload: SignUpDTO = {
+    const payload: SignUpPayload = {
       accountKey: ACCOUNT_KEY,
       salt: VERIFIER.salt,
       verifier: VERIFIER.verifier,
       username: USERNAME,
+      deviceId: faker.random.uuid(),
+      op: faker.random.word(),
     };
 
     jest
@@ -109,7 +111,7 @@ describe('[Auth Module] ...', () => {
 
     const TEST_DEVICE_ID = faker.random.uuid();
 
-    const payload: SignInDTO = {
+    const payload: SignInPayload = {
       accountKey: TEST_ACCOUNT.key,
       deviceId: TEST_DEVICE_ID,
     };
@@ -156,7 +158,7 @@ describe('[Auth Module] ...', () => {
     };
     const TEST_DEVICE_ID = faker.random.uuid();
 
-    const payload: SignInDTO = {
+    const payload: SignInPayload = {
       accountKey: TEST_ACCOUNT.key,
       deviceId: TEST_DEVICE_ID,
     };
@@ -215,7 +217,7 @@ describe('[Auth Module] ...', () => {
       TEST_SERVER_EPHEMERAL.public
     );
 
-    const payload: StartSessionDTO = {
+    const payload: StartSessionPayload = {
       sessionId: TEST_SESSION.id,
       clientPubicEphemeralKey: TEST_CLIENT_EPHEMERAL.public,
       clientSessionProofKey: TEST_CLIENT_SESSION.proof,
@@ -268,7 +270,7 @@ describe('[Auth Module] ...', () => {
       accountId: faker.random.uuid(),
     };
 
-    const payload: StartSessionDTO = {
+    const payload: StartSessionPayload = {
       sessionId: TEST_SESSION.id,
       clientPubicEphemeralKey: faker.random.uuid(),
       clientSessionProofKey: faker.random.uuid(),
