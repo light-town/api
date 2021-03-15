@@ -4,6 +4,9 @@ import UserEntity from './user.entity';
 
 @Entity('accounts')
 export class AccountEntity extends IEntity {
+  @Column({ unique: true })
+  public key: string;
+
   @Column({ type: 'uuid', name: 'user_id' })
   public userId: string;
 

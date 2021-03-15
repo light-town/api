@@ -11,3 +11,13 @@ export class SignUpDTO {
   userAgent?: string;
   hostname?: string;
 }
+
+export class SignInDTO {
+  accountKey: string;
+}
+
+export class StartSessionDTO {
+  accountKey: string;
+  clientPubicEphemeral: string;
+  clientSessionProof: string;
+}

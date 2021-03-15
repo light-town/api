@@ -1,13 +1,14 @@
 import { AuthService } from '../auth.service';
 import { createTestingModule } from './helpers/createTestingModule';
 import { srp, common } from '@light-town/core';
-import { SignUpDTO } from '../auth.dto';
+import { SignInDTO, SignUpDTO } from '../auth.dto';
 import * as faker from 'faker';
 import { TestingModule } from '@nestjs/testing';
 import { Connection } from 'typeorm';
 import { getConnectionToken } from '@nestjs/typeorm';
 import UsersService from '~/modules/users/users.service';
 import AccountsService from '~/modules/accounts/accounts.service';
+import core from '@light-town/core';
 
 describe('[Auth Module] ...', () => {
   let connection: Connection;
@@ -23,6 +24,10 @@ describe('[Auth Module] ...', () => {
     authService = moduleFixture.get<AuthService>(AuthService);
     usersService = moduleFixture.get<UsersService>(UsersService);
     accountsService = moduleFixture.get<AccountsService>(AccountsService);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   afterAll(async () => {
@@ -74,10 +79,75 @@ describe('[Auth Module] ...', () => {
     expect(accountCreateFunc.mock.calls.length).toEqual(1);
     expect(accountCreateFunc.mock.calls[0]).toEqual([
       {
+        key: ACCOUNT_KEY,
         userId: USER_ID,
         salt: VERIFIER.salt,
         verifier: VERIFIER.verifier,
       },
     ]);
+  });
+
+  it('should sign in', async () => {
+    const ACCOUNT_SALT = core.common.genSalt();
+    const ACCOUNT_VERIFIER = core.common.genSalt();
+    const ACCOUNT_KEY = common.genAccountKey({
+      versionCode: 'A3',
+      userId: faker.random.uuid(),
+    });
+
+    const payload: SignInDTO = {
+      accountKey: ACCOUNT_KEY,
+    };
+
+    const accountFindOneFunc = jest
+      .spyOn(accountsService, 'findOne')
+      .mockResolvedValueOnce(<any>{
+        id: faker.random.uuid(),
+        key: ACCOUNT_KEY,
+        salt: ACCOUNT_SALT,
+        verifier: ACCOUNT_VERIFIER,
+      });
+
+    const response = await authService.signIn(payload);
+
+    expect(accountFindOneFunc.mock.calls.length).toEqual(1);
+    expect(accountFindOneFunc.mock.calls[0]).toEqual([
+      {
+        select: ['salt', 'verifier'],
+        where: { key: ACCOUNT_KEY },
+      },
+    ]);
+
+    expect(response.salt).toStrictEqual(ACCOUNT_SALT);
+    expect(response.serverPublicEphemeral).toBeDefined();
+  });
+
+  it('should return random salt when account key is not found', async () => {
+    const ACCOUNT_SALT = core.common.genSalt();
+    const ACCOUNT_KEY = common.genAccountKey({
+      versionCode: 'A3',
+      userId: faker.random.uuid(),
+    });
+
+    const payload: SignInDTO = {
+      accountKey: ACCOUNT_KEY,
+    };
+
+    const accountFindOneFunc = jest
+      .spyOn(accountsService, 'findOne')
+      .mockResolvedValueOnce(undefined);
+
+    const response = await authService.signIn(payload);
+
+    expect(accountFindOneFunc.mock.calls.length).toEqual(1);
+    expect(accountFindOneFunc.mock.calls[0]).toEqual([
+      {
+        select: ['salt', 'verifier'],
+        where: { key: ACCOUNT_KEY },
+      },
+    ]);
+
+    expect(response.salt).not.toEqual(ACCOUNT_SALT);
+    expect(response.serverPublicEphemeral).toBeDefined();
   });
 });
