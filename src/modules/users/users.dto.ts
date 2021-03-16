@@ -1,3 +1,4 @@
 export class CreateUserDTO {
-  avatarURL?: string;
+  name: string;
+  avatarUrl?: string;
 }

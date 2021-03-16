@@ -1,15 +1,13 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import * as cookieParser from 'cookie-parser';
+import initApp from './utils/init-app';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  app.use(cookieParser());
-  app.setGlobalPrefix('/v1/api');
+  const app = initApp(await NestFactory.create(AppModule), { usePrefix: true });
 
   const config = new DocumentBuilder()
     .setTitle('Light Town')

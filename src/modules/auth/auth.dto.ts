@@ -32,28 +32,9 @@ export class SignUpPayload {
   avatarUrl?: string;
 
   @ApiProperty({
-    description: 'The unique id of device where user is signing up',
-    required: true,
+    description: 'The unique uuid of device',
   })
-  deviceId: string;
-
-  @ApiProperty({
-    description: 'The operation system of device',
-    required: true,
-  })
-  op: string;
-
-  @ApiProperty({
-    description: 'The user agent',
-    required: false,
-  })
-  userAgent?: string;
-
-  @ApiProperty({
-    description: 'The hostname',
-    required: false,
-  })
-  hostname?: string;
+  deviceUuid: string;
 }
 
 export class SignInPayload {
@@ -64,10 +45,9 @@ export class SignInPayload {
   accountKey: string;
 
   @ApiProperty({
-    description: 'The unique id of device where user is signing in',
-    required: true,
+    description: 'The unique uuid of device',
   })
-  deviceId: string;
+  deviceUuid: string;
 }
 
 export class StartSessionPayload {
@@ -75,13 +55,13 @@ export class StartSessionPayload {
     description: 'The unique id of session',
     required: true,
   })
-  sessionId: string;
+  sessionUuid: string;
 
   @ApiProperty({
     description: 'The client public ephemeral key',
     required: true,
   })
-  clientPubicEphemeralKey: string;
+  clientPublicEphemeralKey: string;
 
   @ApiProperty({
     description: 'The client session proof key',
@@ -94,7 +74,7 @@ export class SignInResponse {
   @ApiProperty({
     description: 'The unique session id',
   })
-  sessionId: string;
+  sessionUuid: string;
 
   @ApiProperty({
     description: 'The verifier of SRP key',

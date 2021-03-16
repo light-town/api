@@ -14,25 +14,25 @@ import {
 import { AuthService } from './auth.service';
 
 @ApiTags('/auth')
-@Controller()
+@Controller('/auth')
 export class AuthController {
   public constructor(private readonly authService: AuthService) {}
 
-  @Post('/auth/sign-up')
+  @Post('sign-up')
   @ApiCreatedResponse()
   @ApiNotFoundResponse()
   public async signUp(@Body() payload: SignUpPayload): Promise<void> {
-    this.authService.signUp(payload);
+    await this.authService.signUp(payload);
   }
 
-  @Post('/auth/sign-in')
+  @Post('sign-in')
   @ApiCreatedResponse({ type: SignInResponse })
   @ApiNotFoundResponse()
   public async signIn(@Body() payload: SignInPayload): Promise<SignInResponse> {
     return this.authService.signIn(payload);
   }
 
-  @Post('/auth/start-session')
+  @Post('start-session')
   @ApiCreatedResponse({ type: StartSessionResponse })
   @ApiNotFoundResponse()
   public async startSession(

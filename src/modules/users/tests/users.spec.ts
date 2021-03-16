@@ -1,29 +1,16 @@
-import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import * as faker from 'faker';
 import UserEntity from '~/db/entities/user.entity';
-import { UsersModule } from '../users.module';
 import { UsersService } from '../users.service';
 import { FindManyOptions, FindOneOptions, Repository } from 'typeorm';
+import createTestingModule from './helpers/createTestingModule';
 
-describe('[Auth Module] ...', () => {
+describe('[Users Module] ...', () => {
   let usersService: UsersService;
   let usersRepository: Repository<UserEntity>;
 
   beforeAll(async () => {
-    const moduleFixture = await Test.createTestingModule({
-      imports: [UsersModule],
-    })
-      .overrideProvider(getRepositoryToken(UserEntity))
-      .useFactory({
-        factory: jest.fn(() => ({
-          create: () => {},
-          save: () => {},
-          find: () => {},
-          findOne: () => {},
-        })),
-      })
-      .compile();
+    const moduleFixture = await createTestingModule();
 
     usersService = moduleFixture.get<UsersService>(UsersService);
     usersRepository = moduleFixture.get<Repository<UserEntity>>(
@@ -31,20 +18,27 @@ describe('[Auth Module] ...', () => {
     );
   });
 
+  afterEach(() => {
+    jest.resetAllMocks();
+  });
+
   it('should create a user', async () => {
     const TEST_USER_ENTITY: UserEntity = {
       id: faker.random.uuid(),
       name: faker.internet.userName(),
-      avatarURL: faker.internet.avatar(),
+      avatarUrl: faker.internet.avatar(),
       updatedAt: new Date(),
       createdAt: new Date(),
       isDeleted: false,
     };
 
-    jest.spyOn(usersRepository, 'save').mockResolvedValueOnce(TEST_USER_ENTITY);
+    jest
+      .spyOn(usersRepository.manager, 'save')
+      .mockResolvedValueOnce(TEST_USER_ENTITY);
 
-    const user: UserEntity = await usersService.create(TEST_USER_ENTITY.name, {
-      avatarURL: TEST_USER_ENTITY.avatarURL,
+    const user: UserEntity = await usersService.create({
+      name: TEST_USER_ENTITY.name,
+      avatarUrl: TEST_USER_ENTITY.avatarUrl,
     });
 
     expect(user).toStrictEqual(TEST_USER_ENTITY);
@@ -54,20 +48,21 @@ describe('[Auth Module] ...', () => {
     const TEST_USER_ENTITY: UserEntity = {
       id: faker.random.uuid(),
       name: faker.internet.userName(),
-      avatarURL: faker.internet.avatar(),
+      avatarUrl: faker.internet.avatar(),
       updatedAt: new Date(),
       createdAt: new Date(),
       isDeleted: false,
     };
 
     expect(
-      usersService.create(null, {
-        avatarURL: TEST_USER_ENTITY.avatarURL,
+      usersService.create({
+        name: null,
+        avatarUrl: TEST_USER_ENTITY.avatarUrl,
       })
     ).rejects.toEqual(new Error(`The user name must be 'string' type`));
   });
 
-  it('should find users', () => {
+  it('should find users', async () => {
     const TEST_FIND_OPTIONS: FindManyOptions<UserEntity> = {
       where: {
         id: faker.random.uuid(),
@@ -78,7 +73,7 @@ describe('[Auth Module] ...', () => {
       {
         id: faker.random.uuid(),
         name: faker.internet.userName(),
-        avatarURL: faker.internet.avatar(),
+        avatarUrl: faker.internet.avatar(),
         updatedAt: new Date(),
         createdAt: new Date(),
         isDeleted: false,
@@ -86,19 +81,20 @@ describe('[Auth Module] ...', () => {
     ];
 
     const mockFindFunc = jest
-      .spyOn(usersRepository, 'find')
+      .spyOn(usersRepository.manager, 'find')
       .mockResolvedValueOnce(TEST_USERS_ENTITY);
 
-    expect(usersService.find(TEST_FIND_OPTIONS)).resolves.toStrictEqual(
+    expect(await usersService.find(TEST_FIND_OPTIONS)).toStrictEqual(
       TEST_USERS_ENTITY
     );
 
-    expect(mockFindFunc.mock.calls.length).toEqual(1);
-    expect(mockFindFunc.mock.calls[0][0]).toStrictEqual(TEST_FIND_OPTIONS);
+    expect(mockFindFunc).toBeCalledTimes(1);
+    expect(mockFindFunc).toBeCalledWith(UserEntity, TEST_FIND_OPTIONS);
   });
 
-  it('should find one user', () => {
+  it('should find one user', async () => {
     const TEST_FIND_OPTIONS: FindOneOptions<UserEntity> = {
+      select: ['id'],
       where: {
         id: faker.random.uuid(),
       },
@@ -107,21 +103,21 @@ describe('[Auth Module] ...', () => {
     const TEST_USER_ENTITY: UserEntity = {
       id: faker.random.uuid(),
       name: faker.internet.userName(),
-      avatarURL: faker.internet.avatar(),
+      avatarUrl: faker.internet.avatar(),
       updatedAt: new Date(),
       createdAt: new Date(),
       isDeleted: false,
     };
 
     const mockFindOneFunc = jest
-      .spyOn(usersRepository, 'findOne')
+      .spyOn(usersRepository.manager, 'findOne')
       .mockResolvedValueOnce(TEST_USER_ENTITY);
 
-    expect(usersService.findOne(TEST_FIND_OPTIONS)).resolves.toStrictEqual(
+    expect(await usersService.findOne(TEST_FIND_OPTIONS)).toStrictEqual(
       TEST_USER_ENTITY
     );
 
-    expect(mockFindOneFunc.mock.calls.length).toEqual(1);
-    expect(mockFindOneFunc.mock.calls[0][0]).toStrictEqual(TEST_FIND_OPTIONS);
+    expect(mockFindOneFunc).toBeCalledTimes(1);
+    expect(mockFindOneFunc).toBeCalledWith(UserEntity, TEST_FIND_OPTIONS);
   });
 });

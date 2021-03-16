@@ -7,7 +7,7 @@ export class UserEntity extends IEntity {
   public name: string;
 
   @Column({ length: 2048, nullable: true, name: 'avatar_url' })
-  public avatarURL: string;
+  public avatarUrl: string;
 }
 
 export default UserEntity;

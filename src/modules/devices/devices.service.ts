@@ -1,8 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindManyOptions, FindOneOptions, Repository } from 'typeorm';
+import {
+  EntityManager,
+  FindManyOptions,
+  FindOneOptions,
+  Repository,
+} from 'typeorm';
 import { DeviceEntity } from '~/db/entities/device.entity';
-import { DeviceCreateDTO } from './devices.dto';
+import { DeviceCreatePayload } from './devices.dto';
 
 @Injectable()
 export class DevicesService {
@@ -11,9 +16,13 @@ export class DevicesService {
     private readonly devicesRepository: Repository<DeviceEntity>
   ) {}
 
-  public create(options: DeviceCreateDTO) {
-    return this.devicesRepository.save(
-      this.devicesRepository.create({
+  public async create(
+    options: DeviceCreatePayload,
+    entityManager?: EntityManager
+  ): Promise<DeviceEntity> {
+    const manager = this.getManager(entityManager);
+    return await manager.save(
+      manager.create(DeviceEntity, {
         op: options.op,
         userAgent: options.userAgent,
         hostname: options.hostname,
@@ -21,12 +30,24 @@ export class DevicesService {
     );
   }
 
-  public find(options: FindManyOptions<DeviceEntity>) {
-    return this.devicesRepository.find(options);
+  public find(
+    options: FindManyOptions<DeviceEntity>,
+    entityManager?: EntityManager
+  ): Promise<DeviceEntity[]> {
+    const manager = this.getManager(entityManager);
+    return manager.find(DeviceEntity, options);
   }
 
-  public findOne(options: FindOneOptions<DeviceEntity>) {
-    return this.devicesRepository.findOne(options);
+  public findOne(
+    options: FindOneOptions<DeviceEntity>,
+    entityManager?: EntityManager
+  ): Promise<DeviceEntity> {
+    const manager = this.getManager(entityManager);
+    return manager.findOne(DeviceEntity, options);
+  }
+
+  public getManager(entityManager?: EntityManager) {
+    return entityManager || this.devicesRepository.manager;
   }
 }
 

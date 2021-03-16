@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import {
   SignUpPayload,
   SignInPayload,
@@ -30,37 +30,59 @@ export class AuthService {
   ) {}
 
   public async signUp(options: SignUpPayload): Promise<void> {
-    await this.connection.transaction(async () => {
-      const user = await this.usersService.create(options.username, {
-        avatarURL: options.avatarUrl,
-      });
+    await this.connection.transaction(async manager => {
+      const device = await this.devicesService.findOne(
+        {
+          select: ['id'],
+          where: { id: options.deviceUuid },
+        },
+        manager
+      );
 
-      const account = await this.accountsService.create({
-        key: options.accountKey,
-        userId: user.id,
-        verifier: options.verifier,
-        salt: options.salt,
-      });
+      if (!device) throw new NotFoundException(`The device was not found`);
 
-      const device = await this.devicesService.create({
-        op: options.op,
-        userAgent: options.userAgent,
-        hostname: options.hostname,
-      });
+      const user = await this.usersService.create(
+        {
+          name: options.username,
+          avatarUrl: options.avatarUrl,
+        },
+        manager
+      );
+
+      await this.accountsService.create(
+        {
+          key: options.accountKey,
+          userId: user.id,
+          verifier: options.verifier,
+          salt: options.salt,
+        },
+        manager
+      );
     });
   }
 
   public async signIn(options: SignInPayload): Promise<SignInResponse> {
-    const { accountKey } = options;
-
     const account = await this.accountsService.findOne({
-      select: ['salt', 'verifier'],
-      where: { key: accountKey },
+      select: ['id', 'salt', 'verifier'],
+      where: { key: options.accountKey },
     });
 
     if (!account) {
       return {
-        sessionId: uuid.v4(),
+        sessionUuid: uuid.v4(),
+        salt: core.common.genSalt(),
+        serverPublicEphemeral: core.common.genSalt(),
+      };
+    }
+
+    const device = await this.devicesService.findOne({
+      select: ['id'],
+      where: { id: options.deviceUuid },
+    });
+
+    if (!device) {
+      return {
+        sessionUuid: uuid.v4(),
         salt: core.common.genSalt(),
         serverPublicEphemeral: core.common.genSalt(),
       };
@@ -72,15 +94,15 @@ export class AuthService {
       .create({
         secret: ephemeral.secret,
         accountId: account.id,
-        deviceId: options.deviceId,
+        deviceId: device.id,
       })
       .then(session => ({
-        sessionId: session.id,
+        sessionUuid: session.id,
         salt: account.salt,
         serverPublicEphemeral: ephemeral.public,
       }))
       .catch(() => ({
-        sessionId: uuid.v4(),
+        sessionUuid: uuid.v4(),
         salt: core.common.genSalt(),
         serverPublicEphemeral: core.common.genSalt(),
       }));
@@ -91,7 +113,7 @@ export class AuthService {
   ): Promise<StartSessionResponse> {
     const sessionEntity = await this.sessionsService.findOne({
       select: ['id', 'secret', 'accountId'],
-      where: { id: options.sessionId },
+      where: { id: options.sessionUuid },
     });
 
     if (!sessionEntity)
@@ -107,7 +129,7 @@ export class AuthService {
 
     const session = core.srp.server.deriveSession(
       sessionEntity.secret,
-      options.clientPubicEphemeralKey,
+      options.clientPublicEphemeralKey,
       account.salt,
       account.key,
       account.verifier,
@@ -116,7 +138,10 @@ export class AuthService {
 
     const expiresAt = new Date().getTime() + SESSION_EXPIRES_AT;
 
-    await this.sessionsService.update({ id: sessionEntity.id }, { expiresAt });
+    await this.sessionsService.update(
+      { id: sessionEntity.id },
+      { expiresAt: new Date(expiresAt) }
+    );
 
     return {
       token: this.jwtService.sign(

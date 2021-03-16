@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
+  EntityManager,
   FindConditions,
   FindManyOptions,
   FindOneOptions,
@@ -33,42 +34,68 @@ export class SessionsService {
     private readonly devicesService: DevicesService
   ) {}
 
-  public async create(options: SessionCreateDTO) {
-    const account = await this.accountsService.findOne({
-      select: ['id'],
-      where: { id: options.accountId },
-    });
+  public async create(
+    options: SessionCreateDTO,
+    entityManager?: EntityManager
+  ) {
+    const manager = this.getManager(entityManager);
+
+    const account = await this.accountsService.findOne(
+      {
+        select: ['id'],
+        where: { id: options.accountId },
+      },
+      manager
+    );
 
     if (!account) throw new NotFoundException(`The account was not found`);
 
-    const device = await this.devicesService.findOne({
-      select: ['id'],
-      where: { id: options.deviceId },
-    });
+    const device = await this.devicesService.findOne(
+      {
+        select: ['id'],
+        where: { id: options.deviceId },
+      },
+      manager
+    );
 
     if (!device) throw new NotFoundException(`The device was not found`);
 
-    return this.sessionsRepository.save(
-      this.sessionsRepository.create({
+    return manager.save(
+      manager.create(SessionEntity, {
         accountId: account.id,
         deviceId: device.id,
+        secret: options.secret,
       })
     );
   }
 
-  public find(options: FindManyOptions<SessionEntity>) {
-    return this.sessionsRepository.find(options);
+  public find(
+    options: FindManyOptions<SessionEntity>,
+    entityManager?: EntityManager
+  ) {
+    const manager = this.getManager(entityManager);
+    return manager.find(SessionEntity, options);
   }
 
-  public findOne(options: FindOneOptions<SessionEntity>) {
-    return this.sessionsRepository.findOne(options);
+  public findOne(
+    options: FindOneOptions<SessionEntity>,
+    entityManager?: EntityManager
+  ) {
+    const manager = this.getManager(entityManager);
+    return manager.findOne(SessionEntity, options);
   }
 
   public update(
     criteria: Criteria<SessionEntity>,
-    partialEntity: QueryDeepPartialEntity<SessionEntity>
+    partialEntity: QueryDeepPartialEntity<SessionEntity>,
+    entityManager?: EntityManager
   ) {
-    return this.sessionsRepository.update(criteria, partialEntity);
+    const manager = this.getManager(entityManager);
+    return manager.update(SessionEntity, criteria, partialEntity);
+  }
+
+  public getManager(entityManager?: EntityManager) {
+    return entityManager || this.sessionsRepository.manager;
   }
 }
 
