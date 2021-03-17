@@ -36,3 +36,7 @@ lerna-debug.log*
 # Env
 .env*
 !.env.example
+
+# Npmrc
+.npmrc*
+!.npmrc.example
