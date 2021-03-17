@@ -71,7 +71,7 @@ describe('[Unit] [Auth Module] ...', () => {
 
     const payload: StartSessionPayload = {
       sessionUuid: TEST_SESSION.id,
-      clientPubicEphemeralKey: TEST_CLIENT_EPHEMERAL.public,
+      clientPublicEphemeralKey: TEST_CLIENT_EPHEMERAL.public,
       clientSessionProofKey: TEST_CLIENT_SESSION.proof,
     };
 

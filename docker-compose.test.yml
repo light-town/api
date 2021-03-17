@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  db:
+    image: 'postgres'
+    ports:
+      - ${TYPEORM_PORT}:${TYPEORM_PORT}
+    environment:
+      POSTGRES_USER: ${TYPEORM_USERNAME}
+      POSTGRES_PASSWORD: ${TYPEORM_PASSWORD}
+      POSTGRES_DB: ${TYPEORM_DATABASE}
+    container_name: light_town_db_test
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+      args:
+        NPM_TOKEN: ${NPM_TOKEN}
+        WORKDIR: /usr/src/light-town-api
+    ports:
+      - ${PORT}:${PORT}
+    environment:
+      TYPEORM_HOST: 'db'
+      PORT: ${PORT}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      TYPEORM_CONNECTION: ${TYPEORM_CONNECTION}
+      TYPEORM_USERNAME: ${TYPEORM_USERNAME}
+      TYPEORM_PASSWORD: ${TYPEORM_PASSWORD}
+      TYPEORM_DATABASE: ${TYPEORM_DATABASE}
+      TYPEORM_PORT: ${TYPEORM_PORT}
+      TYPEORM_SYNCHRONIZE: ${TYPEORM_SYNCHRONIZE}
+      TYPEORM_ENTITIES: ${TYPEORM_ENTITIES}
+    depends_on:
+      - db
+    volumes:
+      - .:/usr/src/light-town-api
+      - node_modules:/usr/src/light-town-api/node_modules
+    container_name: light_town_api_test
+
+volumes:
+  node_modules:
