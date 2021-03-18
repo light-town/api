@@ -28,9 +28,9 @@ describe('[Auth Module] ...', () => {
   });
 
   it('should create user account', async () => {
-    const TEST_ACCOUNT_KEY = core.common.genAccountKey({
+    const TEST_ACCOUNT_KEY = core.common.generateAccountKey({
       versionCode: 'A1',
-      userId: faker.random.uuid(),
+      secret: core.common.generateCryptoRandomString(32),
     });
 
     const TEST_USER: UserEntity = {

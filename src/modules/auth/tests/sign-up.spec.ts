@@ -1,6 +1,6 @@
 import { AuthService } from '../auth.service';
 import { createTestingModule } from './helpers/createTestingModule';
-import { srp, common } from '@light-town/core';
+import core from '@light-town/core';
 import { SignUpPayload } from '../auth.dto';
 import * as faker from 'faker';
 import * as dotenv from 'dotenv';
@@ -37,11 +37,11 @@ describe('[Unit] [Auth Module] ...', () => {
   });
 
   it('should sign up', async () => {
-    const TEST_ACCOUNT_KEY = common.genAccountKey({
+    const TEST_ACCOUNT_KEY = core.common.generateAccountKey({
       versionCode: 'A3',
-      userId: faker.random.uuid(),
+      secret: core.common.generateCryptoRandomString(32),
     });
-    const TSET_SRP_VERIFIER = srp.client.deriveVerifier(
+    const TSET_SRP_VERIFIER = core.srp.client.deriveVerifier(
       TEST_ACCOUNT_KEY,
       faker.random.word()
     );
@@ -100,11 +100,11 @@ describe('[Unit] [Auth Module] ...', () => {
   });
 
   it('should throw error whene device was not found', async () => {
-    const TEST_ACCOUNT_KEY = common.genAccountKey({
+    const TEST_ACCOUNT_KEY = core.common.generateAccountKey({
       versionCode: 'A3',
-      userId: faker.random.uuid(),
+      secret: core.common.generateCryptoRandomString(32),
     });
-    const TSET_SRP_VERIFIER = srp.client.deriveVerifier(
+    const TSET_SRP_VERIFIER = core.srp.client.deriveVerifier(
       TEST_ACCOUNT_KEY,
       faker.random.word()
     );

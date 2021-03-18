@@ -1,13 +1,12 @@
 import { AuthService } from '../auth.service';
 import { createTestingModule } from './helpers/createTestingModule';
-import { common } from '@light-town/core';
+import core from '@light-town/core';
 import { SignInPayload } from '../auth.dto';
 import * as faker from 'faker';
 import * as uuid from 'uuid';
 import * as dotenv from 'dotenv';
 import { TestingModule } from '@nestjs/testing';
 import AccountsService from '~/modules/accounts/accounts.service';
-import core from '@light-town/core';
 import SessionsService from '~/modules/sessions/sessions.service';
 import DevicesService from '~/modules/devices/devices.service';
 
@@ -36,12 +35,12 @@ describe('[Unit] [Auth Module] ...', () => {
   it('should sign in', async () => {
     const TEST_ACCOUNT = {
       id: faker.random.uuid(),
-      key: common.genAccountKey({
+      key: core.common.generateAccountKey({
         versionCode: 'A3',
-        userId: faker.random.uuid(),
+        secret: core.common.generateCryptoRandomString(32),
       }),
-      salt: core.common.genSalt(),
-      verifier: core.common.genSalt(),
+      salt: core.common.generateRandomSalt(32),
+      verifier: core.common.generateRandomSalt(32),
     };
 
     const TEST_SESSION = {
@@ -102,12 +101,12 @@ describe('[Unit] [Auth Module] ...', () => {
   it('should return random salt when account is not found', async () => {
     const TEST_ACCOUNT = {
       id: faker.random.uuid(),
-      key: common.genAccountKey({
+      key: core.common.generateAccountKey({
         versionCode: 'A3',
-        userId: faker.random.uuid(),
+        secret: core.common.generateCryptoRandomString(32),
       }),
-      salt: core.common.genSalt(),
-      verifier: core.common.genSalt(),
+      salt: core.common.generateRandomSalt(32),
+      verifier: core.common.generateRandomSalt(32),
     };
     const TEST_DEVICE_UUID = faker.random.uuid();
 
@@ -137,12 +136,12 @@ describe('[Unit] [Auth Module] ...', () => {
   it('should return random salt when device is not found', async () => {
     const TEST_ACCOUNT = {
       id: faker.random.uuid(),
-      key: common.genAccountKey({
+      key: core.common.generateAccountKey({
         versionCode: 'A3',
-        userId: faker.random.uuid(),
+        secret: core.common.generateCryptoRandomString(32),
       }),
-      salt: core.common.genSalt(),
-      verifier: core.common.genSalt(),
+      salt: core.common.generateRandomSalt(32),
+      verifier: core.common.generateRandomSalt(32),
     };
     const TEST_DEVICE_UUID = faker.random.uuid();
 

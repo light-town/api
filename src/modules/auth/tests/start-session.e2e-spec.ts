@@ -44,9 +44,9 @@ describe('[E2E] [Auth Module] ...', () => {
     let TEST_DEVICE: DeviceEntity;
     const TEST_USERNAME = faker.internet.userName();
     const TEST_USER_PASSWORD = faker.random.word();
-    const TEST_ACCOUNT_KEY = core.common.genAccountKey({
+    const TEST_ACCOUNT_KEY = core.common.generateAccountKey({
       versionCode: 'A3',
-      userId: faker.random.uuid(),
+      secret: core.common.generateCryptoRandomString(32),
     });
     const TEST_SRP_VERIFIER = core.srp.client.deriveVerifier(
       TEST_ACCOUNT_KEY,

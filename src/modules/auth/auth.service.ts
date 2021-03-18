@@ -70,8 +70,8 @@ export class AuthService {
     if (!account) {
       return {
         sessionUuid: uuid.v4(),
-        salt: core.common.genSalt(),
-        serverPublicEphemeral: core.common.genSalt(),
+        salt: core.common.generateRandomSalt(32),
+        serverPublicEphemeral: core.common.generateRandomSalt(32),
       };
     }
 
@@ -83,8 +83,8 @@ export class AuthService {
     if (!device) {
       return {
         sessionUuid: uuid.v4(),
-        salt: core.common.genSalt(),
-        serverPublicEphemeral: core.common.genSalt(),
+        salt: core.common.generateRandomSalt(32),
+        serverPublicEphemeral: core.common.generateRandomSalt(32),
       };
     }
 
@@ -103,8 +103,8 @@ export class AuthService {
       }))
       .catch(() => ({
         sessionUuid: uuid.v4(),
-        salt: core.common.genSalt(),
-        serverPublicEphemeral: core.common.genSalt(),
+        salt: core.common.generateRandomSalt(32),
+        serverPublicEphemeral: core.common.generateRandomSalt(32),
       }));
   }
 
