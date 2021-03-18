@@ -16,6 +16,9 @@ RUN rm -f .npmrc
 
 COPY . .
 
+RUN npm run format
+RUN npm run lint
+
 EXPOSE ${PORT}
 
 CMD npm run test:prod 
