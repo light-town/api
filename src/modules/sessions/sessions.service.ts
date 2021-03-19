@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   EntityManager,
@@ -12,7 +16,8 @@ import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity
 import { SessionEntity } from '~/db/entities/session.entity';
 import AccountsService from '../accounts/accounts.service';
 import { DevicesService } from '../devices/devices.service';
-import { SessionCreateDTO } from './sessions.dto';
+import { SessionCreateDTO, VerifySessionStageEnum } from './sessions.dto';
+import VerifySessionStageEntity from '~/db/entities/verify-session-stage.entity';
 
 export type Criteria<T> =
   | string
@@ -30,6 +35,8 @@ export class SessionsService {
   public constructor(
     @InjectRepository(SessionEntity)
     private readonly sessionsRepository: Repository<SessionEntity>,
+    @InjectRepository(VerifySessionStageEntity)
+    private readonly verifySessionStageRepository: Repository<VerifySessionStageEntity>,
     private readonly accountsService: AccountsService,
     private readonly devicesService: DevicesService
   ) {}
@@ -60,11 +67,25 @@ export class SessionsService {
 
     if (!device) throw new NotFoundException(`The device was not found`);
 
+    const verifyStage = await this.verifySessionStageRepository.findOne({
+      select: ['id'],
+      where: {
+        name: VerifySessionStageEnum.REQUIRED,
+        isDeleted: false,
+      },
+    });
+
+    if (!verifyStage)
+      throw new InternalServerErrorException(
+        `The '${VerifySessionStageEnum.REQUIRED}' verify session stage was not found`
+      );
+
     return manager.save(
       manager.create(SessionEntity, {
         accountId: account.id,
         deviceId: device.id,
         secret: options.secret,
+        verifyStageId: verifyStage.id,
       })
     );
   }
@@ -83,6 +104,14 @@ export class SessionsService {
   ) {
     const manager = this.getManager(entityManager);
     return manager.findOne(SessionEntity, options);
+  }
+
+  public findOneVerifyStage(
+    options: FindOneOptions<VerifySessionStageEntity>,
+    entityManager?: EntityManager
+  ) {
+    const manager = entityManager ?? this.verifySessionStageRepository.manager;
+    return manager.findOne(VerifySessionStageEntity, options);
   }
 
   public update(

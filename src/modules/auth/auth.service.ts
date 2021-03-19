@@ -1,6 +1,7 @@
 import {
   ForbiddenException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import {
@@ -10,16 +11,19 @@ import {
   StartSessionResponse,
   SignInResponse,
   MFATypesEnum,
+  VerifySessionPayload,
+  VerifySessionResponse,
 } from './auth.dto';
 import core from '@light-town/core';
 import { AccountsService } from '../accounts/accounts.service';
 import { UsersService } from '../users/users.service';
-import { Connection } from 'typeorm';
+import { Connection, MoreThan } from 'typeorm';
 import { InjectConnection } from '@nestjs/typeorm';
 import { SessionsService } from '../sessions/sessions.service';
 import DevicesService from '../devices/devices.service';
 import * as uuid from 'uuid';
 import { JwtService } from '@nestjs/jwt';
+import { VerifySessionStageEnum } from '../sessions/sessions.dto';
 
 export const SESSION_EXPIRES_AT = 10 * 60 * 1000; // 10 minutes
 @Injectable()
@@ -127,8 +131,17 @@ export class AuthService {
     options: StartSessionPayload
   ): Promise<StartSessionResponse> {
     const sessionEntity = await this.sessionsService.findOne({
-      select: ['id', 'secret', 'accountId'],
-      where: { id: options.sessionUuid, isDeleted: false },
+      select: ['id', 'secret', 'accountId', 'verifyStage'],
+      where: {
+        id: options.sessionUuid,
+        isDeleted: false,
+      },
+      join: {
+        alias: 'sessions',
+        leftJoinAndSelect: {
+          verifyStage: 'sessions.verifyStage',
+        },
+      },
     });
 
     if (!sessionEntity)
@@ -148,7 +161,10 @@ export class AuthService {
       },
     });
 
-    if (account.mfaType?.name !== MFATypesEnum.NONE) {
+    if (
+      sessionEntity.verifyStage.name !== VerifySessionStageEnum.NOT_REQUIRED &&
+      sessionEntity.verifyStage.name !== VerifySessionStageEnum.COMPLETED
+    ) {
       throw new ForbiddenException(`The session was not verified`);
     }
 
@@ -174,6 +190,45 @@ export class AuthService {
         { expiresIn: expiresAt }
       ),
       serverSessionProof: session.proof,
+    };
+  }
+
+  public async verifySession(
+    payload: VerifySessionPayload
+  ): Promise<VerifySessionResponse> {
+    const session = await this.sessionsService.findOne({
+      select: ['id', 'verifyStage'],
+      where: {
+        id: payload.sessionUuid,
+        isDeleted: false,
+        expiresAt: MoreThan(new Date()),
+      },
+    });
+
+    if (!session) throw new NotFoundException(`The session was not found`);
+
+    if (session.verifyStage.name !== VerifySessionStageEnum.REQUIRED)
+      return {
+        stage: session.verifyStage.name as VerifySessionStageEnum,
+      };
+
+    const verifyStage = await this.sessionsService.findOneVerifyStage({
+      select: ['id'],
+      where: { name: VerifySessionStageEnum.IN_PROGRESS, isDeleted: false },
+    });
+
+    if (!verifyStage)
+      throw new InternalServerErrorException(
+        `The '${VerifySessionStageEnum.IN_PROGRESS}' verify session stage was not found`
+      );
+
+    await this.sessionsService.update(
+      { id: session.id },
+      { verifyStageId: verifyStage.id }
+    );
+
+    return {
+      stage: VerifySessionStageEnum.IN_PROGRESS,
     };
   }
 }

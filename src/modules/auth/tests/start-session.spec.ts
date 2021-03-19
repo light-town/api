@@ -10,6 +10,7 @@ import AccountsService from '~/modules/accounts/accounts.service';
 import SessionsService from '~/modules/sessions/sessions.service';
 import { JwtService } from '@nestjs/jwt';
 import { ForbiddenException } from '@nestjs/common';
+import { VerifySessionStageEnum } from '~/modules/sessions/sessions.dto';
 
 dotenv.config();
 
@@ -62,6 +63,9 @@ describe('[Unit] [Auth Module] ...', () => {
       id: faker.random.uuid(),
       secret: TEST_SERVER_EPHEMERAL.secret,
       accountId: TEST_ACCOUNT.id,
+      verifyStage: {
+        name: VerifySessionStageEnum.COMPLETED,
+      },
     };
 
     const TEST_CLIENT_SESSION = core.srp.client.deriveSession(
@@ -97,10 +101,17 @@ describe('[Unit] [Auth Module] ...', () => {
 
     expect(sessionFindOneFunc).toBeCalledTimes(1);
     expect(sessionFindOneFunc).toBeCalledWith({
-      select: ['id', 'secret', 'accountId'],
+      select: ['id', 'secret', 'accountId', 'verifyStage'],
       where: {
         id: TEST_SESSION.id,
         isDeleted: false,
+        expiresAt: (sessionFindOneFunc.mock.calls[0][0].where as any).expiresAt,
+      },
+      join: {
+        alias: 'sessions',
+        leftJoinAndSelect: {
+          verifyStage: 'sessions.verifyStage',
+        },
       },
     });
 
@@ -152,15 +163,22 @@ describe('[Unit] [Auth Module] ...', () => {
 
     expect(sessionFindOneFunc).toBeCalledTimes(1);
     expect(sessionFindOneFunc).toBeCalledWith({
-      select: ['id', 'secret', 'accountId'],
+      select: ['id', 'secret', 'accountId', 'verifyStage'],
       where: {
         id: TEST_SESSION.id,
         isDeleted: false,
+        expiresAt: (sessionFindOneFunc.mock.calls[0][0].where as any).expiresAt,
+      },
+      join: {
+        alias: 'sessions',
+        leftJoinAndSelect: {
+          verifyStage: 'sessions.verifyStage',
+        },
       },
     });
   });
 
-  it('should throw 401 error when the session was not verified', async () => {
+  it('should throw 403 error when the session was not verified', async () => {
     const TEST_ACCOUNT_KEY = core.common.generateAccountKey({
       versionCode: 'A3',
       secret: core.common.generateCryptoRandomString(32),
@@ -185,6 +203,7 @@ describe('[Unit] [Auth Module] ...', () => {
       id: faker.random.uuid(),
       secret: faker.random.uuid(),
       accountId: faker.random.uuid(),
+      verifyStage: VerifySessionStageEnum.IN_PROGRESS,
     };
 
     const payload: StartSessionPayload = {
@@ -212,4 +231,68 @@ describe('[Unit] [Auth Module] ...', () => {
     expect(sessionFindOneFunc).toBeCalledTimes(1);
     expect(accountFindOneFunc).toBeCalledTimes(1);
   });
+
+  it('should correct start session when the account has MFA, but the session is not required to verify', async () => {
+    const TEST_ACCOUNT_KEY = core.common.generateAccountKey({
+      versionCode: 'A3',
+      secret: core.common.generateCryptoRandomString(32),
+    });
+    const TEST_USER_PASSWORD = faker.random.word();
+    const TEST_CLIENT_VERIFIER = core.srp.client.deriveVerifier(
+      TEST_ACCOUNT_KEY,
+      TEST_USER_PASSWORD
+    );
+    const TEST_CLIENT_EPHEMERAL = core.srp.client.generateEphemeral();
+    const TEST_SERVER_EPHEMERAL = core.srp.server.generateEphemeral(
+      TEST_CLIENT_VERIFIER.verifier
+    );
+
+    const TEST_ACCOUNT = {
+      id: faker.random.uuid(),
+      key: TEST_ACCOUNT_KEY,
+      salt: TEST_CLIENT_VERIFIER.salt,
+      verifier: TEST_CLIENT_VERIFIER.verifier,
+      mfaType: {
+        name: MFATypesEnum.FINGERPRINT,
+      },
+    };
+
+    const TEST_SESSION = {
+      id: faker.random.uuid(),
+      secret: TEST_SERVER_EPHEMERAL.secret,
+      accountId: TEST_ACCOUNT.id,
+      verifyStage: {
+        name: VerifySessionStageEnum.NOT_REQUIRED,
+      },
+    };
+
+    const TEST_CLIENT_SESSION = core.srp.client.deriveSession(
+      TEST_ACCOUNT.salt,
+      TEST_ACCOUNT_KEY,
+      TEST_USER_PASSWORD,
+      TEST_CLIENT_EPHEMERAL.secret,
+      TEST_SERVER_EPHEMERAL.public
+    );
+
+    const payload: StartSessionPayload = {
+      sessionUuid: TEST_SESSION.id,
+      clientPublicEphemeralKey: TEST_CLIENT_EPHEMERAL.public,
+      clientSessionProofKey: TEST_CLIENT_SESSION.proof,
+    };
+
+    const sessionFindOneFunc = jest
+      .spyOn(sessionsService, 'findOne')
+      .mockResolvedValueOnce(<any>TEST_SESSION);
+
+    const accountFindOneFunc = jest
+      .spyOn(accountsService, 'findOne')
+      .mockResolvedValueOnce(<any>TEST_ACCOUNT);
+
+    await authService.startSession(payload);
+
+    expect(sessionFindOneFunc).toBeCalledTimes(1);
+    expect(accountFindOneFunc).toBeCalledTimes(1);
+  });
+
+  test.todo('should throw 404 when session is expired');
 });

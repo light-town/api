@@ -10,6 +10,7 @@ import DevicesService from '~/modules/devices/devices.service';
 import SessionsService from '~/modules/sessions/sessions.service';
 import SessionEntity from '~/db/entities/session.entity';
 import initDB from './helpers/initDatabase';
+import { VerifySessionStageEnum } from '~/modules/sessions/sessions.dto';
 
 describe('[E2E] [Auth Module] ...', () => {
   let connection: Connection;
@@ -99,6 +100,18 @@ describe('[E2E] [Auth Module] ...', () => {
         serverPublicEphemeral
       );
 
+      const verifyStage = await sessionsService.findOneVerifyStage({
+        select: ['id'],
+        where: {
+          name: VerifySessionStageEnum.COMPLETED,
+        },
+      });
+
+      await sessionsService.update(
+        { id: sessionUuid },
+        { verifyStageId: verifyStage.id }
+      );
+
       const startSessionResponse = await api.startSession({
         sessionUuid,
         clientPublicEphemeralKey: ephemeralPairKeys.public,
@@ -129,6 +142,7 @@ describe('[E2E] [Auth Module] ...', () => {
       expect(updateSession).toStrictEqual(
         sessions.create({
           ...initSession,
+          verifyStageId: updateSession.verifyStageId,
           updatedAt: updateSession.updatedAt,
           expiresAt: updateSession.expiresAt,
         })

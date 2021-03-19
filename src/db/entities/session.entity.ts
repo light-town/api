@@ -2,6 +2,7 @@ import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 import { IEntity } from './entity.interface';
 import { DeviceEntity } from './device.entity';
 import AccountEntity from './account.entity';
+import VerifySessionStageEntity from './verify-session-stage.entity';
 
 @Entity('sessions')
 export class SessionEntity extends IEntity {
@@ -13,6 +14,16 @@ export class SessionEntity extends IEntity {
 
   @Column({ type: 'uuid', name: 'device_id' })
   public deviceId: string;
+
+  @Column({ type: 'uuid', name: 'verify_session_stage_id' })
+  public verifyStageId: string;
+
+  @ManyToOne(() => VerifySessionStageEntity)
+  @JoinColumn({
+    name: 'verify_session_stage_id',
+    referencedColumnName: 'id',
+  })
+  public verifyStage?: VerifySessionStageEntity;
 
   @ManyToOne(() => DeviceEntity)
   @JoinColumn({

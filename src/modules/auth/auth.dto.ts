@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { VerifySessionStageEnum } from '../sessions/sessions.dto';
 
 export class SignUpPayload {
   @ApiProperty({
@@ -109,4 +110,19 @@ export class StartSessionResponse {
     description: 'The server session proof',
   })
   serverSessionProof: string;
+}
+
+export class VerifySessionPayload {
+  @ApiProperty({
+    description: 'The unique session uuid',
+  })
+  sessionUuid: string;
+}
+
+export class VerifySessionResponse {
+  @ApiProperty({
+    description: 'The current stage of session verifying',
+    enum: () => VerifySessionStageEnum,
+  })
+  stage: VerifySessionStageEnum;
 }

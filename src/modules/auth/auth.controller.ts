@@ -10,6 +10,8 @@ import {
   StartSessionPayload,
   SignInResponse,
   StartSessionResponse,
+  VerifySessionPayload,
+  VerifySessionResponse,
 } from './auth.dto';
 import { AuthService } from './auth.service';
 
@@ -39,6 +41,14 @@ export class AuthController {
     @Body() payload: StartSessionPayload
   ): Promise<StartSessionResponse> {
     return this.authService.startSession(payload);
+  }
+
+  @Post('verify')
+  @ApiNotFoundResponse()
+  public async verify(
+    @Body() payload: VerifySessionPayload
+  ): Promise<VerifySessionResponse> {
+    return this.authService.verifySession(payload);
   }
 }
 
