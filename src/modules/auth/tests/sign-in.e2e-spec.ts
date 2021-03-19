@@ -2,7 +2,7 @@ import { createTestingE2EModule } from './helpers/createTestingE2EModule';
 import { Connection } from 'typeorm';
 import { getConnectionToken } from '@nestjs/typeorm';
 import { Api } from './helpers/api';
-import { SignInPayload } from '../auth.dto';
+import { MFATypesEnum, SignInPayload } from '../auth.dto';
 import core from '@light-town/core';
 import * as faker from 'faker';
 import UserEntity from '~/db/entities/user.entity';
@@ -12,6 +12,8 @@ import DeviceEntity from '~/db/entities/device.entity';
 import UsersService from '~/modules/users/users.service';
 import AccountsService from '~/modules/accounts/accounts.service';
 import DevicesService from '~/modules/devices/devices.service';
+import initDB from './helpers/initDatabase';
+import MFATypeEntity from '~/db/entities/mfa-type.entity';
 
 describe('[E2E] [Auth Module] ...', () => {
   let connection: Connection;
@@ -28,6 +30,8 @@ describe('[E2E] [Auth Module] ...', () => {
 
     connection = app.get<Connection>(getConnectionToken());
     await connection.synchronize(true);
+
+    await initDB();
 
     usersService = app.get<UsersService>(UsersService);
     accountsService = app.get<AccountsService>(AccountsService);
@@ -88,6 +92,7 @@ describe('[E2E] [Auth Module] ...', () => {
           salt: TEST_SRP_VERIFIER.salt,
           sessionUuid: response.body.data.sessionUuid,
           serverPublicEphemeral: response.body.data.serverPublicEphemeral,
+          mfaType: MFATypesEnum.NONE,
         },
       });
 
@@ -109,6 +114,12 @@ describe('[E2E] [Auth Module] ...', () => {
       const accounts = connection.getRepository(AccountEntity);
       expect(await accounts.count()).toEqual(1);
 
+      const mfaTypes = connection.getRepository(MFATypeEntity);
+      const mfaType = await mfaTypes.findOne({
+        select: ['id'],
+        where: { name: MFATypesEnum.NONE },
+      });
+
       const newAccount = await accounts.findOne({
         where: { key: TEST_ACCOUNT_KEY },
       });
@@ -118,6 +129,7 @@ describe('[E2E] [Auth Module] ...', () => {
           key: TEST_ACCOUNT_KEY,
           userId: newUser.id,
           salt: TEST_SRP_VERIFIER.salt,
+          mfaTypeId: mfaType.id,
           verifier: TEST_SRP_VERIFIER.verifier,
           updatedAt: newAccount.updatedAt,
           createdAt: newAccount.createdAt,

@@ -1,7 +1,7 @@
 import { createTestingE2EModule } from './helpers/createTestingE2EModule';
 import { Connection, getConnection } from 'typeorm';
 import { Api } from './helpers/api';
-import { SignUpPayload } from '../auth.dto';
+import { MFATypesEnum, SignUpPayload } from '../auth.dto';
 import core from '@light-town/core';
 import * as faker from 'faker';
 import UserEntity from '~/db/entities/user.entity';
@@ -9,6 +9,8 @@ import AccountEntity from '~/db/entities/account.entity';
 import { INestApplication } from '@nestjs/common';
 import DeviceEntity from '~/db/entities/device.entity';
 import DevicesService from '~/modules/devices/devices.service';
+import initDB from './helpers/initDatabase';
+import MFATypeEntity from '~/db/entities/mfa-type.entity';
 
 describe('[E2E] [Auth Module] ...', () => {
   let connection: Connection;
@@ -24,6 +26,8 @@ describe('[E2E] [Auth Module] ...', () => {
     connection = getConnection();
     await connection.synchronize(true);
 
+    await initDB();
+
     devicesService = app.get<DevicesService>(DevicesService);
   });
 
@@ -33,7 +37,7 @@ describe('[E2E] [Auth Module] ...', () => {
   });
 
   describe('[Sign up] ...', () => {
-    beforeEach(async () => {
+    afterEach(async () => {
       await connection.query(
         'TRUNCATE users, accounts, devices, sessions CASCADE'
       );
@@ -87,6 +91,12 @@ describe('[E2E] [Auth Module] ...', () => {
         })
       );
 
+      const mfaTypes = connection.getRepository(MFATypeEntity);
+      const mfaType = await mfaTypes.findOne({
+        select: ['id'],
+        where: { name: MFATypesEnum.NONE },
+      });
+
       const accounts = connection.getRepository(AccountEntity);
       expect(await accounts.count()).toEqual(1);
 
@@ -98,6 +108,7 @@ describe('[E2E] [Auth Module] ...', () => {
           id: newAccount.id,
           key: TEST_ACCOUNT_KEY,
           userId: newUser.id,
+          mfaTypeId: mfaType.id,
           salt: TEST_SRP_VERIFIER.salt,
           verifier: TEST_SRP_VERIFIER.verifier,
           updatedAt: newAccount.updatedAt,

@@ -70,6 +70,12 @@ export class StartSessionPayload {
   clientSessionProofKey: string;
 }
 
+export enum MFATypesEnum {
+  NONE = 'NONE',
+  FINGERPRINT = 'FINGERPRINT',
+  ONE_TIME_PASSWORD = 'ONE_TIME_PASSWORD',
+}
+
 export class SignInResponse {
   @ApiProperty({
     description: 'The unique session id',
@@ -85,6 +91,12 @@ export class SignInResponse {
     description: 'The server public ephemeral key',
   })
   serverPublicEphemeral: string;
+
+  @ApiProperty({
+    description: 'The multi-factor authorization type',
+    enum: () => MFATypesEnum,
+  })
+  mfaType: MFATypesEnum;
 }
 
 export class StartSessionResponse {

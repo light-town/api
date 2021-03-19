@@ -1,7 +1,7 @@
 import { AuthService } from '../auth.service';
 import { createTestingModule } from './helpers/createTestingModule';
 import core from '@light-town/core';
-import { SignInPayload } from '../auth.dto';
+import { MFATypesEnum, SignInPayload } from '../auth.dto';
 import * as faker from 'faker';
 import * as uuid from 'uuid';
 import * as dotenv from 'dotenv';
@@ -41,6 +41,10 @@ describe('[Unit] [Auth Module] ...', () => {
       }),
       salt: core.common.generateRandomSalt(32),
       verifier: core.common.generateRandomSalt(32),
+      mfaType: {
+        id: faker.random.uuid(),
+        name: MFATypesEnum.NONE,
+      },
     };
 
     const TEST_SESSION = {
@@ -75,14 +79,20 @@ describe('[Unit] [Auth Module] ...', () => {
 
     expect(accountFindOneFunc).toBeCalledTimes(1);
     expect(accountFindOneFunc).toBeCalledWith({
-      select: ['id', 'salt', 'verifier'],
-      where: { key: TEST_ACCOUNT.key },
+      select: ['id', 'salt', 'verifier', 'mfaType'],
+      where: { key: TEST_ACCOUNT.key, isDeleted: false },
+      join: {
+        alias: 'accounts',
+        leftJoinAndSelect: {
+          mfaType: 'accounts.mfaType',
+        },
+      },
     });
 
     expect(deviceFineOneFunc).toBeCalledTimes(1);
     expect(deviceFineOneFunc).toBeCalledWith({
       select: ['id'],
-      where: { id: TEST_DEVICE_UUID },
+      where: { id: TEST_DEVICE_UUID, isDeleted: false },
     });
 
     expect(sessionCreateFunc).toBeCalledTimes(1);
@@ -90,9 +100,15 @@ describe('[Unit] [Auth Module] ...', () => {
       accountId: TEST_ACCOUNT.id,
       deviceId: TEST_DEVICE_ID,
       secret: sessionCreateFunc.mock.calls[0][0].secret,
+      mfaTypes: undefined,
     });
 
-    expect(response.salt).toStrictEqual(TEST_ACCOUNT.salt);
+    expect(response).toStrictEqual({
+      sessionUuid: response.sessionUuid,
+      salt: TEST_ACCOUNT.salt,
+      serverPublicEphemeral: response.serverPublicEphemeral,
+      mfaType: MFATypesEnum.NONE,
+    });
     expect(response.serverPublicEphemeral).toBeDefined();
     expect(uuid.version(response.sessionUuid)).toEqual(4);
     expect(uuid.validate(response.sessionUuid)).toBeTruthy();
@@ -123,8 +139,14 @@ describe('[Unit] [Auth Module] ...', () => {
 
     expect(accountFindOneFunc).toBeCalledTimes(1);
     expect(accountFindOneFunc).toBeCalledWith({
-      select: ['id', 'salt', 'verifier'],
-      where: { key: TEST_ACCOUNT.key },
+      select: ['id', 'salt', 'verifier', 'mfaType'],
+      where: { key: TEST_ACCOUNT.key, isDeleted: false },
+      join: {
+        alias: 'accounts',
+        leftJoinAndSelect: {
+          mfaType: 'accounts.mfaType',
+        },
+      },
     });
 
     expect(response.salt).not.toEqual(TEST_ACCOUNT.salt);
@@ -162,14 +184,20 @@ describe('[Unit] [Auth Module] ...', () => {
 
     expect(accountFindOneFunc).toBeCalledTimes(1);
     expect(accountFindOneFunc).toBeCalledWith({
-      select: ['id', 'salt', 'verifier'],
-      where: { key: TEST_ACCOUNT.key },
+      select: ['id', 'salt', 'verifier', 'mfaType'],
+      where: { key: TEST_ACCOUNT.key, isDeleted: false },
+      join: {
+        alias: 'accounts',
+        leftJoinAndSelect: {
+          mfaType: 'accounts.mfaType',
+        },
+      },
     });
 
     expect(deviceFindOneFunc).toBeCalledTimes(1);
     expect(deviceFindOneFunc).toBeCalledWith({
       select: ['id'],
-      where: { id: TEST_DEVICE_UUID },
+      where: { id: TEST_DEVICE_UUID, isDeleted: false },
     });
 
     expect(response.salt).not.toEqual(TEST_ACCOUNT.salt);

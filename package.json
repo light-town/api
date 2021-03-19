@@ -18,7 +18,7 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./jest.config.e2e.js --runInBand",
     "test:e2e:watch": "npm run test:e2e -- --watch --coverage",
-    "db:seeds:run": "node dist/src/db/seeds/index.js",
+    "db:seeds:run": "npm run build && node dist/src/db/seeds/index.js",
     "test:prod": "jest --runInBand --coverage --config ./jest.config.prod.js"
   },
   "repository": {

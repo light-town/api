@@ -1,7 +1,7 @@
 import { AuthService } from '../auth.service';
 import { createTestingModule } from './helpers/createTestingModule';
 import core from '@light-town/core';
-import { StartSessionPayload } from '../auth.dto';
+import { MFATypesEnum, StartSessionPayload } from '../auth.dto';
 import * as faker from 'faker';
 import * as uuid from 'uuid';
 import * as dotenv from 'dotenv';
@@ -9,6 +9,7 @@ import { TestingModule } from '@nestjs/testing';
 import AccountsService from '~/modules/accounts/accounts.service';
 import SessionsService from '~/modules/sessions/sessions.service';
 import { JwtService } from '@nestjs/jwt';
+import { ForbiddenException } from '@nestjs/common';
 
 dotenv.config();
 
@@ -52,6 +53,9 @@ describe('[Unit] [Auth Module] ...', () => {
       key: TEST_ACCOUNT_KEY,
       salt: TEST_CLIENT_VERIFIER.salt,
       verifier: TEST_CLIENT_VERIFIER.verifier,
+      mfaType: {
+        name: MFATypesEnum.NONE,
+      },
     };
 
     const TEST_SESSION = {
@@ -96,13 +100,20 @@ describe('[Unit] [Auth Module] ...', () => {
       select: ['id', 'secret', 'accountId'],
       where: {
         id: TEST_SESSION.id,
+        isDeleted: false,
       },
     });
 
     expect(accountFindOneFunc).toBeCalledTimes(1);
     expect(accountFindOneFunc).toBeCalledWith({
-      select: ['salt', 'key', 'verifier'],
-      where: { id: TEST_ACCOUNT.id },
+      select: ['id', 'salt', 'key', 'verifier', 'mfaType'],
+      where: { id: TEST_ACCOUNT.id, isDeleted: false },
+      join: {
+        alias: 'accounts',
+        leftJoinAndSelect: {
+          mfaType: 'accounts.mfaType',
+        },
+      },
     });
 
     expect(sessionUpdateFunc).toBeCalledTimes(1);
@@ -114,7 +125,7 @@ describe('[Unit] [Auth Module] ...', () => {
     );
   });
 
-  it('should start session', async () => {
+  it('should return invalid session info when session was not found', async () => {
     const TEST_SESSION = {
       id: faker.random.uuid(),
       secret: faker.random.uuid(),
@@ -144,7 +155,61 @@ describe('[Unit] [Auth Module] ...', () => {
       select: ['id', 'secret', 'accountId'],
       where: {
         id: TEST_SESSION.id,
+        isDeleted: false,
       },
     });
+  });
+
+  it('should throw 401 error when the session was not verified', async () => {
+    const TEST_ACCOUNT_KEY = core.common.generateAccountKey({
+      versionCode: 'A3',
+      secret: core.common.generateCryptoRandomString(32),
+    });
+    const TEST_USER_PASSWORD = faker.random.word();
+    const TEST_CLIENT_VERIFIER = core.srp.client.deriveVerifier(
+      TEST_ACCOUNT_KEY,
+      TEST_USER_PASSWORD
+    );
+
+    const TEST_ACCOUNT = {
+      id: faker.random.uuid(),
+      key: TEST_ACCOUNT_KEY,
+      salt: TEST_CLIENT_VERIFIER.salt,
+      verifier: TEST_CLIENT_VERIFIER.verifier,
+      mfaType: {
+        name: MFATypesEnum.FINGERPRINT,
+      },
+    };
+
+    const TEST_SESSION = {
+      id: faker.random.uuid(),
+      secret: faker.random.uuid(),
+      accountId: faker.random.uuid(),
+    };
+
+    const payload: StartSessionPayload = {
+      sessionUuid: TEST_SESSION.id,
+      clientPublicEphemeralKey: faker.random.uuid(),
+      clientSessionProofKey: faker.random.uuid(),
+    };
+
+    const sessionFindOneFunc = jest
+      .spyOn(sessionsService, 'findOne')
+      .mockResolvedValueOnce(<any>TEST_SESSION);
+
+    const accountFindOneFunc = jest
+      .spyOn(accountsService, 'findOne')
+      .mockResolvedValueOnce(<any>TEST_ACCOUNT);
+
+    try {
+      await authService.startSession(payload);
+    } catch (e) {
+      expect(e).toStrictEqual(
+        new ForbiddenException(`The session was not verified`)
+      );
+    }
+
+    expect(sessionFindOneFunc).toBeCalledTimes(1);
+    expect(accountFindOneFunc).toBeCalledTimes(1);
   });
 });

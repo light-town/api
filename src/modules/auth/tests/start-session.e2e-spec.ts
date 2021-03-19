@@ -9,6 +9,7 @@ import DeviceEntity from '~/db/entities/device.entity';
 import DevicesService from '~/modules/devices/devices.service';
 import SessionsService from '~/modules/sessions/sessions.service';
 import SessionEntity from '~/db/entities/session.entity';
+import initDB from './helpers/initDatabase';
 
 describe('[E2E] [Auth Module] ...', () => {
   let connection: Connection;
@@ -24,6 +25,8 @@ describe('[E2E] [Auth Module] ...', () => {
 
     connection = getConnection();
     await connection.synchronize(true);
+
+    await initDB();
 
     devicesService = app.get<DevicesService>(DevicesService);
     sessionsService = app.get<SessionsService>(SessionsService);

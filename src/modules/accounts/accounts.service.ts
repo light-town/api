@@ -7,7 +7,9 @@ import {
   Repository,
 } from 'typeorm';
 import { AccountEntity } from '~/db/entities/account.entity';
+import MFATypeEntity from '~/db/entities/mfa-type.entity';
 import { UserEntity } from '~/db/entities/user.entity';
+import { MFATypesEnum } from '../auth/auth.dto';
 import { UsersService } from '../users/users.service';
 import { CreateAccountDTO } from './accounts.dto';
 
@@ -16,6 +18,8 @@ export class AccountsService {
   public constructor(
     @InjectRepository(AccountEntity)
     private readonly accountsRepository: Repository<AccountEntity>,
+    @InjectRepository(MFATypeEntity)
+    private readonly mfaTypesRepository: Repository<MFATypeEntity>,
     private readonly usersService: UsersService
   ) {}
 
@@ -35,12 +39,22 @@ export class AccountsService {
 
     if (!user) throw new NotFoundException(`The user was not found`);
 
+    const mfaTypeName = payload.mfaType || MFATypesEnum.NONE;
+
+    const mfaType = await this.mfaTypesRepository.findOne({
+      select: ['id'],
+      where: { name: mfaTypeName },
+    });
+
+    if (!mfaType) throw new NotFoundException(`The MFA type was not found`);
+
     return await manager.save(
       manager.create(AccountEntity, {
         key: payload.key,
         userId: user.id,
         salt: payload.salt,
         verifier: payload.verifier,
+        mfaTypeId: mfaType.id,
       })
     );
   }

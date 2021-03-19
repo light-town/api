@@ -7,11 +7,13 @@ import { AccountEntity } from '~/db/entities/account.entity';
 import { createTestingModule } from './helpers/createTestingModule';
 import { UsersService } from '~/modules/users/users.service';
 import core from '@light-town/core';
+import MFATypeEntity from '~/db/entities/mfa-type.entity';
 
 describe('[Auth Module] ...', () => {
   let accountsService: AccountsService;
   let usersService: UsersService;
   let acoountsRepository: Repository<AccountEntity>;
+  let mfaTypesRepository: Repository<MFATypeEntity>;
 
   beforeAll(async () => {
     const moduleFixture = await createTestingModule();
@@ -19,6 +21,9 @@ describe('[Auth Module] ...', () => {
     accountsService = moduleFixture.get<AccountsService>(AccountsService);
     acoountsRepository = moduleFixture.get<Repository<AccountEntity>>(
       getRepositoryToken(AccountEntity)
+    );
+    mfaTypesRepository = moduleFixture.get<Repository<MFATypeEntity>>(
+      getRepositoryToken(MFATypeEntity)
     );
     usersService = moduleFixture.get<UsersService>(UsersService);
   });
@@ -48,6 +53,7 @@ describe('[Auth Module] ...', () => {
       userId: TEST_USER.id,
       salt: faker.random.word(),
       verifier: faker.random.word(),
+      mfaTypeId: faker.random.uuid(),
       updatedAt: new Date(),
       createdAt: new Date(),
       isDeleted: false,
@@ -57,6 +63,10 @@ describe('[Auth Module] ...', () => {
     jest
       .spyOn(acoountsRepository.manager, 'save')
       .mockResolvedValueOnce(TEST_ACCOUNT);
+
+    jest
+      .spyOn(mfaTypesRepository, 'findOne')
+      .mockResolvedValueOnce(<any>{ id: TEST_ACCOUNT.mfaTypeId });
 
     const account: AccountEntity = await accountsService.create({
       key: TEST_ACCOUNT_KEY,

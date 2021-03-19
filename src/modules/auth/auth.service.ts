@@ -1,10 +1,15 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import {
   SignUpPayload,
   SignInPayload,
   StartSessionPayload,
   StartSessionResponse,
   SignInResponse,
+  MFATypesEnum,
 } from './auth.dto';
 import core from '@light-town/core';
 import { AccountsService } from '../accounts/accounts.service';
@@ -34,7 +39,7 @@ export class AuthService {
       const device = await this.devicesService.findOne(
         {
           select: ['id'],
-          where: { id: options.deviceUuid },
+          where: { id: options.deviceUuid, isDeleted: false },
         },
         manager
       );
@@ -63,8 +68,14 @@ export class AuthService {
 
   public async signIn(options: SignInPayload): Promise<SignInResponse> {
     const account = await this.accountsService.findOne({
-      select: ['id', 'salt', 'verifier'],
-      where: { key: options.accountKey },
+      select: ['id', 'salt', 'verifier', 'mfaType'],
+      where: { key: options.accountKey, isDeleted: false },
+      join: {
+        alias: 'accounts',
+        leftJoinAndSelect: {
+          mfaType: 'accounts.mfaType',
+        },
+      },
     });
 
     if (!account) {
@@ -72,12 +83,13 @@ export class AuthService {
         sessionUuid: uuid.v4(),
         salt: core.common.generateRandomSalt(32),
         serverPublicEphemeral: core.common.generateRandomSalt(32),
+        mfaType: MFATypesEnum.NONE,
       };
     }
 
     const device = await this.devicesService.findOne({
       select: ['id'],
-      where: { id: options.deviceUuid },
+      where: { id: options.deviceUuid, isDeleted: false },
     });
 
     if (!device) {
@@ -85,6 +97,7 @@ export class AuthService {
         sessionUuid: uuid.v4(),
         salt: core.common.generateRandomSalt(32),
         serverPublicEphemeral: core.common.generateRandomSalt(32),
+        mfaType: MFATypesEnum.NONE,
       };
     }
 
@@ -100,11 +113,13 @@ export class AuthService {
         sessionUuid: session.id,
         salt: account.salt,
         serverPublicEphemeral: ephemeral.public,
+        mfaType: account.mfaType.name,
       }))
       .catch(() => ({
         sessionUuid: uuid.v4(),
         salt: core.common.generateRandomSalt(32),
         serverPublicEphemeral: core.common.generateRandomSalt(32),
+        mfaType: MFATypesEnum.NONE,
       }));
   }
 
@@ -113,7 +128,7 @@ export class AuthService {
   ): Promise<StartSessionResponse> {
     const sessionEntity = await this.sessionsService.findOne({
       select: ['id', 'secret', 'accountId'],
-      where: { id: options.sessionUuid },
+      where: { id: options.sessionUuid, isDeleted: false },
     });
 
     if (!sessionEntity)
@@ -123,9 +138,19 @@ export class AuthService {
       };
 
     const account = await this.accountsService.findOne({
-      select: ['salt', 'key', 'verifier'],
-      where: { id: sessionEntity.accountId },
+      select: ['id', 'salt', 'key', 'verifier', 'mfaType'],
+      where: { id: sessionEntity.accountId, isDeleted: false },
+      join: {
+        alias: 'accounts',
+        leftJoinAndSelect: {
+          mfaType: 'accounts.mfaType',
+        },
+      },
     });
+
+    if (account.mfaType?.name !== MFATypesEnum.NONE) {
+      throw new ForbiddenException(`The session was not verified`);
+    }
 
     const session = core.srp.server.deriveSession(
       sessionEntity.secret,
