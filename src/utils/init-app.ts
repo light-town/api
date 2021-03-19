@@ -2,10 +2,12 @@ import * as cookieParser from 'cookie-parser';
 import { DataFormatInterceptor } from './data.interceptor';
 import { INestApplication } from '@nestjs/common';
 import * as dotenv from 'dotenv';
+import * as csurf from 'csurf';
 
 dotenv.config();
 
 export const initApp = (app: INestApplication, { usePrefix = false } = {}) => {
+  app.use(csurf());
   app.enableCors({
     credentials: true,
     origin: process.env.FRONTEND_URL,

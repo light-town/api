@@ -40,6 +40,7 @@
     "@nestjs/swagger": "^4.7.16",
     "@nestjs/typeorm": "^7.1.5",
     "cookie-parser": "^1.4.5",
+    "csurf": "^1.11.0",
     "passport-jwt": "^4.0.0",
     "pg": "^8.5.1",
     "reflect-metadata": "^0.1.13",
