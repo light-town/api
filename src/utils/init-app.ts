@@ -6,15 +6,18 @@ import * as csurf from 'csurf';
 
 dotenv.config();
 
-export const initApp = (app: INestApplication, { usePrefix = false } = {}) => {
-  app.use(csurf());
+export const initApp = (
+  app: INestApplication,
+  { usePrefix = false, useCsurf = false } = {}
+) => {
+  app.use(cookieParser());
   app.enableCors({
     credentials: true,
     origin: process.env.FRONTEND_URL,
   });
-  app.use(cookieParser());
   app.useGlobalInterceptors(new DataFormatInterceptor());
 
+  if (useCsurf) app.use(csurf({ cookie: true }));
   if (usePrefix) app.setGlobalPrefix('/v1/api');
 
   return app;

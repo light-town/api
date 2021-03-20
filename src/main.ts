@@ -7,7 +7,10 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 async function bootstrap() {
-  const app = initApp(await NestFactory.create(AppModule), { usePrefix: true });
+  const app = initApp(await NestFactory.create(AppModule), {
+    usePrefix: true,
+    useCsurf: true,
+  });
 
   const config = new DocumentBuilder()
     .setTitle('Light Town')
