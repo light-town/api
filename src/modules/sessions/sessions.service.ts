@@ -6,10 +6,8 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   EntityManager,
-  FindConditions,
   FindManyOptions,
   FindOneOptions,
-  ObjectID,
   Repository,
 } from 'typeorm';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
@@ -18,17 +16,7 @@ import AccountsService from '../accounts/accounts.service';
 import { DevicesService } from '../devices/devices.service';
 import { SessionCreateDTO, VerifySessionStageEnum } from './sessions.dto';
 import VerifySessionStageEntity from '~/db/entities/verify-session-stage.entity';
-
-export type Criteria<T> =
-  | string
-  | string[]
-  | number
-  | number[]
-  | Date
-  | Date[]
-  | ObjectID
-  | ObjectID[]
-  | FindConditions<T>;
+import Criteria from '~/utils/criteria';
 
 @Injectable()
 export class SessionsService {

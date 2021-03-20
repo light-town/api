@@ -7,6 +7,10 @@ import VerifySessionStagesSeeder, {
   VerifySessionStagesFactory,
 } from './verify-session-stages.seed';
 import { VerifySessionStageEnum } from '~/modules/sessions/sessions.dto';
+import PushNotificationStagesSeeder, {
+  PushNotificationStagesFactory,
+} from './push-notification-stages.seed';
+import { PushNotificationStageEnum } from '~/modules/push-notifications/push-notifications.dto';
 
 dotenv.config();
 
@@ -35,5 +39,18 @@ createConnection().then(async (connection: Connection) => {
   });
   await verifySessionStagesSeeder.run(1, {
     name: VerifySessionStageEnum.NOT_REQUIRED,
+  });
+
+  const pushNotificationStagesSeeder = new PushNotificationStagesSeeder(
+    new PushNotificationStagesFactory()
+  );
+  await pushNotificationStagesSeeder.run(1, {
+    name: PushNotificationStageEnum.CREATED,
+  });
+  await pushNotificationStagesSeeder.run(1, {
+    name: PushNotificationStageEnum.SENT,
+  });
+  await pushNotificationStagesSeeder.run(1, {
+    name: PushNotificationStageEnum.ARRIVED,
   });
 });

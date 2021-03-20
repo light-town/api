@@ -1,8 +1,9 @@
-import * as cookieParser from 'cookie-parser';
-import { DataFormatInterceptor } from './data.interceptor';
 import { INestApplication } from '@nestjs/common';
+import { WsAdapter } from '@nestjs/platform-ws';
 import * as dotenv from 'dotenv';
 import * as csurf from 'csurf';
+import * as cookieParser from 'cookie-parser';
+import { DataFormatInterceptor } from './data.interceptor';
 
 dotenv.config();
 
@@ -19,6 +20,8 @@ export const initApp = (
 
   if (useCsurf) app.use(csurf({ cookie: true }));
   if (usePrefix) app.setGlobalPrefix('/v1/api');
+
+  app.useWebSocketAdapter(new WsAdapter(app));
 
   return app;
 };
