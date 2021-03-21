@@ -219,7 +219,7 @@ export class AuthService {
 
     if (!verifyStage)
       throw new InternalServerErrorException(
-        `The '${VerifySessionStageEnum.IN_PROGRESS}' verify session stage was not found`
+        `The '${VerifySessionStageEnum.IN_PROGRESS}' session verify stage was not found`
       );
 
     await this.sessionsService.update(
