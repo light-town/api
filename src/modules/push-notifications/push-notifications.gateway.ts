@@ -27,7 +27,7 @@ export const UnauthorizedException = (client: WebSocket) => {
       data: { message: 'Unauthorized' },
     })
   );
-  client.close();
+  client.close(1008);
 };
 
 @WebSocketGateway()

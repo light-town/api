@@ -130,7 +130,7 @@ describe('[Push Notifications] ...', () => {
     );
 
     expect(clientCloseFunc).toBeCalledTimes(1);
-    expect(clientCloseFunc).toBeCalledWith();
+    expect(clientCloseFunc).toBeCalledWith(1008);
   });
 
   it(`should throw 'Unauthorized' error when request has url '/?'`, async () => {
@@ -161,7 +161,7 @@ describe('[Push Notifications] ...', () => {
     );
 
     expect(clientCloseFunc).toBeCalledTimes(1);
-    expect(clientCloseFunc).toBeCalledWith();
+    expect(clientCloseFunc).toBeCalledWith(1008);
   });
 
   it(`should throw 'Unauthorized' error when request has url without device uuid`, async () => {
@@ -192,7 +192,7 @@ describe('[Push Notifications] ...', () => {
     );
 
     expect(clientCloseFunc).toBeCalledTimes(1);
-    expect(clientCloseFunc).toBeCalledWith();
+    expect(clientCloseFunc).toBeCalledWith(1008);
   });
 
   it(`should throw 'Unauthorized' error when recipient device is not exists`, async () => {
@@ -227,7 +227,7 @@ describe('[Push Notifications] ...', () => {
     );
 
     expect(clientCloseFunc).toBeCalledTimes(1);
-    expect(clientCloseFunc).toBeCalledWith();
+    expect(clientCloseFunc).toBeCalledWith(1008);
 
     expect(existsRecipientFunc).toBeCalledTimes(1);
     expect(existsRecipientFunc).toBeCalledWith(DEVICE_ID);
