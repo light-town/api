@@ -1,9 +1,10 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req } from '@nestjs/common';
 import {
   ApiTags,
   ApiCreatedResponse,
   ApiNotFoundResponse,
 } from '@nestjs/swagger';
+import { Request } from 'express';
 import {
   SignUpPayload,
   SignInPayload,
@@ -49,6 +50,13 @@ export class AuthController {
     @Body() payload: VerifySessionPayload
   ): Promise<VerifySessionResponse> {
     return this.authService.verifySession(payload);
+  }
+
+  @Get('/csrf-token')
+  public getCsrfToken(@Req() req: Request) {
+    return {
+      'X-CSRF-TOKEN': req.csrfToken(),
+    };
   }
 }
 

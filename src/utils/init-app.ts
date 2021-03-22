@@ -18,7 +18,14 @@ export const initApp = (
   });
   app.useGlobalInterceptors(new DataFormatInterceptor());
 
-  if (useCsurf) app.use(csurf({ cookie: true }));
+  if (useCsurf)
+    app.use(
+      csurf({
+        cookie: true,
+        value: req => <string>req.headers['x-csrf-token'],
+      })
+    );
+
   if (usePrefix) app.setGlobalPrefix('/v1/api');
 
   app.useWebSocketAdapter(new WsAdapter(app));
