@@ -29,7 +29,7 @@ describe('[Auth Module] ...', () => {
   });
 
   afterEach(() => {
-    jest.resetAllMocks();
+    jest.restoreAllMocks();
   });
 
   it('should create user account', async () => {

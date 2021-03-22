@@ -31,7 +31,7 @@ describe('[Unit] [Auth Module] ...', () => {
   });
 
   afterEach(() => {
-    jest.resetAllMocks();
+    jest.restoreAllMocks();
   });
 
   it('should start session', async () => {
@@ -288,10 +288,15 @@ describe('[Unit] [Auth Module] ...', () => {
       .spyOn(accountsService, 'findOne')
       .mockResolvedValueOnce(<any>TEST_ACCOUNT);
 
+    const updateSessionFunc = jest
+      .spyOn(sessionsService, 'update')
+      .mockResolvedValueOnce(<any>{});
+
     await authService.startSession(payload);
 
     expect(sessionFindOneFunc).toBeCalledTimes(1);
     expect(accountFindOneFunc).toBeCalledTimes(1);
+    expect(updateSessionFunc).toBeCalledTimes(1);
   });
 
   test.todo('should throw 404 when session is expired');

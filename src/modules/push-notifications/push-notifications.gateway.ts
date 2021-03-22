@@ -60,7 +60,7 @@ export class PushNotificationsGateway
       );
 
     if (
-      !queryParams?.deviceUuid ||
+      !queryParams.deviceUuid ||
       !(await this.pushNotificationsService.existsRecipient(
         queryParams.deviceUuid
       ))
@@ -111,7 +111,8 @@ export class PushNotificationsGateway
       pushNotification.recipientDeviceId
     );
 
-    if (!client) throw new NotFoundException(`The client device not connected`);
+    if (!client)
+      throw new NotFoundException(`The client device is not connected`);
 
     const sentStage = await this.pushNotificationsService.findOneStage({
       select: ['id'],

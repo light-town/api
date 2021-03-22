@@ -33,7 +33,7 @@ export class PushNotificationsService {
     payload: Payload
   ): Promise<PushNotificationEntity> {
     if (!(await this.existsRecipient(deviceId)))
-      throw new NotFoundException('The device was not found');
+      throw new NotFoundException('The recipient device was not found');
 
     const createdStage = await this.pushNotificationStagesRepository.findOne({
       select: ['id'],
@@ -64,7 +64,7 @@ export class PushNotificationsService {
       select: ['id'],
       where: { id: deviceId },
     });
-    return device !== undefined;
+    return typeof device === 'object' && device !== null;
   }
 
   public create(deviceId: string, payload: Payload, stageId: string) {

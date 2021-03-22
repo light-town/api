@@ -19,7 +19,7 @@ describe('[Users Module] ...', () => {
   });
 
   afterEach(() => {
-    jest.resetAllMocks();
+    jest.restoreAllMocks();
   });
 
   it('should create a user', async () => {

@@ -26,7 +26,7 @@ describe('[Unit] [Auth Module] ...', () => {
   });
 
   afterEach(() => {
-    jest.resetAllMocks();
+    jest.restoreAllMocks();
   });
 
   it('should verify session', async () => {

@@ -29,7 +29,7 @@ describe('[Unit] [Auth Module] ...', () => {
   });
 
   afterEach(() => {
-    jest.resetAllMocks();
+    jest.restoreAllMocks();
   });
 
   it('should sign in', async () => {
