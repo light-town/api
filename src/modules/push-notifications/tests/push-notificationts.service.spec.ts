@@ -13,6 +13,7 @@ import PushNotificationStageEntity from '~/db/entities/push-notification-stage.e
 import { getRepositoryToken } from '@nestjs/typeorm';
 import PushNotificationEntity from '~/db/entities/push-notification.entity';
 import DevicesService from '~/modules/devices/devices.service';
+import DeviceEntity from '~/db/entities/device.entity';
 
 describe('[Push Notifications] ...', () => {
   let moduleFixture: TestingModule;
@@ -51,7 +52,6 @@ describe('[Push Notifications] ...', () => {
     const TEST_DEVICE = {
       id: faker.random.uuid(),
     };
-    const TEST_EVENT_NAME = faker.random.word();
     const TEST_EVENT_PAYLOAD = {
       message: faker.random.word(),
     };
@@ -85,7 +85,6 @@ describe('[Push Notifications] ...', () => {
 
     const response = await pushNotificationsService.send(
       TEST_DEVICE.id,
-      TEST_EVENT_NAME,
       TEST_EVENT_PAYLOAD
     );
 
@@ -106,7 +105,7 @@ describe('[Push Notifications] ...', () => {
     expect(createFunc).toBeCalledTimes(1);
     expect(createFunc).toBeCalledWith(
       TEST_DEVICE.id,
-      { event: TEST_EVENT_NAME, data: TEST_EVENT_PAYLOAD },
+      TEST_EVENT_PAYLOAD,
       TEST_CREATED_STAGE.id
     );
 
@@ -118,7 +117,6 @@ describe('[Push Notifications] ...', () => {
     const TEST_DEVICE = {
       id: faker.random.uuid(),
     };
-    const TEST_EVENT_NAME = faker.random.word();
     const TEST_EVENT_PAYLOAD = {
       message: faker.random.word(),
     };
@@ -142,11 +140,7 @@ describe('[Push Notifications] ...', () => {
     const sendFunc = jest.spyOn(pushNotificationsGateway, 'send');
 
     try {
-      await pushNotificationsService.send(
-        TEST_DEVICE.id,
-        TEST_EVENT_NAME,
-        TEST_EVENT_PAYLOAD
-      );
+      await pushNotificationsService.send(TEST_DEVICE.id, TEST_EVENT_PAYLOAD);
     } catch (e) {
       expect(e).toStrictEqual(
         new NotFoundException(`The recipient device was not found`)
@@ -166,7 +160,6 @@ describe('[Push Notifications] ...', () => {
     const TEST_DEVICE = {
       id: faker.random.uuid(),
     };
-    const TEST_EVENT_NAME = faker.random.word();
     const TEST_EVENT_PAYLOAD = {
       message: faker.random.word(),
     };
@@ -189,11 +182,7 @@ describe('[Push Notifications] ...', () => {
     const sendFunc = jest.spyOn(pushNotificationsGateway, 'send');
 
     try {
-      await pushNotificationsService.send(
-        TEST_DEVICE.id,
-        TEST_EVENT_NAME,
-        TEST_EVENT_PAYLOAD
-      );
+      await pushNotificationsService.send(TEST_DEVICE.id, TEST_EVENT_PAYLOAD);
     } catch (e) {
       expect(e).toStrictEqual(
         new InternalServerErrorException(
@@ -220,7 +209,6 @@ describe('[Push Notifications] ...', () => {
     const TEST_DEVICE = {
       id: faker.random.uuid(),
     };
-    const TEST_EVENT_NAME = faker.random.word();
     const TEST_EVENT_PAYLOAD = {
       message: faker.random.word(),
     };
@@ -252,7 +240,6 @@ describe('[Push Notifications] ...', () => {
 
     const response = await pushNotificationsService.send(
       TEST_DEVICE.id,
-      TEST_EVENT_NAME,
       TEST_EVENT_PAYLOAD
     );
 
@@ -273,7 +260,7 @@ describe('[Push Notifications] ...', () => {
     expect(createFunc).toBeCalledTimes(1);
     expect(createFunc).toBeCalledWith(
       TEST_DEVICE.id,
-      { event: TEST_EVENT_NAME, data: TEST_EVENT_PAYLOAD },
+      TEST_EVENT_PAYLOAD,
       TEST_CREATED_STAGE.id
     );
 
@@ -281,9 +268,8 @@ describe('[Push Notifications] ...', () => {
   });
 
   it('should answer positive when checking exists recipient device', async () => {
-    const TEST_DEVICE: any = {
-      id: faker.random.uuid(),
-    };
+    const TEST_DEVICE: DeviceEntity = new DeviceEntity();
+    TEST_DEVICE.id = faker.random.uuid();
 
     const findOneDeviceFunc = jest
       .spyOn(devicesService, 'findOne')
@@ -298,14 +284,13 @@ describe('[Push Notifications] ...', () => {
     expect(findOneDeviceFunc).toBeCalledTimes(1);
     expect(findOneDeviceFunc).toBeCalledWith({
       select: ['id'],
-      where: { id: TEST_DEVICE.id },
+      where: { id: TEST_DEVICE.id, isDeleted: false },
     });
   });
 
   it('should answer negative when checking not exists recipient device', async () => {
-    const TEST_DEVICE: any = {
-      id: faker.random.uuid(),
-    };
+    const TEST_DEVICE: DeviceEntity = new DeviceEntity();
+    TEST_DEVICE.id = faker.random.uuid();
 
     const findOneDeviceFunc = jest
       .spyOn(devicesService, 'findOne')
@@ -320,7 +305,7 @@ describe('[Push Notifications] ...', () => {
     expect(findOneDeviceFunc).toBeCalledTimes(1);
     expect(findOneDeviceFunc).toBeCalledWith({
       select: ['id'],
-      where: { id: TEST_DEVICE.id },
+      where: { id: TEST_DEVICE.id, isDeleted: false },
     });
   });
 

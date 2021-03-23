@@ -1,9 +1,9 @@
 import { INestApplication } from '@nestjs/common';
-import { WsAdapter } from '@nestjs/platform-ws';
 import * as dotenv from 'dotenv';
 import * as csurf from 'csurf';
 import * as cookieParser from 'cookie-parser';
 import { DataFormatInterceptor } from './data.interceptor';
+import { WsAdapter } from '~/common/ws-adapter';
 
 dotenv.config();
 

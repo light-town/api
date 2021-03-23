@@ -3,7 +3,6 @@ import {
   ApiTags,
   ApiCreatedResponse,
   ApiNotFoundResponse,
-  ApiResponse,
   ApiOkResponse,
 } from '@nestjs/swagger';
 import { Request } from 'express';

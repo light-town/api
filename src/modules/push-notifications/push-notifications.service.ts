@@ -14,6 +14,7 @@ import { Payload, PushNotificationStageEnum } from './push-notifications.dto';
 import PushNotificationsGateway from './push-notifications.gateway';
 import Criteria from '~/utils/criteria';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
+import DeviceEntity from '~/db/entities/device.entity';
 
 @Injectable()
 export class PushNotificationsService {
@@ -29,7 +30,6 @@ export class PushNotificationsService {
 
   public async send(
     deviceId: string,
-    event: string,
     payload: Payload
   ): Promise<PushNotificationEntity> {
     if (!(await this.existsRecipient(deviceId)))
@@ -47,7 +47,7 @@ export class PushNotificationsService {
 
     const pushNotification = await this.create(
       deviceId,
-      { event, data: payload },
+      payload,
       createdStage.id
     );
 
@@ -62,9 +62,9 @@ export class PushNotificationsService {
   public async existsRecipient(deviceId: string): Promise<boolean> {
     const device = await this.devicesService.findOne({
       select: ['id'],
-      where: { id: deviceId },
+      where: { id: deviceId, isDeleted: false },
     });
-    return typeof device === 'object' && device !== null;
+    return device instanceof DeviceEntity;
   }
 
   public create(deviceId: string, payload: Payload, stageId: string) {

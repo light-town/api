@@ -1,6 +1,6 @@
 import { TestingModule } from '@nestjs/testing';
 import PushNotificationsGateway, {
-  PushNotificationEvents,
+  PushNotificationEventsEnum,
 } from '../push-notifications.gateway';
 import PushNotificationsService from '../push-notifications.service';
 import createTestingModule from './helpers/createTestingModule';
@@ -11,6 +11,10 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
+import GatewayNamespacesEnum from '~/common/gateway-namespaces';
+import * as WebSocket from 'ws';
+
+jest.mock('ws', () => function () {});
 
 describe('[Push Notifications] ...', () => {
   let moduleFixture: TestingModule;
@@ -28,18 +32,20 @@ describe('[Push Notifications] ...', () => {
     );
   });
 
+  beforeEach(() => {
+    (pushNotificationsGateway as any).connectedDevices.clear();
+  });
+
   afterEach(() => {
+    jest.clearAllMocks();
     jest.restoreAllMocks();
   });
 
-  it(`should send all push notifications`, async () => {
-    const DEVICE_ID = faker.random.uuid();
+  it(`should subscribe to notify and send all push notifications`, async () => {
+    const TEST_DEVICE_ID = faker.random.uuid();
     const TEST_DEVICE_CLIENT: any = {
       send: jest.fn(),
       close: jest.fn(),
-    };
-    const TEST_REQUEST: any = {
-      url: `/?deviceUuid=${DEVICE_ID}`,
     };
     const TEST_STAGES: any = [
       { id: faker.random.uuid(), name: PushNotificationStageEnum.CREATED },
@@ -67,13 +73,12 @@ describe('[Push Notifications] ...', () => {
       .spyOn(pushNotificationsGateway, 'send')
       .mockResolvedValue();
 
-    await pushNotificationsGateway.handleConnection(
-      TEST_DEVICE_CLIENT,
-      TEST_REQUEST
-    );
+    await pushNotificationsGateway.onSubNotifyEvent(TEST_DEVICE_CLIENT, {
+      deviceUuid: TEST_DEVICE_ID,
+    });
 
     expect(existsRecipientFunc).toBeCalledTimes(1);
-    expect(existsRecipientFunc).toBeCalledWith(DEVICE_ID);
+    expect(existsRecipientFunc).toBeCalledWith(TEST_DEVICE_ID);
 
     expect(findStagesFunc).toBeCalledTimes(1);
     expect(findStagesFunc).toBeCalledWith({
@@ -91,6 +96,7 @@ describe('[Push Notifications] ...', () => {
       select: ['id', 'payload', 'recipientDeviceId'],
       where: {
         stageId: In(TEST_STAGES.map(s => s.id)),
+        recipientDeviceId: TEST_DEVICE_ID,
       },
     });
 
@@ -102,145 +108,35 @@ describe('[Push Notifications] ...', () => {
     ]);
   });
 
-  it(`should throw 'Unauthorized' error when request has url '/'`, async () => {
+  it(`should throw error when device was not found`, async () => {
     const TEST_DEVICE_CLIENT: any = {
       send: jest.fn(),
       close: jest.fn(),
     };
-    const TEST_REQUEST: any = {
-      url: '/',
-    };
 
     const clientSendFunc = jest.spyOn(TEST_DEVICE_CLIENT, 'send');
-    const clientCloseFunc = jest.spyOn(TEST_DEVICE_CLIENT, 'close');
 
-    await pushNotificationsGateway.handleConnection(
-      TEST_DEVICE_CLIENT,
-      TEST_REQUEST
-    );
+    await pushNotificationsGateway.onSubNotifyEvent(TEST_DEVICE_CLIENT, {
+      deviceUuid: null,
+    });
 
     expect(clientSendFunc).toBeCalledTimes(1);
     expect(clientSendFunc).toBeCalledWith(
       JSON.stringify({
-        event: PushNotificationEvents.ERROR,
-        data: {
-          message: 'Unauthorized',
+        namespace: GatewayNamespacesEnum.PUSH_NOTIFICATION,
+        event: PushNotificationEventsEnum.ERROR,
+        error: {
+          message: 'The device was not found',
         },
       })
     );
-
-    expect(clientCloseFunc).toBeCalledTimes(1);
-    expect(clientCloseFunc).toBeCalledWith(1008);
-  });
-
-  it(`should throw 'Unauthorized' error when request has url '/?'`, async () => {
-    const TEST_DEVICE_CLIENT: any = {
-      send: jest.fn(),
-      close: jest.fn(),
-    };
-    const TEST_REQUEST: any = {
-      url: '/?',
-    };
-
-    const clientSendFunc = jest.spyOn(TEST_DEVICE_CLIENT, 'send');
-    const clientCloseFunc = jest.spyOn(TEST_DEVICE_CLIENT, 'close');
-
-    await pushNotificationsGateway.handleConnection(
-      TEST_DEVICE_CLIENT,
-      TEST_REQUEST
-    );
-
-    expect(clientSendFunc).toBeCalledTimes(1);
-    expect(clientSendFunc).toBeCalledWith(
-      JSON.stringify({
-        event: PushNotificationEvents.ERROR,
-        data: {
-          message: 'Unauthorized',
-        },
-      })
-    );
-
-    expect(clientCloseFunc).toBeCalledTimes(1);
-    expect(clientCloseFunc).toBeCalledWith(1008);
-  });
-
-  it(`should throw 'Unauthorized' error when request has url without device uuid`, async () => {
-    const TEST_DEVICE_CLIENT: any = {
-      send: jest.fn(),
-      close: jest.fn(),
-    };
-    const TEST_REQUEST: any = {
-      url: '/?somekey=somevalue',
-    };
-
-    const clientSendFunc = jest.spyOn(TEST_DEVICE_CLIENT, 'send');
-    const clientCloseFunc = jest.spyOn(TEST_DEVICE_CLIENT, 'close');
-
-    await pushNotificationsGateway.handleConnection(
-      TEST_DEVICE_CLIENT,
-      TEST_REQUEST
-    );
-
-    expect(clientSendFunc).toBeCalledTimes(1);
-    expect(clientSendFunc).toBeCalledWith(
-      JSON.stringify({
-        event: PushNotificationEvents.ERROR,
-        data: {
-          message: 'Unauthorized',
-        },
-      })
-    );
-
-    expect(clientCloseFunc).toBeCalledTimes(1);
-    expect(clientCloseFunc).toBeCalledWith(1008);
-  });
-
-  it(`should throw 'Unauthorized' error when recipient device is not exists`, async () => {
-    const DEVICE_ID = faker.random.uuid();
-    const TEST_DEVICE_CLIENT: any = {
-      send: jest.fn(),
-      close: jest.fn(),
-    };
-    const TEST_REQUEST: any = {
-      url: `/?deviceUuid=${DEVICE_ID}`,
-    };
-
-    const existsRecipientFunc = jest
-      .spyOn(pushNotificationsService, 'existsRecipient')
-      .mockResolvedValueOnce(undefined);
-    const clientSendFunc = jest.spyOn(TEST_DEVICE_CLIENT, 'send');
-    const clientCloseFunc = jest.spyOn(TEST_DEVICE_CLIENT, 'close');
-
-    await pushNotificationsGateway.handleConnection(
-      TEST_DEVICE_CLIENT,
-      TEST_REQUEST
-    );
-
-    expect(clientSendFunc).toBeCalledTimes(1);
-    expect(clientSendFunc).toBeCalledWith(
-      JSON.stringify({
-        event: PushNotificationEvents.ERROR,
-        data: {
-          message: 'Unauthorized',
-        },
-      })
-    );
-
-    expect(clientCloseFunc).toBeCalledTimes(1);
-    expect(clientCloseFunc).toBeCalledWith(1008);
-
-    expect(existsRecipientFunc).toBeCalledTimes(1);
-    expect(existsRecipientFunc).toBeCalledWith(DEVICE_ID);
   });
 
   it(`should throw error when '${PushNotificationStageEnum.CREATED}' and '${PushNotificationStageEnum.SENT}' push notification stages was not found`, async () => {
-    const DEVICE_ID = faker.random.uuid();
+    const TEST_DEVICE_ID = faker.random.uuid();
     const TEST_DEVICE_CLIENT: any = {
       send: jest.fn(),
       close: jest.fn(),
-    };
-    const TEST_REQUEST: any = {
-      url: `/?deviceUuid=${DEVICE_ID}`,
     };
 
     const existsRecipientFunc = jest
@@ -251,10 +147,9 @@ describe('[Push Notifications] ...', () => {
       .mockResolvedValueOnce([]);
 
     try {
-      await pushNotificationsGateway.handleConnection(
-        TEST_DEVICE_CLIENT,
-        TEST_REQUEST
-      );
+      await pushNotificationsGateway.onSubNotifyEvent(TEST_DEVICE_CLIENT, {
+        deviceUuid: TEST_DEVICE_ID,
+      });
     } catch (e) {
       expect(e).toStrictEqual(
         new InternalServerErrorException(
@@ -264,7 +159,7 @@ describe('[Push Notifications] ...', () => {
     }
 
     expect(existsRecipientFunc).toBeCalledTimes(1);
-    expect(existsRecipientFunc).toBeCalledWith(DEVICE_ID);
+    expect(existsRecipientFunc).toBeCalledWith(TEST_DEVICE_ID);
 
     expect(findStagesFunc).toBeCalledTimes(1);
     expect(findStagesFunc).toBeCalledWith({
@@ -276,6 +171,28 @@ describe('[Push Notifications] ...', () => {
         ]),
       },
     });
+  });
+
+  it('should correctly unsubscribe from notifications', async () => {
+    const TEST_DEVICE: any = {
+      id: faker.random.uuid(),
+    };
+    const TEST_CLIENT_DEVICE: any = {
+      id: faker.random.uuid(),
+      send: jest.fn(),
+    };
+
+    await pushNotificationsGateway.onSubNotifyEvent(TEST_CLIENT_DEVICE, {
+      deviceUuid: TEST_DEVICE.id,
+    });
+
+    await pushNotificationsGateway.onUnsubNotifyEvent(TEST_CLIENT_DEVICE);
+
+    expect(
+      (pushNotificationsGateway as any).connectedDevices.get(TEST_CLIENT_DEVICE)
+    ).toBeUndefined();
+
+    expect((pushNotificationsGateway as any).connectedDevices.size).toEqual(0);
   });
 
   it('should correctly send push notification', async () => {
@@ -308,9 +225,9 @@ describe('[Push Notifications] ...', () => {
       .spyOn(pushNotificationsService, 'update')
       .mockImplementationOnce(<any>(() => {}));
 
-    pushNotificationsGateway.connectedDevices.set(
-      TEST_DEVICE.id,
-      TEST_CLIENT_DEVICE
+    (pushNotificationsGateway as any).connectedDevices.set(
+      TEST_CLIENT_DEVICE,
+      TEST_DEVICE.id
     );
 
     await pushNotificationsGateway.send(TEST_PUSH_NOTIFICATION.id);
@@ -340,8 +257,12 @@ describe('[Push Notifications] ...', () => {
     expect(TEST_CLIENT_DEVICE.send).toBeCalledTimes(1);
     expect(TEST_CLIENT_DEVICE.send).toBeCalledWith(
       JSON.stringify({
-        ...TEST_PUSH_NOTIFICATION.payload,
-        __id: TEST_PUSH_NOTIFICATION.id,
+        namespace: GatewayNamespacesEnum.PUSH_NOTIFICATION,
+        event: PushNotificationEventsEnum.ARRIVED_NOTIFICATION,
+        data: TEST_PUSH_NOTIFICATION.payload,
+        metadata: {
+          __notificationId: TEST_PUSH_NOTIFICATION.id,
+        },
       })
     );
   });
@@ -350,13 +271,11 @@ describe('[Push Notifications] ...', () => {
     const TEST_DEVICE = {
       id: faker.random.uuid(),
     };
-    const TEST_CLIENT_DEVICE: any = {
-      id: faker.random.uuid(),
-    };
+    const TEST_CLIENT_DEVICE = new WebSocket('');
 
-    pushNotificationsGateway.connectedDevices.set(
-      TEST_DEVICE.id,
-      TEST_CLIENT_DEVICE
+    (pushNotificationsGateway as any).connectedDevices.set(
+      TEST_CLIENT_DEVICE,
+      TEST_DEVICE.id
     );
 
     expect(
@@ -372,14 +291,14 @@ describe('[Push Notifications] ...', () => {
       id: faker.random.uuid(),
     };
 
-    pushNotificationsGateway.connectedDevices.set(
-      TEST_DEVICE.id,
-      TEST_CLIENT_DEVICE
-    );
-
-    expect(pushNotificationsGateway.findDeviceId(TEST_CLIENT_DEVICE)).toEqual(
+    (pushNotificationsGateway as any).connectedDevices.set(
+      TEST_CLIENT_DEVICE,
       TEST_DEVICE.id
     );
+
+    expect(
+      pushNotificationsGateway.findClientByDeviceId(TEST_DEVICE.id)
+    ).toEqual(TEST_CLIENT_DEVICE);
   });
   it('should correctly delete client device from pool', () => {
     const TEST_DEVICE = {
@@ -389,15 +308,15 @@ describe('[Push Notifications] ...', () => {
       id: faker.random.uuid(),
     };
 
-    pushNotificationsGateway.connectedDevices.set(
-      TEST_DEVICE.id,
-      TEST_CLIENT_DEVICE
+    (pushNotificationsGateway as any).connectedDevices.set(
+      TEST_CLIENT_DEVICE,
+      TEST_DEVICE.id
     );
 
     pushNotificationsGateway.handleDisconnect(TEST_CLIENT_DEVICE);
 
     expect(
-      pushNotificationsGateway.connectedDevices.has(TEST_DEVICE.id)
+      pushNotificationsGateway.hasConnectedDevice(TEST_DEVICE.id)
     ).toBeFalsy();
   });
 
@@ -480,9 +399,9 @@ describe('[Push Notifications] ...', () => {
       .spyOn(pushNotificationsService, 'findOne')
       .mockResolvedValueOnce(TEST_PUSH_NOTIFICATION);
 
-    pushNotificationsGateway.connectedDevices.set(
-      TEST_DEVICE.id,
-      TEST_CLIENT_DEVICE
+    (pushNotificationsGateway as any).connectedDevices.set(
+      TEST_CLIENT_DEVICE,
+      TEST_DEVICE.id
     );
 
     try {
@@ -502,5 +421,43 @@ describe('[Push Notifications] ...', () => {
         id: TEST_PUSH_NOTIFICATION.id,
       },
     });
+  });
+
+  it('should confirm arrived notification', async () => {
+    const TEST_DEVICE: any = {
+      id: faker.random.uuid(),
+    };
+    const TEST_CLIENT_DEVICE: any = {
+      id: faker.random.uuid(),
+      send: jest.fn(),
+    };
+    const TEST_PUSH_NOTIFICATION: any = {
+      id: faker.random.uuid(),
+      payload: {},
+      recipientDeviceId: TEST_DEVICE.id,
+    };
+
+    const confirmNotificationFunc = jest
+      .spyOn(pushNotificationsService, 'confirm')
+      .mockResolvedValueOnce();
+
+    await pushNotificationsGateway.onConfirmArrivedNotification(
+      TEST_CLIENT_DEVICE,
+      {
+        pushNotificationId: TEST_PUSH_NOTIFICATION.id,
+      }
+    );
+
+    expect(confirmNotificationFunc).toBeCalledTimes(1);
+    expect(confirmNotificationFunc).toBeCalledWith(TEST_PUSH_NOTIFICATION.id);
+
+    expect(TEST_CLIENT_DEVICE.send).toBeCalledTimes(1);
+    expect(TEST_CLIENT_DEVICE.send).toBeCalledWith(
+      JSON.stringify({
+        namespace: GatewayNamespacesEnum.PUSH_NOTIFICATION,
+        event: PushNotificationEventsEnum.NOTIFICATION_STATUS,
+        status: 'ok',
+      })
+    );
   });
 });

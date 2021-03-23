@@ -5,72 +5,112 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import {
-  OnGatewayConnection,
-  OnGatewayDisconnect,
+  MessageBody,
   WebSocketGateway,
+  ConnectedSocket,
+  OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { In } from 'typeorm';
 import * as WebSocket from 'ws';
+import SubscribeEvent from '~/common/subscribe-event';
+import GatewayNamespacesEnum from '~/common/gateway-namespaces';
 import { PushNotificationStageEnum } from './push-notifications.dto';
 import PushNotificationsService from './push-notifications.service';
+import AbstractGateway from '~/common/abstract-gateway';
 
-export enum PushNotificationEvents {
-  INIT = 'SOCKET_INIT',
-  ERROR = 'SOCKET_ERROR',
-  ARRIVED = 'SOCKET_ARRIVED',
+export enum PushNotificationEventsEnum {
+  ERROR = 'ERROR',
+  SUBSCRIBE_NOTIFY = 'SUBSCRIBE_NOTIFY',
+  SUBSCRIBE_STATUS = 'SUBSCRIBE_STATUS',
+  UNSUBSCRIBE_NOTIFY = 'UNSUBSCRIBE_NOTIFY',
+  ARRIVED_NOTIFICATION = 'ARRIVED_NOTIFICATION',
+  NOTIFICATION_STATUS = 'NOTIFICATION_STATUS',
+  CONFIRM_ARRIVED_NOTIFICATION = 'CONFIRM_ARRIVED_NOTIFICATION',
 }
-
-export const UnauthorizedException = (client: WebSocket) => {
-  client.send(
-    JSON.stringify({
-      event: PushNotificationEvents.ERROR,
-      data: { message: 'Unauthorized' },
-    })
-  );
-  client.close(1008);
-};
 
 @WebSocketGateway()
 export class PushNotificationsGateway
-  implements OnGatewayConnection, OnGatewayDisconnect {
-  public connectedDevices = new Map<string, WebSocket>();
+  extends AbstractGateway
+  implements OnGatewayDisconnect {
+  private readonly connectedDevices = new Map<WebSocket, string>();
 
   public constructor(
     @Inject(forwardRef(() => PushNotificationsService))
     private readonly pushNotificationsService: PushNotificationsService
-  ) {}
+  ) {
+    super();
+  }
 
-  async handleConnection(client: WebSocket, req: Request) {
-    const queryUrl = req.url.slice(1); // start after '/' symbol
+  async handleDisconnect(client: WebSocket) {
+    if (this.connectedDevices.has(client)) this.connectedDevices.delete(client);
+  }
 
-    if (!queryUrl.length) {
-      UnauthorizedException(client);
+  @SubscribeEvent(
+    GatewayNamespacesEnum.PUSH_NOTIFICATION,
+    PushNotificationEventsEnum.SUBSCRIBE_NOTIFY
+  )
+  public async onSubNotifyEvent(
+    @ConnectedSocket() client: WebSocket,
+    @MessageBody() data
+  ) {
+    const deviceUuid = data?.deviceUuid;
+
+    const existsDevice = await this.pushNotificationsService.existsRecipient(
+      deviceUuid
+    );
+
+    if (!existsDevice) {
+      this.sendMessage(client, {
+        namespace: GatewayNamespacesEnum.PUSH_NOTIFICATION,
+        event: PushNotificationEventsEnum.ERROR,
+        error: { message: 'The device was not found' },
+      });
       return;
     }
 
-    const queryParams: { [key: string]: string } = queryUrl
-      .replace('?', '')
-      .split(';')
-      .reduce(
-        (prev, val) => ({
-          ...prev,
-          [val.split('=')[0]]: val.split('=')[1],
-        }),
-        {}
-      );
+    this.connectedDevices.set(client, deviceUuid);
 
-    if (
-      !queryParams.deviceUuid ||
-      !(await this.pushNotificationsService.existsRecipient(
-        queryParams.deviceUuid
-      ))
-    ) {
-      UnauthorizedException(client);
-      return;
-    }
+    await this.sendRemainingNotifications(deviceUuid);
 
-    this.connectedDevices.set(queryParams.deviceUuid, client);
+    this.sendMessage(client, {
+      namespace: GatewayNamespacesEnum.PUSH_NOTIFICATION,
+      event: PushNotificationEventsEnum.SUBSCRIBE_STATUS,
+      status: 'ok',
+    });
+  }
 
+  @SubscribeEvent(
+    GatewayNamespacesEnum.PUSH_NOTIFICATION,
+    PushNotificationEventsEnum.UNSUBSCRIBE_NOTIFY
+  )
+  public async onUnsubNotifyEvent(@ConnectedSocket() client: WebSocket) {
+    if (this.connectedDevices.has(client)) this.connectedDevices.delete(client);
+
+    this.sendMessage(client, {
+      namespace: GatewayNamespacesEnum.PUSH_NOTIFICATION,
+      event: PushNotificationEventsEnum.SUBSCRIBE_STATUS,
+      status: 'ok',
+    });
+  }
+
+  @SubscribeEvent(
+    GatewayNamespacesEnum.PUSH_NOTIFICATION,
+    PushNotificationEventsEnum.CONFIRM_ARRIVED_NOTIFICATION
+  )
+  public async onConfirmArrivedNotification(
+    @ConnectedSocket() client: WebSocket,
+    @MessageBody() data
+  ) {
+    await this.pushNotificationsService.confirm(data?.pushNotificationId);
+
+    this.sendMessage(client, {
+      namespace: GatewayNamespacesEnum.PUSH_NOTIFICATION,
+      event: PushNotificationEventsEnum.NOTIFICATION_STATUS,
+      status: 'ok',
+    });
+  }
+
+  async sendRemainingNotifications(deviceUuid: string) {
     const stages = await this.pushNotificationsService.findStages({
       select: ['id'],
       where: {
@@ -90,6 +130,7 @@ export class PushNotificationsGateway
       select: ['id', 'payload', 'recipientDeviceId'],
       where: {
         stageId: In(stages.map(s => s.id)),
+        recipientDeviceId: deviceUuid,
       },
     });
 
@@ -107,7 +148,7 @@ export class PushNotificationsGateway
     if (!pushNotification)
       throw new NotFoundException(`The push notification was not found`);
 
-    const client = this.connectedDevices.get(
+    const client = this.findClientByDeviceId(
       pushNotification.recipientDeviceId
     );
 
@@ -133,28 +174,24 @@ export class PushNotificationsGateway
       { stageId: sentStage.id }
     );
 
-    client.send(
-      JSON.stringify({ ...pushNotification.payload, __id: pushNotificationId })
-    );
+    this.sendMessage(client, {
+      namespace: GatewayNamespacesEnum.PUSH_NOTIFICATION,
+      event: PushNotificationEventsEnum.ARRIVED_NOTIFICATION,
+      data: pushNotification.payload,
+      metadata: {
+        __notificationId: pushNotification.id,
+      },
+    });
   }
 
   hasConnectedDevice(deviceId: string) {
-    return this.connectedDevices.has(deviceId);
+    return this.findClientByDeviceId(deviceId) instanceof WebSocket;
   }
 
-  findDeviceId(client: WebSocket): string | undefined {
-    for (const [deviceId, deviceClient] of this.connectedDevices.entries()) {
-      if (deviceClient === client) {
-        return deviceId;
-      }
-    }
-  }
-
-  async handleDisconnect(client: WebSocket) {
-    for (const [deviceId, deviceClient] of this.connectedDevices.entries()) {
-      if (deviceClient === client) {
-        this.connectedDevices.delete(deviceId);
-        return;
+  findClientByDeviceId(deviceId: string): WebSocket | undefined {
+    for (const [client, connectedDeviceId] of this.connectedDevices) {
+      if (connectedDeviceId === deviceId) {
+        return client;
       }
     }
   }
