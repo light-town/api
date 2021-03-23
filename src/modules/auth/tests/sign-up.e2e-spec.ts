@@ -11,6 +11,7 @@ import DeviceEntity from '~/db/entities/device.entity';
 import DevicesService from '~/modules/devices/devices.service';
 import initDB from './helpers/initDatabase';
 import MFATypeEntity from '~/db/entities/mfa-type.entity';
+import { OS } from '~/modules/devices/devices.dto';
 
 describe('[E2E] [Auth Module] ...', () => {
   let connection: Connection;
@@ -45,7 +46,7 @@ describe('[E2E] [Auth Module] ...', () => {
 
     it('should sign up', async () => {
       const TEST_DEVICE = await devicesService.create({
-        op: faker.random.word(),
+        os: OS.ANDROID,
         hostname: faker.internet.ip(),
       });
 
@@ -126,7 +127,7 @@ describe('[E2E] [Auth Module] ...', () => {
       expect(newDevice).toStrictEqual(
         devices.create({
           id: newDevice.id,
-          op: TEST_DEVICE.op,
+          os: TEST_DEVICE.os,
           userAgent: null,
           hostname: TEST_DEVICE.hostname,
           updatedAt: newDevice.updatedAt,

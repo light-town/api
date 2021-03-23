@@ -4,6 +4,7 @@ import {
   ApiCreatedResponse,
   ApiNotFoundResponse,
   ApiResponse,
+  ApiOkResponse,
 } from '@nestjs/swagger';
 import { Request } from 'express';
 import {
@@ -55,7 +56,7 @@ export class AuthController {
   }
 
   @Get('/csrf-token')
-  @ApiResponse({ type: GetCsrfTokenResponse })
+  @ApiOkResponse({ type: GetCsrfTokenResponse })
   public getCsrfToken(@Req() req: Request): GetCsrfTokenResponse {
     return {
       'X-CSRF-TOKEN': req.csrfToken(),

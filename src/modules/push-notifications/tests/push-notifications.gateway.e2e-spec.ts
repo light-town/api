@@ -9,6 +9,7 @@ import DevicesService from '~/modules/devices/devices.service';
 import PushNotificationsService from '../push-notifications.service';
 import initDB from './helpers/initDatabase';
 import { PushNotificationStageEnum } from '../push-notifications.dto';
+import { OS } from '~/modules/devices/devices.dto';
 
 const WS_URL = 'ws://127.0.0.1:8080';
 const CLOSE_SOCKET_EVENT = 'CLOSE_SOCKET_EVENT';
@@ -55,7 +56,7 @@ describe('[Push Notifications]', () => {
 
   it('should set right connection ', async () => {
     const device = await devicesService.create({
-      op: faker.internet.domainName(),
+      os: OS.ANDROID,
       hostname: faker.internet.mac(),
     });
 
@@ -76,7 +77,7 @@ describe('[Push Notifications]', () => {
 
   it('should send push notification when device is already connected', async () => {
     const device = await devicesService.create({
-      op: faker.internet.domainName(),
+      os: OS.ANDROID,
       hostname: faker.internet.mac(),
     });
     const EVENT_NAME = 'VERIFY_SESSION';
@@ -109,7 +110,7 @@ describe('[Push Notifications]', () => {
 
   it('should send push notification when device will connect', async () => {
     const device = await devicesService.create({
-      op: faker.internet.domainName(),
+      os: OS.ANDROID,
       hostname: faker.internet.mac(),
     });
     const EVENT_NAME = 'VERIFY_SESSION';
@@ -140,7 +141,7 @@ describe('[Push Notifications]', () => {
 
   it('should create several push notifications and send them when device will be connected', async () => {
     const device = await devicesService.create({
-      op: faker.internet.domainName(),
+      os: OS.ANDROID,
       hostname: faker.internet.mac(),
     });
     const EVENT_NAME = 'VERIFY_SESSION';
@@ -194,7 +195,7 @@ describe('[Push Notifications]', () => {
 
   it('it should set ARRIVED stage in push notification', async () => {
     const device = await devicesService.create({
-      op: faker.internet.domainName(),
+      os: OS.ANDROID,
       hostname: faker.internet.mac(),
     });
     const EVENT_NAME = 'VERIFY_SESSION';

@@ -11,6 +11,7 @@ import SessionsService from '~/modules/sessions/sessions.service';
 import SessionEntity from '~/db/entities/session.entity';
 import initDB from './helpers/initDatabase';
 import { VerifySessionStageEnum } from '~/modules/sessions/sessions.dto';
+import { OS } from '~/modules/devices/devices.dto';
 
 describe('[E2E] [Auth Module] ...', () => {
   let connection: Connection;
@@ -59,7 +60,7 @@ describe('[E2E] [Auth Module] ...', () => {
 
     beforeEach(async () => {
       TEST_DEVICE = await devicesService.create({
-        op: faker.random.word(),
+        os: OS.ANDROID,
         hostname: faker.internet.ip(),
       });
 

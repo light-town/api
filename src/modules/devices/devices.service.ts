@@ -6,7 +6,9 @@ import {
   FindOneOptions,
   Repository,
 } from 'typeorm';
+import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { DeviceEntity } from '~/db/entities/device.entity';
+import Criteria from '~/utils/criteria';
 import { DeviceCreatePayload } from './devices.dto';
 
 @Injectable()
@@ -23,7 +25,7 @@ export class DevicesService {
     const manager = this.getManager(entityManager);
     return await manager.save(
       manager.create(DeviceEntity, {
-        op: options.op,
+        os: options.os,
         userAgent: options.userAgent,
         hostname: options.hostname,
       })
@@ -48,6 +50,15 @@ export class DevicesService {
 
   public getManager(entityManager?: EntityManager) {
     return entityManager || this.devicesRepository.manager;
+  }
+
+  public update(
+    criteria: Criteria<DeviceEntity>,
+    partialEntity: QueryDeepPartialEntity<DeviceEntity>,
+    entityManager?: EntityManager
+  ) {
+    const manager = this.getManager(entityManager);
+    return manager.update(DeviceEntity, criteria, partialEntity);
   }
 }
 

@@ -4,7 +4,7 @@ import { IEntity } from './entity.interface';
 @Entity('devices')
 export class DeviceEntity extends IEntity {
   @Column()
-  public op: string;
+  public os: string;
 
   @Column({ name: 'user-agent', nullable: true })
   public userAgent: string;
