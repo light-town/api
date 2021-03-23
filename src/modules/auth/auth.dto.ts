@@ -1,7 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsOptional } from 'class-validator';
 import { VerifySessionStageEnum } from '../sessions/sessions.dto';
-import { IsString, IsNotEmpty } from '~/common/validation';
+import { IsString, IsNotEmpty, IsOptional, IsEnum } from '~/common/validation';
 export class SignUpPayload {
   @ApiProperty({
     description: 'The unique account key',

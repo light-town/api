@@ -13,7 +13,7 @@ export class DevicesController {
   public constructor(private readonly devicesService: DevicesService) {}
 
   @Post()
-  @ApiCreatedResponse({ type: DeviceCreatePayload })
+  @ApiCreatedResponse({ type: DeviceCreateResponse })
   @ApiNotFoundResponse()
   public async createDevice(
     @Body() payload: DeviceCreatePayload
