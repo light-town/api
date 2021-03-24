@@ -147,6 +147,11 @@ export class VerifySessionPayload {
     description: 'The unique session uuid',
   })
   sessionUuid: string;
+
+  @ApiProperty({
+    description: 'The unique device uuid that verify session',
+  })
+  deviceUuid: string;
 }
 
 export class VerifySessionResponse {

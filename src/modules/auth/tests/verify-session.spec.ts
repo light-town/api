@@ -10,6 +10,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
+import DevicesService from '~/modules/devices/devices.service';
 
 dotenv.config();
 
@@ -17,19 +18,25 @@ describe('[Unit] [Auth Module] ...', () => {
   let moduleFixture: TestingModule;
   let sessionsService: SessionsService;
   let authService: AuthService;
+  let devicesService: DevicesService;
 
   beforeAll(async () => {
     moduleFixture = await createTestingModule();
 
     sessionsService = moduleFixture.get<SessionsService>(SessionsService);
     authService = moduleFixture.get<AuthService>(AuthService);
+    devicesService = moduleFixture.get<DevicesService>(DevicesService);
   });
 
   afterEach(() => {
+    jest.clearAllMocks();
     jest.restoreAllMocks();
   });
 
   it('should verify session', async () => {
+    const TEST_DEVICE = {
+      id: faker.random.uuid(),
+    };
     const TEST_SESSION = {
       id: faker.random.uuid(),
       verifyStage: {
@@ -43,7 +50,12 @@ describe('[Unit] [Auth Module] ...', () => {
 
     const findOneSessionFunc = jest
       .spyOn(sessionsService, 'findOne')
+      .mockResolvedValueOnce(<any>TEST_SESSION)
       .mockResolvedValueOnce(<any>TEST_SESSION);
+
+    const findOneDeviceFunc = jest
+      .spyOn(devicesService, 'findOne')
+      .mockResolvedValueOnce(<any>TEST_DEVICE);
 
     const findOneVerifyStageFunc = jest
       .spyOn(sessionsService, 'findOneVerifyStage')
@@ -55,17 +67,40 @@ describe('[Unit] [Auth Module] ...', () => {
 
     const payload: VerifySessionPayload = {
       sessionUuid: TEST_SESSION.id,
+      deviceUuid: TEST_DEVICE.id,
     };
     const response = await authService.verifySession(payload);
 
-    expect(response.stage).toEqual(VerifySessionStageEnum.IN_PROGRESS);
+    expect(response.stage).toEqual(VerifySessionStageEnum.COMPLETED);
 
-    expect(findOneSessionFunc).toBeCalledTimes(1);
-    expect(findOneSessionFunc).toBeCalledWith({
-      select: ['id', 'verifyStage'],
+    expect(findOneSessionFunc).toBeCalledTimes(2);
+    expect(findOneSessionFunc.mock.calls[0][0]).toStrictEqual({
+      select: ['id', 'deviceId', 'verifyStage'],
       where: {
         id: TEST_SESSION.id,
         expiresAt: (findOneSessionFunc.mock.calls[0][0].where as any).expiresAt,
+        isDeleted: false,
+      },
+    });
+    expect(findOneSessionFunc.mock.calls[1][0]).toStrictEqual({
+      select: ['id', 'deviceId', 'verifyStage'],
+      where: {
+        id: TEST_SESSION.id,
+        isDeleted: false,
+      },
+      join: {
+        alias: 'sessions',
+        leftJoinAndSelect: {
+          verifyStage: 'sessions.verifyStage',
+        },
+      },
+    });
+
+    expect(findOneDeviceFunc).toBeCalledTimes(1);
+    expect(findOneDeviceFunc).toBeCalledWith({
+      select: ['id'],
+      where: {
+        id: payload.deviceUuid,
         isDeleted: false,
       },
     });
@@ -74,7 +109,7 @@ describe('[Unit] [Auth Module] ...', () => {
     expect(findOneVerifyStageFunc).toBeCalledWith({
       select: ['id'],
       where: {
-        name: VerifySessionStageEnum.IN_PROGRESS,
+        name: VerifySessionStageEnum.COMPLETED,
         isDeleted: false,
       },
     });
@@ -98,9 +133,17 @@ describe('[Unit] [Auth Module] ...', () => {
       id: faker.random.uuid(),
     };
 
+    const TEST_DEVICE = {
+      id: faker.random.uuid(),
+    };
+
     const findOneSessionFunc = jest
       .spyOn(sessionsService, 'findOne')
       .mockResolvedValueOnce(undefined);
+
+    const findOneDeviceFunc = jest
+      .spyOn(devicesService, 'findOne')
+      .mockResolvedValueOnce(<any>TEST_DEVICE);
 
     const findOneVerifyStageFunc = jest
       .spyOn(sessionsService, 'findOneVerifyStage')
@@ -112,6 +155,7 @@ describe('[Unit] [Auth Module] ...', () => {
 
     const payload: VerifySessionPayload = {
       sessionUuid: TEST_SESSION.id,
+      deviceUuid: TEST_DEVICE.id,
     };
 
     try {
@@ -124,7 +168,7 @@ describe('[Unit] [Auth Module] ...', () => {
 
     expect(findOneSessionFunc).toBeCalledTimes(1);
     expect(findOneSessionFunc).toBeCalledWith({
-      select: ['id', 'verifyStage'],
+      select: ['id', 'deviceId', 'verifyStage'],
       where: {
         id: TEST_SESSION.id,
         expiresAt: (findOneSessionFunc.mock.calls[0][0].where as any).expiresAt,
@@ -134,6 +178,7 @@ describe('[Unit] [Auth Module] ...', () => {
 
     expect(findOneVerifyStageFunc).toBeCalledTimes(0);
     expect(updateSessionFunc).toBeCalledTimes(0);
+    expect(findOneDeviceFunc).toBeCalledTimes(0);
   });
 
   it(`should return current verify stage when session verify stage is not ${VerifySessionStageEnum.REQUIRED}`, async () => {
@@ -148,6 +193,10 @@ describe('[Unit] [Auth Module] ...', () => {
       id: faker.random.uuid(),
     };
 
+    const TEST_DEVICE = {
+      id: faker.random.uuid(),
+    };
+
     const findOneSessionFunc = jest
       .spyOn(sessionsService, 'findOne')
       .mockResolvedValueOnce(<any>TEST_SESSION);
@@ -162,6 +211,7 @@ describe('[Unit] [Auth Module] ...', () => {
 
     const payload: VerifySessionPayload = {
       sessionUuid: TEST_SESSION.id,
+      deviceUuid: TEST_DEVICE.id,
     };
 
     expect(await authService.verifySession(payload)).toStrictEqual({
@@ -170,7 +220,7 @@ describe('[Unit] [Auth Module] ...', () => {
 
     expect(findOneSessionFunc).toBeCalledTimes(1);
     expect(findOneSessionFunc).toBeCalledWith({
-      select: ['id', 'verifyStage'],
+      select: ['id', 'deviceId', 'verifyStage'],
       where: {
         id: TEST_SESSION.id,
         expiresAt: (findOneSessionFunc.mock.calls[0][0].where as any).expiresAt,
@@ -182,7 +232,7 @@ describe('[Unit] [Auth Module] ...', () => {
     expect(updateSessionFunc).toBeCalledTimes(0);
   });
 
-  it(`should throw error when ${VerifySessionStageEnum.IN_PROGRESS} session verify stage was not found`, async () => {
+  it(`should throw error when ${VerifySessionStageEnum.COMPLETED} session verify stage was not found`, async () => {
     const TEST_SESSION = {
       id: faker.random.uuid(),
       verifyStage: {
@@ -190,9 +240,17 @@ describe('[Unit] [Auth Module] ...', () => {
       },
     };
 
+    const TEST_DEVICE = {
+      id: faker.random.uuid(),
+    };
+
     const findOneSessionFunc = jest
       .spyOn(sessionsService, 'findOne')
       .mockResolvedValueOnce(<any>TEST_SESSION);
+
+    const findOneDeviceFunc = jest
+      .spyOn(devicesService, 'findOne')
+      .mockResolvedValueOnce(<any>TEST_DEVICE);
 
     const findOneVerifyStageFunc = jest
       .spyOn(sessionsService, 'findOneVerifyStage')
@@ -204,6 +262,7 @@ describe('[Unit] [Auth Module] ...', () => {
 
     const payload: VerifySessionPayload = {
       sessionUuid: TEST_SESSION.id,
+      deviceUuid: TEST_DEVICE.id,
     };
 
     try {
@@ -211,14 +270,23 @@ describe('[Unit] [Auth Module] ...', () => {
     } catch (e) {
       expect(e).toStrictEqual(
         new InternalServerErrorException(
-          `The '${VerifySessionStageEnum.IN_PROGRESS}' session verify stage was not found`
+          `The '${VerifySessionStageEnum.COMPLETED}' session verify stage was not found`
         )
       );
     }
 
+    expect(findOneDeviceFunc).toBeCalledTimes(1);
+    expect(findOneDeviceFunc).toBeCalledWith({
+      select: ['id'],
+      where: {
+        id: payload.deviceUuid,
+        isDeleted: false,
+      },
+    });
+
     expect(findOneSessionFunc).toBeCalledTimes(1);
     expect(findOneSessionFunc).toBeCalledWith({
-      select: ['id', 'verifyStage'],
+      select: ['id', 'deviceId', 'verifyStage'],
       where: {
         id: TEST_SESSION.id,
         expiresAt: (findOneSessionFunc.mock.calls[0][0].where as any).expiresAt,
@@ -230,7 +298,7 @@ describe('[Unit] [Auth Module] ...', () => {
     expect(findOneVerifyStageFunc).toBeCalledWith({
       select: ['id'],
       where: {
-        name: VerifySessionStageEnum.IN_PROGRESS,
+        name: VerifySessionStageEnum.COMPLETED,
         isDeleted: false,
       },
     });

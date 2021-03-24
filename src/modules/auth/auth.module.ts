@@ -8,6 +8,7 @@ import { DevicesModule } from '../devices/devices.module';
 import { JwtModule } from '@nestjs/jwt';
 import * as dotenv from 'dotenv';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import AuthGateway from './auth.gateway';
 
 dotenv.config();
 
@@ -24,8 +25,8 @@ dotenv.config();
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService],
-  exports: [AuthService],
+  providers: [AuthService, AuthGateway],
+  exports: [AuthService, AuthGateway],
 })
 export class AuthModule {}
 

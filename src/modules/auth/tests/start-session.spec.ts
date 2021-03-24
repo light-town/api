@@ -203,7 +203,7 @@ describe('[Unit] [Auth Module] ...', () => {
       id: faker.random.uuid(),
       secret: faker.random.uuid(),
       accountId: faker.random.uuid(),
-      verifyStage: VerifySessionStageEnum.IN_PROGRESS,
+      verifyStage: VerifySessionStageEnum.REQUIRED,
     };
 
     const payload: StartSessionPayload = {

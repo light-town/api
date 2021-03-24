@@ -24,6 +24,7 @@ import DevicesService from '../devices/devices.service';
 import * as uuid from 'uuid';
 import { JwtService } from '@nestjs/jwt';
 import { VerifySessionStageEnum } from '../sessions/sessions.dto';
+import AuthGateway from './auth.gateway';
 
 export const SESSION_EXPIRES_AT = 10 * 60 * 1000; // 10 minutes
 @Injectable()
@@ -35,7 +36,8 @@ export class AuthService {
     private readonly devicesService: DevicesService,
     private readonly jwtService: JwtService,
     @InjectConnection()
-    private readonly connection: Connection
+    private readonly connection: Connection,
+    private readonly authGateway: AuthGateway
   ) {}
 
   public async signUp(options: SignUpPayload): Promise<void> {
@@ -197,7 +199,7 @@ export class AuthService {
     payload: VerifySessionPayload
   ): Promise<VerifySessionResponse> {
     const session = await this.sessionsService.findOne({
-      select: ['id', 'verifyStage'],
+      select: ['id', 'deviceId', 'verifyStage'],
       where: {
         id: payload.sessionUuid,
         isDeleted: false,
@@ -212,14 +214,30 @@ export class AuthService {
         stage: session.verifyStage.name as VerifySessionStageEnum,
       };
 
+    const device = await this.devicesService.findOne({
+      select: ['id'],
+      where: {
+        id: payload.deviceUuid,
+        isDeleted: false,
+      },
+    });
+
+    if (!device) throw new NotFoundException(`The device was not found`);
+
+    if (device.id === session.deviceId) {
+      throw new ForbiddenException(
+        `The device to verify the session should be other than the device that created the session`
+      );
+    }
+
     const verifyStage = await this.sessionsService.findOneVerifyStage({
       select: ['id'],
-      where: { name: VerifySessionStageEnum.IN_PROGRESS, isDeleted: false },
+      where: { name: VerifySessionStageEnum.COMPLETED, isDeleted: false },
     });
 
     if (!verifyStage)
       throw new InternalServerErrorException(
-        `The '${VerifySessionStageEnum.IN_PROGRESS}' session verify stage was not found`
+        `The '${VerifySessionStageEnum.COMPLETED}' session verify stage was not found`
       );
 
     await this.sessionsService.update(
@@ -227,8 +245,10 @@ export class AuthService {
       { verifyStageId: verifyStage.id }
     );
 
+    await this.authGateway.updatedSessionVerifyStage(session.id);
+
     return {
-      stage: VerifySessionStageEnum.IN_PROGRESS,
+      stage: VerifySessionStageEnum.COMPLETED,
     };
   }
 }
