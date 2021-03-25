@@ -31,20 +31,30 @@ describe('[Devices Module] ...', () => {
     };
     const TEST_PAYLOAD: DeviceCreatePayload = {
       os: TEST_DEVICE.os,
-      userAgent: TEST_DEVICE.userAgent,
-      hostname: TEST_DEVICE.hostname,
     };
+    const TEST_HOSTNAME = faker.internet.ip();
+    const TEST_USER_AGENT = faker.internet.userAgent();
+    const TEST_REQ: any = {
+      header: jest.fn(),
+      ip: `some-trash:${TEST_HOSTNAME}`,
+    };
+
+    TEST_REQ.header.mockReturnValueOnce(TEST_USER_AGENT);
 
     const createDeviceFunc = jest
       .spyOn(devicesService, 'create')
       .mockReturnValueOnce(<any>TEST_DEVICE);
 
-    const device = await devicesController.createDevice(TEST_PAYLOAD);
+    const device = await devicesController.createDevice(TEST_REQ, TEST_PAYLOAD);
 
     expect(device).toStrictEqual({ deviceUuid: TEST_DEVICE.id });
 
     expect(createDeviceFunc).toBeCalledTimes(1);
-    expect(createDeviceFunc).toBeCalledWith(TEST_PAYLOAD);
+    expect(createDeviceFunc).toBeCalledWith({
+      ...TEST_PAYLOAD,
+      userAgent: TEST_USER_AGENT,
+      hostname: TEST_HOSTNAME,
+    });
   });
 
   it('should return all devices', async () => {

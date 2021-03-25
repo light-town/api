@@ -35,25 +35,11 @@ export class DeviceCreatePayload {
   @ApiProperty({
     description: 'The operation system of device',
     required: true,
+    enum: OS,
   })
   @IsString()
   @IsEnum(OS)
   os: OS;
-
-  @ApiProperty({
-    description: 'The user agent',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  userAgent?: string;
-
-  @ApiProperty({
-    description: 'The hostname',
-    required: true,
-  })
-  @IsString()
-  hostname: string;
 }
 
 export class DeviceCreateResponse {

@@ -6,6 +6,7 @@ import {
   NotFoundException,
   Param,
   Post,
+  Req,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -20,6 +21,7 @@ import {
   DeviceCreateResponse,
 } from './devices.dto';
 import DeviceEntity from '~/db/entities/device.entity';
+import { Request } from 'express';
 
 @ApiTags('/devices')
 @Controller('/devices')
@@ -29,9 +31,14 @@ export class DevicesController {
   @Post()
   @ApiCreatedResponse({ type: DeviceCreateResponse })
   public async createDevice(
+    @Req() req: Request,
     @Body() payload: DeviceCreatePayload
   ): Promise<DeviceCreateResponse> {
-    const device = await this.devicesService.create(payload);
+    const device = await this.devicesService.create({
+      os: payload.os,
+      userAgent: req.header('user-agent'),
+      hostname: req.ip.split(':').pop(),
+    });
     return { deviceUuid: device.id };
   }
 

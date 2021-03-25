@@ -32,9 +32,6 @@ createConnection().then(async (connection: Connection) => {
     name: VerifySessionStageEnum.REQUIRED,
   });
   await verifySessionStagesSeeder.run(1, {
-    name: VerifySessionStageEnum.IN_PROGRESS,
-  });
-  await verifySessionStagesSeeder.run(1, {
     name: VerifySessionStageEnum.COMPLETED,
   });
   await verifySessionStagesSeeder.run(1, {

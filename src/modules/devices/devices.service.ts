@@ -11,6 +11,10 @@ import { DeviceEntity } from '~/db/entities/device.entity';
 import Criteria from '~/utils/criteria';
 import { DeviceCreatePayload } from './devices.dto';
 
+export class DeviceCreateOptions extends DeviceCreatePayload {
+  userAgent: string;
+  hostname: string;
+}
 @Injectable()
 export class DevicesService {
   public constructor(
@@ -19,7 +23,7 @@ export class DevicesService {
   ) {}
 
   public async create(
-    options: DeviceCreatePayload,
+    options: DeviceCreateOptions,
     entityManager?: EntityManager
   ): Promise<DeviceEntity> {
     const manager = this.getManager(entityManager);
