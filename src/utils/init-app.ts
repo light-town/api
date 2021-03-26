@@ -22,7 +22,7 @@ export const initApp = (
     app.use(
       csurf({
         cookie: true,
-        value: req => <string>req.headers['x-csrf-token'],
+        value: req => req?.headers['x-csrf-token'] || req?.cookies['_csrf'],
       })
     );
 
