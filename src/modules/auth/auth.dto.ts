@@ -126,7 +126,7 @@ export class SignInResponse {
     description: 'The multi-factor authorization type',
     enum: () => MFATypesEnum,
   })
-  @IsEnum(MFATypesEnum, { message: '' })
+  @IsEnum(MFATypesEnum)
   mfaType: MFATypesEnum;
 }
 
