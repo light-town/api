@@ -12,7 +12,7 @@ import PushNotificationEntity from '~/db/entities/push-notification.entity';
 import DevicesService from '../devices/devices.service';
 import { Payload, PushNotificationStageEnum } from './push-notifications.dto';
 import PushNotificationsGateway from './push-notifications.gateway';
-import Criteria from '~/utils/criteria';
+import Criteria from '~/common/criteria';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import DeviceEntity from '~/db/entities/device.entity';
 

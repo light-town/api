@@ -8,7 +8,9 @@ export const createTestingE2EModule = async () => {
     imports: [TypeOrmModule.forRoot(), PushNotificationsModule],
   }).compile();
 
-  const app = await initApp(moduleFixture.createNestApplication());
+  const app = await initApp(moduleFixture.createNestApplication(), {
+    useWS: true,
+  });
   await app.init();
 
   return app;

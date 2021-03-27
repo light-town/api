@@ -1,27 +1,32 @@
-import { TestingModule } from '@nestjs/testing';
+import { INestApplication } from '@nestjs/common';
 import { DeviceCreatePayload, OS } from '../devices.dto';
 import DevicesService from '../devices.service';
 import createTestingModule from './helpers/createTestingModule';
 import * as faker from 'faker';
-import DevicesController from '../devices.controller';
-import { NotFoundException } from '@nestjs/common';
+import Api from './helpers/api';
 
 describe('[Devices Module] ...', () => {
-  let moduleFixture: TestingModule;
+  let api: Api;
+  let app: INestApplication;
   let devicesService: DevicesService;
-  let devicesController: DevicesController;
 
   beforeAll(async () => {
-    moduleFixture = await createTestingModule();
+    app = await createTestingModule();
 
-    devicesService = moduleFixture.get<DevicesService>(DevicesService);
-    devicesController = moduleFixture.get<DevicesController>(DevicesController);
+    api = new Api(app);
+
+    devicesService = app.get<DevicesService>(DevicesService);
   });
 
   afterEach(() => {
     jest.clearAllMocks();
     jest.restoreAllMocks();
   });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
   it('should create new device', async () => {
     const TEST_DEVICE = {
       id: faker.random.uuid(),
@@ -32,22 +37,20 @@ describe('[Devices Module] ...', () => {
     const TEST_PAYLOAD: DeviceCreatePayload = {
       os: TEST_DEVICE.os,
     };
-    const TEST_HOSTNAME = faker.internet.ip();
-    const TEST_USER_AGENT = faker.internet.userAgent();
-    const TEST_REQ: any = {
-      header: jest.fn(),
-      ip: `some-trash:${TEST_HOSTNAME}`,
-    };
-
-    TEST_REQ.header.mockReturnValueOnce(TEST_USER_AGENT);
+    const TEST_HOSTNAME = '127.0.0.1';
+    const TEST_USER_AGENT = undefined;
 
     const createDeviceFunc = jest
       .spyOn(devicesService, 'create')
       .mockReturnValueOnce(<any>TEST_DEVICE);
 
-    const device = await devicesController.createDevice(TEST_REQ, TEST_PAYLOAD);
+    const response = await api.createDevice(TEST_PAYLOAD);
 
-    expect(device).toStrictEqual({ deviceUuid: TEST_DEVICE.id });
+    expect(response.status).toEqual(201);
+    expect(response.body).toStrictEqual({
+      data: { deviceUuid: TEST_DEVICE.id },
+      statusCode: 201,
+    });
 
     expect(createDeviceFunc).toBeCalledTimes(1);
     expect(createDeviceFunc).toBeCalledWith({
@@ -55,6 +58,34 @@ describe('[Devices Module] ...', () => {
       userAgent: TEST_USER_AGENT,
       hostname: TEST_HOSTNAME,
     });
+  });
+
+  it('should throw validation error when os is null', async () => {
+    const TEST_DEVICE = {
+      id: faker.random.uuid(),
+      os: OS.ANDROID,
+      userAgent: faker.internet.userAgent(),
+      hostname: faker.random.word(),
+    };
+    const TEST_PAYLOAD: DeviceCreatePayload = {
+      os: null,
+    };
+
+    const createDeviceFunc = jest
+      .spyOn(devicesService, 'create')
+      .mockReturnValueOnce(<any>TEST_DEVICE);
+
+    const response = await api.createDevice(TEST_PAYLOAD);
+
+    expect(response.status).toEqual(400);
+    expect(response.body).toStrictEqual({
+      error: {
+        type: 'Validation Error',
+        properties: { os: ['The os must be a valid enum value'] },
+      },
+      statusCode: 400,
+    });
+    expect(createDeviceFunc).toBeCalledTimes(0);
   });
 
   it('should return all devices', async () => {
@@ -82,9 +113,13 @@ describe('[Devices Module] ...', () => {
       .spyOn(devicesService, 'find')
       .mockReturnValueOnce(<any>TEST_DEVICES);
 
-    const device = await devicesController.getAllDevices();
+    const response = await api.getDevices();
 
-    expect(device).toStrictEqual(TEST_DEVICES);
+    expect(response.status).toEqual(200);
+    expect(response.body).toStrictEqual({
+      data: TEST_DEVICES,
+      statusCode: 200,
+    });
 
     expect(findDevicesFunc).toBeCalledTimes(1);
     expect(findDevicesFunc).toBeCalledWith({
@@ -107,9 +142,13 @@ describe('[Devices Module] ...', () => {
       .spyOn(devicesService, 'findOne')
       .mockReturnValueOnce(<any>TEST_DEVICE);
 
-    const device = await devicesController.getDevice(TEST_DEVICE.id);
+    const response = await api.getDevice(TEST_DEVICE.id);
 
-    expect(device).toStrictEqual(TEST_DEVICE);
+    expect(response.status).toEqual(200);
+    expect(response.body).toStrictEqual({
+      data: TEST_DEVICE,
+      statusCode: 200,
+    });
 
     expect(findOneDeviceFunc).toBeCalledTimes(1);
     expect(findOneDeviceFunc).toBeCalledWith({
@@ -127,13 +166,16 @@ describe('[Devices Module] ...', () => {
       .spyOn(devicesService, 'findOne')
       .mockReturnValueOnce(undefined);
 
-    try {
-      await devicesController.getDevice(TEST_DEVICE_ID);
-    } catch (e) {
-      expect(e).toStrictEqual(
-        new NotFoundException('The device was not found')
-      );
-    }
+    const response = await api.getDevice(TEST_DEVICE_ID);
+
+    expect(response.status).toEqual(404);
+    expect(response.body).toStrictEqual({
+      error: {
+        type: 'Not Found',
+        message: 'The device was not found',
+      },
+      statusCode: 404,
+    });
 
     expect(findOneDeviceFunc).toBeCalledTimes(1);
     expect(findOneDeviceFunc).toBeCalledWith({
@@ -159,7 +201,12 @@ describe('[Devices Module] ...', () => {
 
     const updateDeviceFunc = jest.spyOn(devicesService, 'update');
 
-    await devicesController.deleteDevice(TEST_DEVICE.id);
+    const response = await api.removeDevice(TEST_DEVICE.id);
+
+    expect(response.status).toEqual(200);
+    expect(response.body).toStrictEqual({
+      statusCode: 200,
+    });
 
     expect(findOneDeviceFunc).toBeCalledTimes(1);
     expect(findOneDeviceFunc).toBeCalledWith({
@@ -179,19 +226,22 @@ describe('[Devices Module] ...', () => {
     );
   });
 
-  it('should throw error while deleting when device was not found', async () => {
+  it('should throw error while deleting device when device was not found', async () => {
     const TEST_DEVICE_ID = faker.random.uuid();
     const findOneDeviceFunc = jest
       .spyOn(devicesService, 'findOne')
       .mockReturnValueOnce(undefined);
 
-    try {
-      await devicesController.deleteDevice(TEST_DEVICE_ID);
-    } catch (e) {
-      expect(e).toStrictEqual(
-        new NotFoundException('The device was not found')
-      );
-    }
+    const response = await api.removeDevice(TEST_DEVICE_ID);
+
+    expect(response.status).toEqual(404);
+    expect(response.body).toStrictEqual({
+      error: {
+        type: 'Not Found',
+        message: 'The device was not found',
+      },
+      statusCode: 404,
+    });
 
     expect(findOneDeviceFunc).toBeCalledTimes(1);
     expect(findOneDeviceFunc).toBeCalledWith({

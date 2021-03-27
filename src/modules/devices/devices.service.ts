@@ -8,11 +8,11 @@ import {
 } from 'typeorm';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { DeviceEntity } from '~/db/entities/device.entity';
-import Criteria from '~/utils/criteria';
+import Criteria from '~/common/criteria';
 import { DeviceCreatePayload } from './devices.dto';
 
 export class DeviceCreateOptions extends DeviceCreatePayload {
-  userAgent: string;
+  userAgent?: string;
   hostname: string;
 }
 @Injectable()

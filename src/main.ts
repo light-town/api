@@ -8,8 +8,10 @@ dotenv.config();
 
 async function bootstrap() {
   const app = initApp(await NestFactory.create(AppModule), {
-    usePrefix: true,
+    useCors: true,
     useCsurf: true,
+    usePrefix: true,
+    useWS: true,
   });
 
   const config = new DocumentBuilder()

@@ -2,21 +2,28 @@ import { INestApplication } from '@nestjs/common';
 import * as dotenv from 'dotenv';
 import * as csurf from 'csurf';
 import * as cookieParser from 'cookie-parser';
-import { DataFormatInterceptor } from './data.interceptor';
-import { WsAdapter } from '~/common/ws-adapter';
+import ResponseFormatInterceptor from '~/common/response-format.interceptor';
+import WsAdapter from '~/common/ws-adapter';
+import ValidationPipe from '~/common/validation/pipe';
+import ApiExceptionFilter from '~/common/api-exception-filter';
 
 dotenv.config();
 
 export const initApp = (
   app: INestApplication,
-  { usePrefix = false, useCsurf = false } = {}
+  { useCors = false, useCsurf = false, usePrefix = false, useWS = false } = {}
 ) => {
   app.use(cookieParser());
-  app.enableCors({
-    credentials: true,
-    origin: process.env.FRONTEND_URL,
-  });
-  app.useGlobalInterceptors(new DataFormatInterceptor());
+
+  if (useCors)
+    app.enableCors({
+      credentials: true,
+      origin: process.env.FRONTEND_URL,
+    });
+
+  app.useGlobalFilters(new ApiExceptionFilter());
+  app.useGlobalInterceptors(new ResponseFormatInterceptor());
+  app.useGlobalPipes(new ValidationPipe());
 
   if (useCsurf)
     app.use(
@@ -28,7 +35,7 @@ export const initApp = (
 
   if (usePrefix) app.setGlobalPrefix('/v1/api');
 
-  app.useWebSocketAdapter(new WsAdapter(app));
+  if (useWS) app.useWebSocketAdapter(new WsAdapter(app));
 
   return app;
 };

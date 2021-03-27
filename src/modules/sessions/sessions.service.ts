@@ -16,7 +16,7 @@ import AccountsService from '../accounts/accounts.service';
 import { DevicesService } from '../devices/devices.service';
 import { SessionCreateDTO, VerifySessionStageEnum } from './sessions.dto';
 import VerifySessionStageEntity from '~/db/entities/verify-session-stage.entity';
-import Criteria from '~/utils/criteria';
+import Criteria from '~/common/criteria';
 
 @Injectable()
 export class SessionsService {

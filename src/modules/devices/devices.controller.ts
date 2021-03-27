@@ -3,7 +3,6 @@ import {
   Controller,
   Delete,
   Get,
-  NotFoundException,
   Param,
   Post,
   Req,
@@ -22,6 +21,7 @@ import {
 } from './devices.dto';
 import DeviceEntity from '~/db/entities/device.entity';
 import { Request } from 'express';
+import { ApiNotFoundException } from '~/common/exceptions';
 
 @ApiTags('/devices')
 @Controller('/devices')
@@ -67,7 +67,7 @@ export class DevicesController {
       },
     });
 
-    if (!device) throw new NotFoundException(`The device was not found`);
+    if (!device) throw new ApiNotFoundException(`The device was not found`);
 
     return device;
   }
@@ -86,7 +86,7 @@ export class DevicesController {
       },
     });
 
-    if (!device) throw new NotFoundException(`The device was not found`);
+    if (!device) throw new ApiNotFoundException(`The device was not found`);
 
     await this.devicesService.update(
       {

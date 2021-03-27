@@ -12,7 +12,7 @@ import {
 import { Observable, fromEvent, EMPTY } from 'rxjs';
 import { mergeMap, filter } from 'rxjs/operators';
 
-export class WsAdapter extends AbstractWsAdapter {
+export default class WsAdapter extends AbstractWsAdapter {
   private readonly logger: Logger;
 
   constructor(private readonly appOrHttpServer: INestApplicationContext) {
