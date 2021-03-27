@@ -11,7 +11,10 @@ import GatewayNamespacesEnum from '~/common/gateway-namespaces';
 import DevicesService from '../devices/devices.service';
 import SessionsService from '../sessions/sessions.service';
 import { VerifySessionStageEnum } from '../sessions/sessions.dto';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  ApiConflictException,
+  ApiNotFoundException,
+} from '~/common/exceptions';
 
 export enum AuthEventsEnum {
   ERROR = 'ERROR',
@@ -56,7 +59,7 @@ export class AuthGateway
       },
     });
 
-    if (!device) throw new NotFoundException('The device was not found');
+    if (!device) throw new ApiNotFoundException('The device was not found');
 
     const session = await this.sessionsService.findOne({
       select: ['id', 'verifyStage'],
@@ -72,10 +75,10 @@ export class AuthGateway
       },
     });
 
-    if (!session) throw new NotFoundException('The session was not found');
+    if (!session) throw new ApiNotFoundException('The session was not found');
 
     if (session.verifyStage?.name !== VerifySessionStageEnum.REQUIRED)
-      throw new BadRequestException(
+      throw new ApiConflictException(
         'The session verify is already completed or not require at all'
       );
 
@@ -110,7 +113,7 @@ export class AuthGateway
       },
     });
 
-    if (!session) throw new NotFoundException(`The session was not found`);
+    if (!session) throw new ApiNotFoundException(`The session was not found`);
 
     for (const [client, config] of this.connectedDevices) {
       if (config.sessionUuid === session.id) {

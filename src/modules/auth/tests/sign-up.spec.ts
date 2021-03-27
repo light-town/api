@@ -10,7 +10,7 @@ import { getConnectionToken } from '@nestjs/typeorm';
 import UsersService from '~/modules/users/users.service';
 import AccountsService from '~/modules/accounts/accounts.service';
 import DevicesService from '~/modules/devices/devices.service';
-import { NotFoundException } from '@nestjs/common';
+import { ApiNotFoundException } from '~/common/exceptions';
 
 dotenv.config();
 
@@ -127,7 +127,7 @@ describe('[Unit] [Auth Module] ...', () => {
     jest.spyOn(devicesService, 'findOne').mockResolvedValueOnce(undefined);
 
     expect(authService.signUp(payload)).rejects.toStrictEqual(
-      new NotFoundException(`The device was not found`)
+      new ApiNotFoundException(`The device was not found`)
     );
   });
 });

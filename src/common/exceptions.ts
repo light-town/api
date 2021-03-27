@@ -24,3 +24,18 @@ export class ApiUnauthorizedException extends ApiException {
     super({ type: 'Unauthorized', message }, HttpStatus.UNAUTHORIZED);
   }
 }
+
+export class ApiConflictException extends ApiException {
+  constructor(message?: string) {
+    super({ type: 'Conflict', message }, HttpStatus.CONFLICT);
+  }
+}
+
+export class ApiInternalServerException extends ApiException {
+  constructor(message?: string) {
+    super(
+      { type: 'InternalServer', message },
+      HttpStatus.INTERNAL_SERVER_ERROR
+    );
+  }
+}

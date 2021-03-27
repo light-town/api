@@ -1,10 +1,4 @@
-import {
-  forwardRef,
-  Inject,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindManyOptions, FindOneOptions, Repository } from 'typeorm';
 import PushNotificationStageEntity from '~/db/entities/push-notification-stage.entity';
@@ -15,6 +9,10 @@ import PushNotificationsGateway from './push-notifications.gateway';
 import Criteria from '~/common/criteria';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import DeviceEntity from '~/db/entities/device.entity';
+import {
+  ApiInternalServerException,
+  ApiNotFoundException,
+} from '~/common/exceptions';
 
 @Injectable()
 export class PushNotificationsService {
@@ -33,7 +31,7 @@ export class PushNotificationsService {
     payload: Payload
   ): Promise<PushNotificationEntity> {
     if (!(await this.existsRecipient(deviceId)))
-      throw new NotFoundException('The recipient device was not found');
+      throw new ApiNotFoundException('The recipient device was not found');
 
     const createdStage = await this.pushNotificationStagesRepository.findOne({
       select: ['id'],
@@ -41,7 +39,7 @@ export class PushNotificationsService {
     });
 
     if (!createdStage)
-      throw new InternalServerErrorException(
+      throw new ApiInternalServerException(
         `The '${PushNotificationStageEnum.CREATED}' push notification stage was not found`
       );
 
@@ -86,7 +84,7 @@ export class PushNotificationsService {
     });
 
     if (!pushNotification)
-      throw new NotFoundException(`The push notification was not found`);
+      throw new ApiNotFoundException(`The push notification was not found`);
 
     const arrivedStage = await this.findOneStage({
       select: ['id'],
@@ -96,7 +94,7 @@ export class PushNotificationsService {
     });
 
     if (!arrivedStage)
-      throw new InternalServerErrorException(
+      throw new ApiInternalServerException(
         `The '${PushNotificationStageEnum.ARRIVED}' push notification stage was not found`
       );
 

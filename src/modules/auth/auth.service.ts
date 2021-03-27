@@ -2,7 +2,6 @@ import {
   ForbiddenException,
   Injectable,
   InternalServerErrorException,
-  NotFoundException,
 } from '@nestjs/common';
 import {
   SignUpPayload,
@@ -25,6 +24,10 @@ import * as uuid from 'uuid';
 import { JwtService } from '@nestjs/jwt';
 import { VerifySessionStageEnum } from '../sessions/sessions.dto';
 import AuthGateway from './auth.gateway';
+import {
+  ApiInternalServerException,
+  ApiNotFoundException,
+} from '~/common/exceptions';
 
 export const SESSION_EXPIRES_AT = 10 * 60 * 1000; // 10 minutes
 @Injectable()
@@ -50,7 +53,7 @@ export class AuthService {
         manager
       );
 
-      if (!device) throw new NotFoundException(`The device was not found`);
+      if (!device) throw new ApiNotFoundException(`The device was not found`);
 
       const user = await this.usersService.create(
         {
@@ -207,7 +210,7 @@ export class AuthService {
       },
     });
 
-    if (!session) throw new NotFoundException(`The session was not found`);
+    if (!session) throw new ApiNotFoundException(`The session was not found`);
 
     if (session.verifyStage.name !== VerifySessionStageEnum.REQUIRED)
       return {
@@ -222,7 +225,7 @@ export class AuthService {
       },
     });
 
-    if (!device) throw new NotFoundException(`The device was not found`);
+    if (!device) throw new ApiNotFoundException(`The device was not found`);
 
     if (device.id === session.deviceId) {
       throw new ForbiddenException(
@@ -236,7 +239,7 @@ export class AuthService {
     });
 
     if (!verifyStage)
-      throw new InternalServerErrorException(
+      throw new ApiInternalServerException(
         `The '${VerifySessionStageEnum.COMPLETED}' session verify stage was not found`
       );
 

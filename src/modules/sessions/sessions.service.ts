@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   EntityManager,
@@ -17,6 +13,10 @@ import { DevicesService } from '../devices/devices.service';
 import { SessionCreateDTO, VerifySessionStageEnum } from './sessions.dto';
 import VerifySessionStageEntity from '~/db/entities/verify-session-stage.entity';
 import Criteria from '~/common/criteria';
+import {
+  ApiInternalServerException,
+  ApiNotFoundException,
+} from '~/common/exceptions';
 
 @Injectable()
 export class SessionsService {
@@ -43,7 +43,7 @@ export class SessionsService {
       manager
     );
 
-    if (!account) throw new NotFoundException(`The account was not found`);
+    if (!account) throw new ApiNotFoundException(`The account was not found`);
 
     const device = await this.devicesService.findOne(
       {
@@ -53,7 +53,7 @@ export class SessionsService {
       manager
     );
 
-    if (!device) throw new NotFoundException(`The device was not found`);
+    if (!device) throw new ApiNotFoundException(`The device was not found`);
 
     const verifyStage = await this.verifySessionStageRepository.findOne({
       select: ['id'],
@@ -64,7 +64,7 @@ export class SessionsService {
     });
 
     if (!verifyStage)
-      throw new InternalServerErrorException(
+      throw new ApiInternalServerException(
         `The '${VerifySessionStageEnum.REQUIRED}' verify session stage was not found`
       );
 

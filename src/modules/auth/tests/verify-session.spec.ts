@@ -6,11 +6,11 @@ import { TestingModule } from '@nestjs/testing';
 import SessionsService from '~/modules/sessions/sessions.service';
 import { VerifySessionStageEnum } from '~/modules/sessions/sessions.dto';
 import { VerifySessionPayload } from '../auth.dto';
-import {
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
 import DevicesService from '~/modules/devices/devices.service';
+import {
+  ApiInternalServerException,
+  ApiNotFoundException,
+} from '~/common/exceptions';
 
 dotenv.config();
 
@@ -162,7 +162,7 @@ describe('[Unit] [Auth Module] ...', () => {
       await authService.verifySession(payload);
     } catch (e) {
       expect(e).toStrictEqual(
-        new NotFoundException('The session was not found')
+        new ApiNotFoundException('The session was not found')
       );
     }
 
@@ -269,7 +269,7 @@ describe('[Unit] [Auth Module] ...', () => {
       await authService.verifySession(payload);
     } catch (e) {
       expect(e).toStrictEqual(
-        new InternalServerErrorException(
+        new ApiInternalServerException(
           `The '${VerifySessionStageEnum.COMPLETED}' session verify stage was not found`
         )
       );

@@ -5,15 +5,15 @@ import createTestingModule from './helpers/createTestingModule';
 import * as faker from 'faker';
 import { PushNotificationStageEnum } from '../push-notifications.dto';
 import { Repository } from 'typeorm';
-import {
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
 import PushNotificationStageEntity from '~/db/entities/push-notification-stage.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import PushNotificationEntity from '~/db/entities/push-notification.entity';
 import DevicesService from '~/modules/devices/devices.service';
 import DeviceEntity from '~/db/entities/device.entity';
+import {
+  ApiInternalServerException,
+  ApiNotFoundException,
+} from '~/common/exceptions';
 
 describe('[Push Notifications] ...', () => {
   let moduleFixture: TestingModule;
@@ -143,7 +143,7 @@ describe('[Push Notifications] ...', () => {
       await pushNotificationsService.send(TEST_DEVICE.id, TEST_EVENT_PAYLOAD);
     } catch (e) {
       expect(e).toStrictEqual(
-        new NotFoundException(`The recipient device was not found`)
+        new ApiNotFoundException(`The recipient device was not found`)
       );
     }
 
@@ -185,7 +185,7 @@ describe('[Push Notifications] ...', () => {
       await pushNotificationsService.send(TEST_DEVICE.id, TEST_EVENT_PAYLOAD);
     } catch (e) {
       expect(e).toStrictEqual(
-        new InternalServerErrorException(
+        new ApiInternalServerException(
           `The '${PushNotificationStageEnum.CREATED}' push notification stage was not found`
         )
       );
@@ -382,7 +382,7 @@ describe('[Push Notifications] ...', () => {
       await pushNotificationsService.confirm(TEST_PUSH_NOTIFICATION.id);
     } catch (e) {
       expect(e).toStrictEqual(
-        new NotFoundException(`The push notification was not found`)
+        new ApiNotFoundException(`The push notification was not found`)
       );
     }
 
@@ -419,7 +419,7 @@ describe('[Push Notifications] ...', () => {
       await pushNotificationsService.confirm(TEST_PUSH_NOTIFICATION.id);
     } catch (e) {
       expect(e).toStrictEqual(
-        new InternalServerErrorException(
+        new ApiInternalServerException(
           `The '${PushNotificationStageEnum.ARRIVED}' push notification stage was not found`
         )
       );

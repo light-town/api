@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   EntityManager,
@@ -6,6 +6,7 @@ import {
   FindOneOptions,
   Repository,
 } from 'typeorm';
+import { ApiNotFoundException } from '~/common/exceptions';
 import { AccountEntity } from '~/db/entities/account.entity';
 import MFATypeEntity from '~/db/entities/mfa-type.entity';
 import { UserEntity } from '~/db/entities/user.entity';
@@ -37,7 +38,7 @@ export class AccountsService {
       manager
     );
 
-    if (!user) throw new NotFoundException(`The user was not found`);
+    if (!user) throw new ApiNotFoundException(`The user was not found`);
 
     const mfaTypeName = payload.mfaType || MFATypesEnum.NONE;
 
@@ -46,7 +47,7 @@ export class AccountsService {
       where: { name: mfaTypeName },
     });
 
-    if (!mfaType) throw new NotFoundException(`The MFA type was not found`);
+    if (!mfaType) throw new ApiNotFoundException(`The MFA type was not found`);
 
     return await manager.save(
       manager.create(AccountEntity, {

@@ -164,9 +164,11 @@ describe('[E2E] [Auth Module] ...', () => {
 
       expect(response.status).toEqual(404);
       expect(response.body).toStrictEqual({
+        error: {
+          type: 'Not Found',
+          message: 'The device was not found',
+        },
         statusCode: 404,
-        error: 'Not Found',
-        message: 'The device was not found',
       });
 
       const users = connection.getRepository(UserEntity);

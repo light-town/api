@@ -7,12 +7,12 @@ import createTestingModule from './helpers/createTestingModule';
 import * as faker from 'faker';
 import { PushNotificationStageEnum } from '../push-notifications.dto';
 import { In } from 'typeorm';
-import {
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
 import GatewayNamespacesEnum from '~/common/gateway-namespaces';
 import * as WebSocket from 'ws';
+import {
+  ApiInternalServerException,
+  ApiNotFoundException,
+} from '~/common/exceptions';
 
 jest.mock('ws', () => function () {});
 
@@ -152,7 +152,7 @@ describe('[Push Notifications] ...', () => {
       });
     } catch (e) {
       expect(e).toStrictEqual(
-        new InternalServerErrorException(
+        new ApiInternalServerException(
           `The '${PushNotificationStageEnum.CREATED}' and '${PushNotificationStageEnum.SENT}' push notification stages were not found`
         )
       );
@@ -338,7 +338,7 @@ describe('[Push Notifications] ...', () => {
       await pushNotificationsGateway.send(TEST_PUSH_NOTIFICATION.id);
     } catch (e) {
       expect(e).toStrictEqual(
-        new NotFoundException(`The push notification was not found`)
+        new ApiNotFoundException(`The push notification was not found`)
       );
     }
 
@@ -369,7 +369,7 @@ describe('[Push Notifications] ...', () => {
       await pushNotificationsGateway.send(TEST_PUSH_NOTIFICATION.id);
     } catch (e) {
       expect(e).toStrictEqual(
-        new NotFoundException(`The client device is not connected`)
+        new ApiNotFoundException(`The client device is not connected`)
       );
     }
 
@@ -408,7 +408,7 @@ describe('[Push Notifications] ...', () => {
       await pushNotificationsGateway.send(TEST_PUSH_NOTIFICATION.id);
     } catch (e) {
       expect(e).toStrictEqual(
-        new InternalServerErrorException(
+        new ApiInternalServerException(
           `The '${PushNotificationStageEnum.SENT}' push notification stage was not found`
         )
       );

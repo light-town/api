@@ -1,6 +1,9 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { TestingModule } from '@nestjs/testing';
 import * as faker from 'faker';
+import {
+  ApiConflictException,
+  ApiNotFoundException,
+} from '~/common/exceptions';
 import GatewayNamespacesEnum from '~/common/gateway-namespaces';
 import DevicesService from '~/modules/devices/devices.service';
 import { VerifySessionStageEnum } from '~/modules/sessions/sessions.dto';
@@ -129,7 +132,7 @@ describe('[Auth Gateway] ...', () => {
       );
     } catch (e) {
       expect(e).toStrictEqual(
-        new NotFoundException('The device was not found')
+        new ApiNotFoundException('The device was not found')
       );
     }
 
@@ -179,7 +182,7 @@ describe('[Auth Gateway] ...', () => {
       );
     } catch (e) {
       expect(e).toStrictEqual(
-        new NotFoundException('The session was not found')
+        new ApiNotFoundException('The session was not found')
       );
     }
 
@@ -243,7 +246,7 @@ describe('[Auth Gateway] ...', () => {
       );
     } catch (e) {
       expect(e).toStrictEqual(
-        new BadRequestException(
+        new ApiConflictException(
           'The session verify is already completed or not require at all'
         )
       );
@@ -434,7 +437,7 @@ describe('[Auth Gateway] ...', () => {
       await authGateway.updatedSessionVerifyStage(<any>TEST_SESSION);
     } catch (e) {
       expect(e).toStrictEqual(
-        new NotFoundException('The session was not found')
+        new ApiNotFoundException('The session was not found')
       );
     }
 

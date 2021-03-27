@@ -1,9 +1,4 @@
-import {
-  forwardRef,
-  Inject,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { forwardRef, Inject } from '@nestjs/common';
 import {
   MessageBody,
   WebSocketGateway,
@@ -17,6 +12,10 @@ import GatewayNamespacesEnum from '~/common/gateway-namespaces';
 import { PushNotificationStageEnum } from './push-notifications.dto';
 import PushNotificationsService from './push-notifications.service';
 import AbstractGateway from '~/common/abstract-gateway';
+import {
+  ApiInternalServerException,
+  ApiNotFoundException,
+} from '~/common/exceptions';
 
 export enum PushNotificationEventsEnum {
   ERROR = 'ERROR',
@@ -122,7 +121,7 @@ export class PushNotificationsGateway
     });
 
     if (!stages.length)
-      throw new InternalServerErrorException(
+      throw new ApiInternalServerException(
         `The '${PushNotificationStageEnum.CREATED}' and '${PushNotificationStageEnum.SENT}' push notification stages were not found`
       );
 
@@ -146,14 +145,14 @@ export class PushNotificationsGateway
     });
 
     if (!pushNotification)
-      throw new NotFoundException(`The push notification was not found`);
+      throw new ApiNotFoundException(`The push notification was not found`);
 
     const client = this.findClientByDeviceId(
       pushNotification.recipientDeviceId
     );
 
     if (!client)
-      throw new NotFoundException(`The client device is not connected`);
+      throw new ApiNotFoundException(`The client device is not connected`);
 
     const sentStage = await this.pushNotificationsService.findOneStage({
       select: ['id'],
@@ -163,7 +162,7 @@ export class PushNotificationsGateway
     });
 
     if (!sentStage)
-      throw new InternalServerErrorException(
+      throw new ApiInternalServerException(
         `The '${PushNotificationStageEnum.SENT}' push notification stage was not found`
       );
 
