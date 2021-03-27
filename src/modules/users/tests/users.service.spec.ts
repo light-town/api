@@ -1,25 +1,31 @@
+import { INestApplication } from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import * as faker from 'faker';
-import UserEntity from '~/db/entities/user.entity';
-import { UsersService } from '../users.service';
 import { FindManyOptions, FindOneOptions, Repository } from 'typeorm';
+import UserEntity from '~/db/entities/user.entity';
+import UsersService from '../users.service';
 import createTestingModule from './helpers/createTestingModule';
 
 describe('[Users Module] ...', () => {
+  let app: INestApplication;
   let usersService: UsersService;
   let usersRepository: Repository<UserEntity>;
 
   beforeAll(async () => {
-    const moduleFixture = await createTestingModule();
+    const app = await createTestingModule();
 
-    usersService = moduleFixture.get<UsersService>(UsersService);
-    usersRepository = moduleFixture.get<Repository<UserEntity>>(
+    usersService = app.get<UsersService>(UsersService);
+    usersRepository = app.get<Repository<UserEntity>>(
       getRepositoryToken(UserEntity)
     );
   });
 
   afterEach(() => {
     jest.restoreAllMocks();
+  });
+
+  afterAll(async () => {
+    await app.close();
   });
 
   it('should create a user', async () => {
