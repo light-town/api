@@ -2,10 +2,10 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum } from '~/common/validation';
 
 export enum OS {
-  WINDOWS = 'WINDOWS',
-  LINUX = 'LINUX',
-  MACOS = 'MACOS',
-  ANDROID = 'ANDROID',
+  WINDOWS = 'Windows',
+  LINUX = 'Linux',
+  MACOS = 'Macintosh',
+  ANDROID = 'Android',
   IOS = 'IOS',
 }
 

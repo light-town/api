@@ -7,9 +7,10 @@ import { mockUsersService } from '../__mocks__/mockUsersService';
 import AccountsModule from '~/modules/accounts/accounts.module';
 import AccountEntity from '~/db/entities/account.entity';
 import MFATypeEntity from '~/db/entities/mfa-type.entity';
+import initApp from '~/utils/init-app';
 
-export const createTestingModule = () =>
-  Test.createTestingModule({
+export const createTestingModule = async () => {
+  const moduleFixture = await Test.createTestingModule({
     imports: [AccountsModule],
   })
     .overrideProvider(getRepositoryToken(UserEntity))
@@ -21,5 +22,11 @@ export const createTestingModule = () =>
     .overrideProvider(UsersService)
     .useFactory({ factory: mockUsersService })
     .compile();
+
+  const app = initApp(moduleFixture.createNestApplication());
+  await app.init();
+
+  return app;
+};
 
 export default createTestingModule;

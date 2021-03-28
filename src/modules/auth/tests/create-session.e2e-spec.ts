@@ -2,7 +2,7 @@ import { createTestingE2EModule } from './helpers/createTestingE2EModule';
 import { Connection } from 'typeorm';
 import { getConnectionToken } from '@nestjs/typeorm';
 import { Api } from './helpers/api';
-import { MFATypesEnum, SignInPayload } from '../auth.dto';
+import { MFATypesEnum, SessionCreatePayload } from '../auth.dto';
 import core from '@light-town/core';
 import * as faker from 'faker';
 import UserEntity from '~/db/entities/user.entity';
@@ -16,7 +16,7 @@ import initDB from './helpers/initDatabase';
 import MFATypeEntity from '~/db/entities/mfa-type.entity';
 import { OS } from '~/modules/devices/devices.dto';
 
-describe('[E2E] [Auth Module] ...', () => {
+describe('[Auth Module] [Service]...', () => {
   let connection: Connection;
   let app: INestApplication;
   let accountsService: AccountsService;
@@ -50,8 +50,8 @@ describe('[E2E] [Auth Module] ...', () => {
     await connection.close();
   });
 
-  describe('[Sign in] ...', () => {
-    it('should sign in', async () => {
+  describe('[Create Session] ...', () => {
+    it('should create session', async () => {
       const TEST_DEVICE_OP = OS.ANDROID;
       const TEST_DEVICE_HOSTNAME = faker.internet.ip();
       const TEST_DEVICE = await devicesService.create({
@@ -79,22 +79,21 @@ describe('[E2E] [Auth Module] ...', () => {
         verifier: TEST_SRP_VERIFIER.verifier,
       });
 
-      const payload: SignInPayload = {
+      const payload: SessionCreatePayload = {
         accountKey: TEST_ACCOUNT_KEY,
         deviceUuid: TEST_DEVICE.id,
       };
 
-      const response = await api.signIn(payload);
+      const response = await api.createSession(payload);
 
       expect(response.status).toEqual(201);
       expect(response.body).toStrictEqual({
-        statusCode: 201,
         data: {
-          salt: TEST_SRP_VERIFIER.salt,
           sessionUuid: response.body.data.sessionUuid,
+          salt: TEST_SRP_VERIFIER.salt,
           serverPublicEphemeral: response.body.data.serverPublicEphemeral,
-          mfaType: MFATypesEnum.NONE,
         },
+        statusCode: 201,
       });
 
       const users = connection.getRepository(UserEntity);

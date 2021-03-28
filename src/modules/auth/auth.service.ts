@@ -1,17 +1,11 @@
-import {
-  ForbiddenException,
-  Injectable,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import {
   SignUpPayload,
-  SignInPayload,
-  StartSessionPayload,
-  StartSessionResponse,
-  SignInResponse,
-  MFATypesEnum,
-  VerifySessionPayload,
-  VerifySessionResponse,
+  SessionCreatePayload,
+  SessionCreateResponse,
+  SessionStartPayload,
+  SessionStartResponse,
+  SessionVerifyResponse,
 } from './auth.dto';
 import core from '@light-town/core';
 import { AccountsService } from '../accounts/accounts.service';
@@ -20,11 +14,11 @@ import { Connection, MoreThan } from 'typeorm';
 import { InjectConnection } from '@nestjs/typeorm';
 import { SessionsService } from '../sessions/sessions.service';
 import DevicesService from '../devices/devices.service';
-import * as uuid from 'uuid';
 import { JwtService } from '@nestjs/jwt';
 import { VerifySessionStageEnum } from '../sessions/sessions.dto';
 import AuthGateway from './auth.gateway';
 import {
+  ApiConflictException,
   ApiInternalServerException,
   ApiNotFoundException,
 } from '~/common/exceptions';
@@ -75,7 +69,9 @@ export class AuthService {
     });
   }
 
-  public async signIn(options: SignInPayload): Promise<SignInResponse> {
+  public async createSession(
+    options: SessionCreatePayload
+  ): Promise<SessionCreateResponse> {
     const account = await this.accountsService.findOne({
       select: ['id', 'salt', 'verifier', 'mfaType'],
       where: { key: options.accountKey, isDeleted: false },
@@ -87,58 +83,38 @@ export class AuthService {
       },
     });
 
-    if (!account) {
-      return {
-        sessionUuid: uuid.v4(),
-        salt: core.common.generateRandomSalt(32),
-        serverPublicEphemeral: core.common.generateRandomSalt(32),
-        mfaType: MFATypesEnum.NONE,
-      };
-    }
+    if (!account) throw new ApiNotFoundException(`The account was not found`);
 
     const device = await this.devicesService.findOne({
       select: ['id'],
       where: { id: options.deviceUuid, isDeleted: false },
     });
 
-    if (!device) {
-      return {
-        sessionUuid: uuid.v4(),
-        salt: core.common.generateRandomSalt(32),
-        serverPublicEphemeral: core.common.generateRandomSalt(32),
-        mfaType: MFATypesEnum.NONE,
-      };
-    }
+    if (!device) throw new ApiNotFoundException(`The device was not found`);
 
     const ephemeral = core.srp.server.generateEphemeral(account.verifier);
 
-    return this.sessionsService
-      .create({
-        secret: ephemeral.secret,
-        accountId: account.id,
-        deviceId: device.id,
-      })
-      .then(session => ({
-        sessionUuid: session.id,
-        salt: account.salt,
-        serverPublicEphemeral: ephemeral.public,
-        mfaType: account.mfaType.name,
-      }))
-      .catch(() => ({
-        sessionUuid: uuid.v4(),
-        salt: core.common.generateRandomSalt(32),
-        serverPublicEphemeral: core.common.generateRandomSalt(32),
-        mfaType: MFATypesEnum.NONE,
-      }));
+    const session = await this.sessionsService.create({
+      secret: ephemeral.secret,
+      accountId: account.id,
+      deviceId: device.id,
+    });
+
+    return {
+      sessionUuid: session.id,
+      salt: account.salt,
+      serverPublicEphemeral: ephemeral.public,
+    };
   }
 
   public async startSession(
-    options: StartSessionPayload
-  ): Promise<StartSessionResponse> {
+    sessionUuid: string,
+    options: SessionStartPayload
+  ): Promise<SessionStartResponse> {
     const sessionEntity = await this.sessionsService.findOne({
       select: ['id', 'secret', 'accountId', 'verifyStage'],
       where: {
-        id: options.sessionUuid,
+        id: sessionUuid,
         isDeleted: false,
       },
       join: {
@@ -150,10 +126,7 @@ export class AuthService {
     });
 
     if (!sessionEntity)
-      return {
-        token: this.jwtService.sign({ userId: undefined }, { expiresIn: 1 }),
-        serverSessionProof: uuid.v4(),
-      };
+      throw new ApiNotFoundException(`The session was not found`);
 
     const account = await this.accountsService.findOne({
       select: ['id', 'salt', 'key', 'verifier', 'mfaType'],
@@ -169,9 +142,8 @@ export class AuthService {
     if (
       sessionEntity.verifyStage.name !== VerifySessionStageEnum.NOT_REQUIRED &&
       sessionEntity.verifyStage.name !== VerifySessionStageEnum.COMPLETED
-    ) {
-      throw new ForbiddenException(`The session was not verified`);
-    }
+    )
+      throw new ApiConflictException(`The session was not verified`);
 
     const session = core.srp.server.deriveSession(
       sessionEntity.secret,
@@ -199,12 +171,13 @@ export class AuthService {
   }
 
   public async verifySession(
-    payload: VerifySessionPayload
-  ): Promise<VerifySessionResponse> {
+    sessionUuid: string,
+    deviceUuid: string
+  ): Promise<SessionVerifyResponse> {
     const session = await this.sessionsService.findOne({
       select: ['id', 'deviceId', 'verifyStage'],
       where: {
-        id: payload.sessionUuid,
+        id: sessionUuid,
         isDeleted: false,
         expiresAt: MoreThan(new Date()),
       },
@@ -220,7 +193,7 @@ export class AuthService {
     const device = await this.devicesService.findOne({
       select: ['id'],
       where: {
-        id: payload.deviceUuid,
+        id: deviceUuid,
         isDeleted: false,
       },
     });
@@ -228,7 +201,7 @@ export class AuthService {
     if (!device) throw new ApiNotFoundException(`The device was not found`);
 
     if (device.id === session.deviceId) {
-      throw new ForbiddenException(
+      throw new ApiConflictException(
         `The device to verify the session should be other than the device that created the session`
       );
     }

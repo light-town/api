@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { VerifySessionStageEnum } from '../sessions/sessions.dto';
-import { IsString, IsNotEmpty, IsOptional, IsEnum } from '~/common/validation';
+import { IsString, IsNotEmpty, IsOptional } from '~/common/validation';
+
 export class SignUpPayload {
   @ApiProperty({
     description: 'The unique account key',
@@ -51,7 +52,7 @@ export class SignUpPayload {
   deviceUuid: string;
 }
 
-export class SignInPayload {
+export class SessionCreatePayload {
   @ApiProperty({
     description: 'The account key',
     required: true,
@@ -68,15 +69,7 @@ export class SignInPayload {
   deviceUuid: string;
 }
 
-export class StartSessionPayload {
-  @ApiProperty({
-    description: 'The unique id of session',
-    required: true,
-  })
-  @IsString()
-  @IsNotEmpty()
-  sessionUuid: string;
-
+export class SessionStartPayload {
   @ApiProperty({
     description: 'The client public ephemeral key',
     required: true,
@@ -100,39 +93,26 @@ export enum MFATypesEnum {
   ONE_TIME_PASSWORD = 'ONE_TIME_PASSWORD',
 }
 
-export class SignInResponse {
+export class SessionCreateResponse {
   @ApiProperty({
     description: 'The unique session id',
   })
-  @IsString()
-  @IsNotEmpty()
   sessionUuid: string;
 
   @ApiProperty({
     description: 'The verifier of SRP key',
   })
-  @IsString()
-  @IsNotEmpty()
   salt: string;
 
   @ApiProperty({
     description: 'The server public ephemeral key',
   })
-  @IsString()
-  @IsNotEmpty()
   serverPublicEphemeral: string;
-
-  @ApiProperty({
-    description: 'The multi-factor authorization type',
-    enum: () => MFATypesEnum,
-  })
-  @IsEnum(MFATypesEnum)
-  mfaType: MFATypesEnum;
 }
 
-export class StartSessionResponse {
+export class SessionStartResponse {
   @ApiProperty({
-    description: 'The JWT token. Expires in 10 minutes',
+    description: 'The JWT token that expires in 10 minutes',
   })
   token: string;
 
@@ -142,19 +122,16 @@ export class StartSessionResponse {
   serverSessionProof: string;
 }
 
-export class VerifySessionPayload {
-  @ApiProperty({
-    description: 'The unique session uuid',
-  })
-  sessionUuid: string;
-
+export class SessionVerifyPayload {
   @ApiProperty({
     description: 'The unique device uuid that verify session',
   })
+  @IsString()
+  @IsNotEmpty()
   deviceUuid: string;
 }
 
-export class VerifySessionResponse {
+export class SessionVerifyResponse {
   @ApiProperty({
     description: 'The current stage of session verifying',
     enum: () => VerifySessionStageEnum,

@@ -8,28 +8,34 @@ import { createTestingModule } from './helpers/createTestingModule';
 import { UsersService } from '~/modules/users/users.service';
 import core from '@light-town/core';
 import MFATypeEntity from '~/db/entities/mfa-type.entity';
+import { INestApplication } from '@nestjs/common';
 
 describe('[Auth Module] ...', () => {
+  let app: INestApplication;
   let accountsService: AccountsService;
   let usersService: UsersService;
   let acoountsRepository: Repository<AccountEntity>;
   let mfaTypesRepository: Repository<MFATypeEntity>;
 
   beforeAll(async () => {
-    const moduleFixture = await createTestingModule();
+    app = await createTestingModule();
 
-    accountsService = moduleFixture.get<AccountsService>(AccountsService);
-    acoountsRepository = moduleFixture.get<Repository<AccountEntity>>(
+    accountsService = app.get<AccountsService>(AccountsService);
+    acoountsRepository = app.get<Repository<AccountEntity>>(
       getRepositoryToken(AccountEntity)
     );
-    mfaTypesRepository = moduleFixture.get<Repository<MFATypeEntity>>(
+    mfaTypesRepository = app.get<Repository<MFATypeEntity>>(
       getRepositoryToken(MFATypeEntity)
     );
-    usersService = moduleFixture.get<UsersService>(UsersService);
+    usersService = app.get<UsersService>(UsersService);
   });
 
   afterEach(() => {
     jest.restoreAllMocks();
+  });
+
+  afterAll(async () => {
+    await app.close();
   });
 
   it('should create user account', async () => {

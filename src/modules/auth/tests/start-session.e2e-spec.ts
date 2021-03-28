@@ -13,7 +13,7 @@ import initDB from './helpers/initDatabase';
 import { VerifySessionStageEnum } from '~/modules/sessions/sessions.dto';
 import { OS } from '~/modules/devices/devices.dto';
 
-describe('[E2E] [Auth Module] ...', () => {
+describe('[Auth Module] [Controller]...', () => {
   let connection: Connection;
   let app: INestApplication;
   let devicesService: DevicesService;
@@ -76,7 +76,7 @@ describe('[E2E] [Auth Module] ...', () => {
     });
 
     it('should start session', async () => {
-      const signInResponse = await api.signIn({
+      const createSessionResponse = await api.createSession({
         accountKey: TEST_ACCOUNT_KEY,
         deviceUuid: TEST_DEVICE.id,
       });
@@ -85,7 +85,7 @@ describe('[E2E] [Auth Module] ...', () => {
         body: {
           data: { salt, sessionUuid, serverPublicEphemeral },
         },
-      } = signInResponse;
+      } = createSessionResponse;
 
       const initSession = await sessionsService.findOne({
         where: { id: sessionUuid },
@@ -113,8 +113,7 @@ describe('[E2E] [Auth Module] ...', () => {
         { verifyStageId: verifyStage.id }
       );
 
-      const startSessionResponse = await api.startSession({
-        sessionUuid,
+      const startSessionResponse = await api.startSession(sessionUuid, {
         clientPublicEphemeralKey: ephemeralPairKeys.public,
         clientSessionProofKey: session.proof,
       });

@@ -34,7 +34,7 @@ export class ApiConflictException extends ApiException {
 export class ApiInternalServerException extends ApiException {
   constructor(message?: string) {
     super(
-      { type: 'InternalServer', message },
+      { type: 'Internal Server Error', message },
       HttpStatus.INTERNAL_SERVER_ERROR
     );
   }

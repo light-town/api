@@ -1,9 +1,9 @@
 import * as request from 'supertest';
 import { INestApplication } from '@nestjs/common';
 import {
-  SignInPayload,
+  SessionCreatePayload,
+  SessionStartPayload,
   SignUpPayload,
-  StartSessionPayload,
 } from '~/modules/auth/auth.dto';
 
 export class Api {
@@ -13,16 +13,18 @@ export class Api {
     this.handle = request(app.getHttpServer());
   }
 
-  signIn(payload: SignInPayload) {
-    return this.handle.post('/auth/sign-in').send(payload);
-  }
-
   signUp(payload: SignUpPayload) {
     return this.handle.post('/auth/sign-up').send(payload);
   }
 
-  startSession(payload: StartSessionPayload) {
-    return this.handle.post('/auth/start-session').send(payload);
+  createSession(payload: SessionCreatePayload) {
+    return this.handle.post('/auth/sessions').send(payload);
+  }
+
+  startSession(sessionUuid: string, payload: SessionStartPayload) {
+    return this.handle
+      .post(`/auth/sessions/${sessionUuid}/start`)
+      .send(payload);
   }
 }
 

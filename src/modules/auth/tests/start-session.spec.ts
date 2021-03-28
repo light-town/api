@@ -1,16 +1,18 @@
 import { AuthService } from '../auth.service';
 import { createTestingModule } from './helpers/createTestingModule';
 import core from '@light-town/core';
-import { MFATypesEnum, StartSessionPayload } from '../auth.dto';
+import { MFATypesEnum, SessionStartPayload } from '../auth.dto';
 import * as faker from 'faker';
 import * as uuid from 'uuid';
 import * as dotenv from 'dotenv';
 import { TestingModule } from '@nestjs/testing';
 import AccountsService from '~/modules/accounts/accounts.service';
 import SessionsService from '~/modules/sessions/sessions.service';
-import { JwtService } from '@nestjs/jwt';
-import { ForbiddenException } from '@nestjs/common';
 import { VerifySessionStageEnum } from '~/modules/sessions/sessions.dto';
+import {
+  ApiConflictException,
+  ApiNotFoundException,
+} from '~/common/exceptions';
 
 dotenv.config();
 
@@ -19,7 +21,6 @@ describe('[Unit] [Auth Module] ...', () => {
   let authService: AuthService;
   let accountsService: AccountsService;
   let sessionsService: SessionsService;
-  let jwtService: JwtService;
 
   beforeAll(async () => {
     moduleFixture = await createTestingModule();
@@ -27,7 +28,6 @@ describe('[Unit] [Auth Module] ...', () => {
     authService = moduleFixture.get<AuthService>(AuthService);
     accountsService = moduleFixture.get<AccountsService>(AccountsService);
     sessionsService = moduleFixture.get<SessionsService>(SessionsService);
-    jwtService = moduleFixture.get<JwtService>(JwtService);
   });
 
   afterEach(() => {
@@ -76,8 +76,7 @@ describe('[Unit] [Auth Module] ...', () => {
       TEST_SERVER_EPHEMERAL.public
     );
 
-    const payload: StartSessionPayload = {
-      sessionUuid: TEST_SESSION.id,
+    const payload: SessionStartPayload = {
       clientPublicEphemeralKey: TEST_CLIENT_EPHEMERAL.public,
       clientSessionProofKey: TEST_CLIENT_SESSION.proof,
     };
@@ -94,7 +93,7 @@ describe('[Unit] [Auth Module] ...', () => {
       .spyOn(sessionsService, 'update')
       .mockResolvedValueOnce(<any>{});
 
-    const response = await authService.startSession(payload);
+    const response = await authService.startSession(TEST_SESSION.id, payload);
 
     expect(response.serverSessionProof).toBeDefined();
     expect(uuid.validate(response.serverSessionProof)).toBeFalsy();
@@ -136,15 +135,14 @@ describe('[Unit] [Auth Module] ...', () => {
     );
   });
 
-  it('should return invalid session info when session was not found', async () => {
+  it('should throw error when session was not found', async () => {
     const TEST_SESSION = {
       id: faker.random.uuid(),
       secret: faker.random.uuid(),
       accountId: faker.random.uuid(),
     };
 
-    const payload: StartSessionPayload = {
-      sessionUuid: TEST_SESSION.id,
+    const payload: SessionStartPayload = {
       clientPublicEphemeralKey: faker.random.uuid(),
       clientSessionProofKey: faker.random.uuid(),
     };
@@ -153,13 +151,13 @@ describe('[Unit] [Auth Module] ...', () => {
       .spyOn(sessionsService, 'findOne')
       .mockResolvedValueOnce(undefined);
 
-    const response = await authService.startSession(payload);
-
-    expect(response.serverSessionProof).toBeDefined();
-    expect(uuid.validate(response.serverSessionProof)).toBeTruthy();
-    expect(
-      jwtService.verify(response.token, { secret: process.env.JWT_SECRET_KEY })
-    ).toBeDefined();
+    try {
+      await authService.startSession(TEST_SESSION.id, payload);
+    } catch (e) {
+      expect(e).toStrictEqual(
+        new ApiNotFoundException('The session was not found')
+      );
+    }
 
     expect(sessionFindOneFunc).toBeCalledTimes(1);
     expect(sessionFindOneFunc).toBeCalledWith({
@@ -178,7 +176,7 @@ describe('[Unit] [Auth Module] ...', () => {
     });
   });
 
-  it('should throw 403 error when the session was not verified', async () => {
+  it('should throw error when the session was not verified', async () => {
     const TEST_ACCOUNT_KEY = core.common.generateAccountKey({
       versionCode: 'A3',
       secret: core.common.generateCryptoRandomString(32),
@@ -206,8 +204,7 @@ describe('[Unit] [Auth Module] ...', () => {
       verifyStage: VerifySessionStageEnum.REQUIRED,
     };
 
-    const payload: StartSessionPayload = {
-      sessionUuid: TEST_SESSION.id,
+    const payload: SessionStartPayload = {
       clientPublicEphemeralKey: faker.random.uuid(),
       clientSessionProofKey: faker.random.uuid(),
     };
@@ -221,10 +218,10 @@ describe('[Unit] [Auth Module] ...', () => {
       .mockResolvedValueOnce(<any>TEST_ACCOUNT);
 
     try {
-      await authService.startSession(payload);
+      await authService.startSession(TEST_SESSION.id, payload);
     } catch (e) {
       expect(e).toStrictEqual(
-        new ForbiddenException(`The session was not verified`)
+        new ApiConflictException(`The session was not verified`)
       );
     }
 
@@ -274,8 +271,7 @@ describe('[Unit] [Auth Module] ...', () => {
       TEST_SERVER_EPHEMERAL.public
     );
 
-    const payload: StartSessionPayload = {
-      sessionUuid: TEST_SESSION.id,
+    const payload: SessionStartPayload = {
       clientPublicEphemeralKey: TEST_CLIENT_EPHEMERAL.public,
       clientSessionProofKey: TEST_CLIENT_SESSION.proof,
     };
@@ -292,7 +288,7 @@ describe('[Unit] [Auth Module] ...', () => {
       .spyOn(sessionsService, 'update')
       .mockResolvedValueOnce(<any>{});
 
-    await authService.startSession(payload);
+    await authService.startSession(TEST_SESSION.id, payload);
 
     expect(sessionFindOneFunc).toBeCalledTimes(1);
     expect(accountFindOneFunc).toBeCalledTimes(1);

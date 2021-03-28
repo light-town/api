@@ -5,7 +5,6 @@ import * as dotenv from 'dotenv';
 import { TestingModule } from '@nestjs/testing';
 import SessionsService from '~/modules/sessions/sessions.service';
 import { VerifySessionStageEnum } from '~/modules/sessions/sessions.dto';
-import { VerifySessionPayload } from '../auth.dto';
 import DevicesService from '~/modules/devices/devices.service';
 import {
   ApiInternalServerException,
@@ -65,11 +64,10 @@ describe('[Unit] [Auth Module] ...', () => {
       .spyOn(sessionsService, 'update')
       .mockResolvedValueOnce(<any>{});
 
-    const payload: VerifySessionPayload = {
-      sessionUuid: TEST_SESSION.id,
-      deviceUuid: TEST_DEVICE.id,
-    };
-    const response = await authService.verifySession(payload);
+    const response = await authService.verifySession(
+      TEST_SESSION.id,
+      TEST_DEVICE.id
+    );
 
     expect(response.stage).toEqual(VerifySessionStageEnum.COMPLETED);
 
@@ -100,7 +98,7 @@ describe('[Unit] [Auth Module] ...', () => {
     expect(findOneDeviceFunc).toBeCalledWith({
       select: ['id'],
       where: {
-        id: payload.deviceUuid,
+        id: TEST_DEVICE.id,
         isDeleted: false,
       },
     });
@@ -153,13 +151,8 @@ describe('[Unit] [Auth Module] ...', () => {
       .spyOn(sessionsService, 'update')
       .mockResolvedValueOnce(<any>{});
 
-    const payload: VerifySessionPayload = {
-      sessionUuid: TEST_SESSION.id,
-      deviceUuid: TEST_DEVICE.id,
-    };
-
     try {
-      await authService.verifySession(payload);
+      await authService.verifySession(TEST_SESSION.id, TEST_DEVICE.id);
     } catch (e) {
       expect(e).toStrictEqual(
         new ApiNotFoundException('The session was not found')
@@ -209,12 +202,9 @@ describe('[Unit] [Auth Module] ...', () => {
       .spyOn(sessionsService, 'update')
       .mockResolvedValueOnce(<any>{});
 
-    const payload: VerifySessionPayload = {
-      sessionUuid: TEST_SESSION.id,
-      deviceUuid: TEST_DEVICE.id,
-    };
-
-    expect(await authService.verifySession(payload)).toStrictEqual({
+    expect(
+      await authService.verifySession(TEST_SESSION.id, TEST_DEVICE.id)
+    ).toStrictEqual({
       stage: TEST_SESSION.verifyStage.name,
     });
 
@@ -260,13 +250,8 @@ describe('[Unit] [Auth Module] ...', () => {
       .spyOn(sessionsService, 'update')
       .mockResolvedValueOnce(<any>{});
 
-    const payload: VerifySessionPayload = {
-      sessionUuid: TEST_SESSION.id,
-      deviceUuid: TEST_DEVICE.id,
-    };
-
     try {
-      await authService.verifySession(payload);
+      await authService.verifySession(TEST_SESSION.id, TEST_DEVICE.id);
     } catch (e) {
       expect(e).toStrictEqual(
         new ApiInternalServerException(
@@ -279,7 +264,7 @@ describe('[Unit] [Auth Module] ...', () => {
     expect(findOneDeviceFunc).toBeCalledWith({
       select: ['id'],
       where: {
-        id: payload.deviceUuid,
+        id: TEST_DEVICE.id,
         isDeleted: false,
       },
     });

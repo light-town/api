@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Req } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Req } from '@nestjs/common';
 import {
   ApiTags,
   ApiCreatedResponse,
@@ -8,12 +8,12 @@ import {
 import { Request } from 'express';
 import {
   SignUpPayload,
-  SignInPayload,
-  StartSessionPayload,
-  SignInResponse,
-  StartSessionResponse,
-  VerifySessionPayload,
-  VerifySessionResponse,
+  SessionCreatePayload,
+  SessionCreateResponse,
+  SessionStartPayload,
+  SessionStartResponse,
+  SessionVerifyPayload,
+  SessionVerifyResponse,
   GetCsrfTokenResponse,
 } from './auth.dto';
 import { AuthService } from './auth.service';
@@ -30,28 +30,32 @@ export class AuthController {
     await this.authService.signUp(payload);
   }
 
-  @Post('sign-in')
-  @ApiCreatedResponse({ type: SignInResponse })
+  @Post('/sessions')
+  @ApiCreatedResponse({ type: SessionCreateResponse })
   @ApiNotFoundResponse()
-  public async signIn(@Body() payload: SignInPayload): Promise<SignInResponse> {
-    return this.authService.signIn(payload);
+  public async signIn(
+    @Body() payload: SessionCreatePayload
+  ): Promise<SessionCreateResponse> {
+    return this.authService.createSession(payload);
   }
 
-  @Post('start-session')
-  @ApiCreatedResponse({ type: StartSessionResponse })
+  @Post('/sessions/:sessionUuid/start')
+  @ApiCreatedResponse({ type: SessionStartResponse })
   @ApiNotFoundResponse()
   public async startSession(
-    @Body() payload: StartSessionPayload
-  ): Promise<StartSessionResponse> {
-    return this.authService.startSession(payload);
+    @Param('sessionUuid') sessionUuid: string,
+    @Body() payload: SessionStartPayload
+  ): Promise<SessionStartResponse> {
+    return this.authService.startSession(sessionUuid, payload);
   }
 
-  @Post('verify')
+  @Post('/session/:sessionUuid/verify')
   @ApiNotFoundResponse()
   public async verify(
-    @Body() payload: VerifySessionPayload
-  ): Promise<VerifySessionResponse> {
-    return this.authService.verifySession(payload);
+    @Param('sessionUuid') sessionUuid: string,
+    @Body() payload: SessionVerifyPayload
+  ): Promise<SessionVerifyResponse> {
+    return this.authService.verifySession(sessionUuid, payload.deviceUuid);
   }
 
   @Get('/csrf-token')

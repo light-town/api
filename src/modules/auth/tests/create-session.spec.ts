@@ -1,7 +1,7 @@
 import { AuthService } from '../auth.service';
 import { createTestingModule } from './helpers/createTestingModule';
 import core from '@light-town/core';
-import { MFATypesEnum, SignInPayload } from '../auth.dto';
+import { MFATypesEnum, SessionCreatePayload } from '../auth.dto';
 import * as faker from 'faker';
 import * as uuid from 'uuid';
 import * as dotenv from 'dotenv';
@@ -9,10 +9,11 @@ import { TestingModule } from '@nestjs/testing';
 import AccountsService from '~/modules/accounts/accounts.service';
 import SessionsService from '~/modules/sessions/sessions.service';
 import DevicesService from '~/modules/devices/devices.service';
+import { ApiNotFoundException } from '~/common/exceptions';
 
 dotenv.config();
 
-describe('[Unit] [Auth Module] ...', () => {
+describe('[Auth Module] [Service]...', () => {
   let moduleFixture: TestingModule;
   let authService: AuthService;
   let accountsService: AccountsService;
@@ -32,7 +33,7 @@ describe('[Unit] [Auth Module] ...', () => {
     jest.restoreAllMocks();
   });
 
-  it('should sign in', async () => {
+  it('should create session', async () => {
     const TEST_ACCOUNT = {
       id: faker.random.uuid(),
       key: core.common.generateAccountKey({
@@ -54,7 +55,7 @@ describe('[Unit] [Auth Module] ...', () => {
     const TEST_DEVICE_ID = faker.random.uuid();
     const TEST_DEVICE_UUID = faker.random.uuid();
 
-    const payload: SignInPayload = {
+    const payload: SessionCreatePayload = {
       accountKey: TEST_ACCOUNT.key,
       deviceUuid: TEST_DEVICE_UUID,
     };
@@ -75,7 +76,7 @@ describe('[Unit] [Auth Module] ...', () => {
       .spyOn(sessionsService, 'create')
       .mockResolvedValueOnce(<any>TEST_SESSION);
 
-    const response = await authService.signIn(payload);
+    const response = await authService.createSession(payload);
 
     expect(accountFindOneFunc).toBeCalledTimes(1);
     expect(accountFindOneFunc).toBeCalledWith({
@@ -107,14 +108,13 @@ describe('[Unit] [Auth Module] ...', () => {
       sessionUuid: response.sessionUuid,
       salt: TEST_ACCOUNT.salt,
       serverPublicEphemeral: response.serverPublicEphemeral,
-      mfaType: MFATypesEnum.NONE,
     });
     expect(response.serverPublicEphemeral).toBeDefined();
     expect(uuid.version(response.sessionUuid)).toEqual(4);
     expect(uuid.validate(response.sessionUuid)).toBeTruthy();
   });
 
-  it('should return random salt when account is not found', async () => {
+  it('should throw error when account is not found', async () => {
     const TEST_ACCOUNT = {
       id: faker.random.uuid(),
       key: core.common.generateAccountKey({
@@ -126,7 +126,7 @@ describe('[Unit] [Auth Module] ...', () => {
     };
     const TEST_DEVICE_UUID = faker.random.uuid();
 
-    const payload: SignInPayload = {
+    const payload: SessionCreatePayload = {
       accountKey: TEST_ACCOUNT.key,
       deviceUuid: TEST_DEVICE_UUID,
     };
@@ -135,7 +135,13 @@ describe('[Unit] [Auth Module] ...', () => {
       .spyOn(accountsService, 'findOne')
       .mockResolvedValueOnce(undefined);
 
-    const response = await authService.signIn(payload);
+    try {
+      await authService.createSession(payload);
+    } catch (e) {
+      expect(e).toStrictEqual(
+        new ApiNotFoundException('The account was not found')
+      );
+    }
 
     expect(accountFindOneFunc).toBeCalledTimes(1);
     expect(accountFindOneFunc).toBeCalledWith({
@@ -148,14 +154,9 @@ describe('[Unit] [Auth Module] ...', () => {
         },
       },
     });
-
-    expect(response.salt).not.toEqual(TEST_ACCOUNT.salt);
-    expect(response.serverPublicEphemeral).toBeDefined();
-    expect(uuid.version(response.sessionUuid)).toEqual(4);
-    expect(uuid.validate(response.sessionUuid)).toBeTruthy();
   });
 
-  it('should return random salt when device is not found', async () => {
+  it('should throw error when device is not found', async () => {
     const TEST_ACCOUNT = {
       id: faker.random.uuid(),
       key: core.common.generateAccountKey({
@@ -167,7 +168,7 @@ describe('[Unit] [Auth Module] ...', () => {
     };
     const TEST_DEVICE_UUID = faker.random.uuid();
 
-    const payload: SignInPayload = {
+    const payload: SessionCreatePayload = {
       accountKey: TEST_ACCOUNT.key,
       deviceUuid: TEST_DEVICE_UUID,
     };
@@ -180,7 +181,13 @@ describe('[Unit] [Auth Module] ...', () => {
       .spyOn(devicesService, 'findOne')
       .mockResolvedValueOnce(undefined);
 
-    const response = await authService.signIn(payload);
+    try {
+      await authService.createSession(payload);
+    } catch (e) {
+      expect(e).toStrictEqual(
+        new ApiNotFoundException('The device was not found')
+      );
+    }
 
     expect(accountFindOneFunc).toBeCalledTimes(1);
     expect(accountFindOneFunc).toBeCalledWith({
@@ -199,10 +206,5 @@ describe('[Unit] [Auth Module] ...', () => {
       select: ['id'],
       where: { id: TEST_DEVICE_UUID, isDeleted: false },
     });
-
-    expect(response.salt).not.toEqual(TEST_ACCOUNT.salt);
-    expect(response.serverPublicEphemeral).toBeDefined();
-    expect(uuid.version(response.sessionUuid)).toEqual(4);
-    expect(uuid.validate(response.sessionUuid)).toBeTruthy();
   });
 });
