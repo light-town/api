@@ -10,7 +10,7 @@ import AccountsService from '~/modules/accounts/accounts.service';
 import SessionsService from '~/modules/sessions/sessions.service';
 import { VerifySessionStageEnum } from '~/modules/sessions/sessions.dto';
 import {
-  ApiConflictException,
+  ApiForbiddenException,
   ApiNotFoundException,
 } from '~/common/exceptions';
 
@@ -221,7 +221,7 @@ describe('[Unit] [Auth Module] ...', () => {
       await authService.startSession(TEST_SESSION.id, payload);
     } catch (e) {
       expect(e).toStrictEqual(
-        new ApiConflictException(`The session was not verified`)
+        new ApiForbiddenException(`The session was not verified`)
       );
     }
 

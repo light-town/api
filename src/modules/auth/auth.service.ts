@@ -1,4 +1,20 @@
+import { Connection, MoreThan } from 'typeorm';
 import { Injectable } from '@nestjs/common';
+import { InjectConnection } from '@nestjs/typeorm';
+import { JwtService } from '@nestjs/jwt';
+import core from '@light-town/core';
+import {
+  ApiConflictException,
+  ApiForbiddenException,
+  ApiInternalServerException,
+  ApiNotFoundException,
+} from '~/common/exceptions';
+import AccountsService from '~/modules/accounts/accounts.service';
+import UsersService from '~/modules/users/users.service';
+import SessionsService from '~/modules/sessions/sessions.service';
+import DevicesService from '~/modules/devices/devices.service';
+import { VerifySessionStageEnum } from '~/modules/sessions/sessions.dto';
+import PushNotificationsService from '~/modules/push-notifications/push-notifications.service';
 import {
   SignUpPayload,
   SessionCreatePayload,
@@ -6,22 +22,9 @@ import {
   SessionStartPayload,
   SessionStartResponse,
   SessionVerifyResponse,
+  MFATypesEnum,
 } from './auth.dto';
-import core from '@light-town/core';
-import { AccountsService } from '../accounts/accounts.service';
-import { UsersService } from '../users/users.service';
-import { Connection, MoreThan } from 'typeorm';
-import { InjectConnection } from '@nestjs/typeorm';
-import { SessionsService } from '../sessions/sessions.service';
-import DevicesService from '../devices/devices.service';
-import { JwtService } from '@nestjs/jwt';
-import { VerifySessionStageEnum } from '../sessions/sessions.dto';
 import AuthGateway from './auth.gateway';
-import {
-  ApiConflictException,
-  ApiInternalServerException,
-  ApiNotFoundException,
-} from '~/common/exceptions';
 
 export const SESSION_EXPIRES_AT = 10 * 60 * 1000; // 10 minutes
 @Injectable()
@@ -34,7 +37,8 @@ export class AuthService {
     private readonly jwtService: JwtService,
     @InjectConnection()
     private readonly connection: Connection,
-    private readonly authGateway: AuthGateway
+    private readonly authGateway: AuthGateway,
+    private readonly pushNotificationsService: PushNotificationsService
   ) {}
 
   public async signUp(options: SignUpPayload): Promise<void> {
@@ -102,10 +106,58 @@ export class AuthService {
       deviceId: device.id,
     });
 
+    if (account.mfaType.name !== MFATypesEnum.NONE) {
+      const lastVerifiedSessionsByMobileDevices = (
+        await this.sessionsService.getLastVerifiedSessionsByMobileDevices(
+          account.id
+        )
+      ).filter(session => session.deviceId !== device.id);
+
+      if (!lastVerifiedSessionsByMobileDevices.length)
+        throw new ApiInternalServerException(`The verify device was not found`);
+
+      await this.pushNotificationsService.send(
+        lastVerifiedSessionsByMobileDevices[0].deviceId,
+        {
+          action: 'VerifySession',
+          sessionUuid: session.id,
+        }
+      );
+
+      return {
+        sessionUuid: session.id,
+        salt: account.salt,
+        serverPublicEphemeral: ephemeral.public,
+        sessionVerify: {
+          stage: VerifySessionStageEnum.REQUIRED,
+          MFAType: account.mfaType.name,
+        },
+      };
+    }
+
+    const verifyStage = await this.sessionsService.findOneVerifyStage({
+      select: ['id'],
+      where: { name: VerifySessionStageEnum.COMPLETED, isDeleted: false },
+    });
+
+    if (!verifyStage)
+      throw new ApiInternalServerException(
+        `The '${VerifySessionStageEnum.COMPLETED}' session verify stage was not found`
+      );
+
+    await this.sessionsService.update(
+      { id: session.id },
+      { verifyStageId: verifyStage.id }
+    );
+
     return {
       sessionUuid: session.id,
       salt: account.salt,
       serverPublicEphemeral: ephemeral.public,
+      sessionVerify: {
+        stage: VerifySessionStageEnum.NOT_REQUIRED,
+        MFAType: account.mfaType.name,
+      },
     };
   }
 
@@ -145,7 +197,7 @@ export class AuthService {
       sessionEntity.verifyStage.name !== VerifySessionStageEnum.NOT_REQUIRED &&
       sessionEntity.verifyStage.name !== VerifySessionStageEnum.COMPLETED
     )
-      throw new ApiConflictException(`The session was not verified`);
+      throw new ApiForbiddenException(`The session was not verified`);
 
     const session = core.srp.server.deriveSession(
       sessionEntity.secret,

@@ -8,6 +8,8 @@ import DeviceEntity from '~/db/entities/device.entity';
 import SessionEntity from '~/db/entities/session.entity';
 import MFATypeEntity from '~/db/entities/mfa-type.entity';
 import VerifySessionStageEntity from '~/db/entities/verify-session-stage.entity';
+import PushNotificationStageEntity from '~/db/entities/push-notification-stage.entity';
+import PushNotificationEntity from '~/db/entities/push-notification.entity';
 
 export const createTestingModule = () =>
   Test.createTestingModule({
@@ -24,6 +26,10 @@ export const createTestingModule = () =>
     .overrideProvider(getRepositoryToken(MFATypeEntity))
     .useFactory({ factory: mockRepository })
     .overrideProvider(getRepositoryToken(VerifySessionStageEntity))
+    .useFactory({ factory: mockRepository })
+    .overrideProvider(getRepositoryToken(PushNotificationEntity))
+    .useFactory({ factory: mockRepository })
+    .overrideProvider(getRepositoryToken(PushNotificationStageEntity))
     .useFactory({ factory: mockRepository })
     .overrideProvider(getConnectionToken())
     .useFactory({

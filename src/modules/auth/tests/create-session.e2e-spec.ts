@@ -15,6 +15,7 @@ import DevicesService from '~/modules/devices/devices.service';
 import initDB from './helpers/initDatabase';
 import MFATypeEntity from '~/db/entities/mfa-type.entity';
 import { OS } from '~/modules/devices/devices.dto';
+import { VerifySessionStageEnum } from '~/modules/sessions/sessions.dto';
 
 describe('[Auth Module] [Service]...', () => {
   let connection: Connection;
@@ -92,6 +93,10 @@ describe('[Auth Module] [Service]...', () => {
           sessionUuid: response.body.data.sessionUuid,
           salt: TEST_SRP_VERIFIER.salt,
           serverPublicEphemeral: response.body.data.serverPublicEphemeral,
+          sessionVerify: {
+            MFAType: MFATypesEnum.NONE,
+            stage: VerifySessionStageEnum.NOT_REQUIRED,
+          },
         },
         statusCode: 201,
       });

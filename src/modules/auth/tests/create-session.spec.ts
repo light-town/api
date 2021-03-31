@@ -10,6 +10,7 @@ import AccountsService from '~/modules/accounts/accounts.service';
 import SessionsService from '~/modules/sessions/sessions.service';
 import DevicesService from '~/modules/devices/devices.service';
 import { ApiNotFoundException } from '~/common/exceptions';
+import { VerifySessionStageEnum } from '~/modules/sessions/sessions.dto';
 
 dotenv.config();
 
@@ -76,6 +77,10 @@ describe('[Auth Module] [Service]...', () => {
       .spyOn(sessionsService, 'create')
       .mockResolvedValueOnce(<any>TEST_SESSION);
 
+    const findOneVerifyStageFunc = jest
+      .spyOn(sessionsService, 'findOneVerifyStage')
+      .mockResolvedValueOnce(<any>{ id: faker.datatype.uuid() });
+
     const response = await authService.createSession(payload);
 
     expect(accountFindOneFunc).toBeCalledTimes(1);
@@ -108,10 +113,20 @@ describe('[Auth Module] [Service]...', () => {
       sessionUuid: response.sessionUuid,
       salt: TEST_ACCOUNT.salt,
       serverPublicEphemeral: response.serverPublicEphemeral,
+      sessionVerify: {
+        stage: VerifySessionStageEnum.NOT_REQUIRED,
+        MFAType: TEST_ACCOUNT.mfaType.name,
+      },
     });
     expect(response.serverPublicEphemeral).toBeDefined();
     expect(uuid.version(response.sessionUuid)).toEqual(4);
     expect(uuid.validate(response.sessionUuid)).toBeTruthy();
+
+    expect(findOneVerifyStageFunc).toBeCalledTimes(1);
+    expect(findOneVerifyStageFunc).toBeCalledWith({
+      select: ['id'],
+      where: { name: VerifySessionStageEnum.COMPLETED, isDeleted: false },
+    });
   });
 
   it('should throw error when account is not found', async () => {

@@ -4,8 +4,8 @@ import {
   OnGatewayDisconnect,
   WebSocketGateway,
 } from '@nestjs/websockets';
-import AbstractGateway from '~/common/abstract-gateway';
 import * as WebSocket from 'ws';
+import AbstractGateway from '~/common/abstract-gateway';
 import SubscribeEvent from '~/common/subscribe-event';
 import GatewayNamespacesEnum from '~/common/gateway-namespaces';
 import DevicesService from '../devices/devices.service';

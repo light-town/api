@@ -17,6 +17,7 @@ import {
   ApiInternalServerException,
   ApiNotFoundException,
 } from '~/common/exceptions';
+import { OS } from '../devices/devices.dto';
 
 @Injectable()
 export class SessionsService {
@@ -76,6 +77,28 @@ export class SessionsService {
         verifyStageId: verifyStage.id,
       })
     );
+  }
+
+  public getLastVerifiedSessionsByMobileDevices(accountId: string) {
+    return this.sessionsRepository
+      .createQueryBuilder('sessions')
+      .leftJoin('sessions.device', 'devices')
+      .leftJoin('sessions.verifyStage', 'verifyStages')
+      .where('devices.is_deleted = :deviceIsDeleted', {
+        deviceIsDeleted: false,
+      })
+      .andWhere('devices.os in (:...os)', { os: [OS.ANDROID, OS.IOS] })
+      .andWhere('sessions.account_id = :accountId', { accountId })
+      .andWhere('sessions.is_deleted = :accountIsDeleted', {
+        accountIsDeleted: false,
+      })
+      .andWhere('verifyStages.name in (:...verifyStages)', {
+        verifyStages: [
+          VerifySessionStageEnum.COMPLETED,
+          VerifySessionStageEnum.NOT_REQUIRED,
+        ],
+      })
+      .getMany();
   }
 
   public find(

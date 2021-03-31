@@ -93,6 +93,20 @@ export enum MFATypesEnum {
   ONE_TIME_PASSWORD = 'ONE_TIME_PASSWORD',
 }
 
+export class SessionVerifyType {
+  @ApiProperty({
+    description: 'The stage of verifying session',
+    enum: VerifySessionStageEnum,
+  })
+  stage: VerifySessionStageEnum;
+
+  @ApiProperty({
+    description: 'The MFA type of account authorization',
+    enum: MFATypesEnum,
+  })
+  MFAType: MFATypesEnum;
+}
+
 export class SessionCreateResponse {
   @ApiProperty({
     description: 'The unique session id',
@@ -108,6 +122,11 @@ export class SessionCreateResponse {
     description: 'The server public ephemeral key',
   })
   serverPublicEphemeral: string;
+
+  @ApiProperty({
+    description: 'The process info of verifying session',
+  })
+  sessionVerify: SessionVerifyType;
 }
 
 export class SessionStartResponse {
@@ -134,7 +153,7 @@ export class SessionVerifyPayload {
 export class SessionVerifyResponse {
   @ApiProperty({
     description: 'The current stage of session verifying',
-    enum: () => VerifySessionStageEnum,
+    enum: VerifySessionStageEnum,
   })
   stage: VerifySessionStageEnum;
 }
