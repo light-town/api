@@ -11,6 +11,7 @@ import PushNotificationStagesSeeder, {
   PushNotificationStagesFactory,
 } from './push-notification-stages.seed';
 import { PushNotificationStageEnum } from '~/modules/push-notifications/push-notifications.dto';
+import AccountsSeeder, { AccountsFactory } from './accounts.seed';
 
 dotenv.config();
 
@@ -18,36 +19,84 @@ createConnection().then(async (connection: Connection) => {
   await connection.synchronize(true);
 
   const userSeeder = new UsersSeeder(new UsersFactory());
-  await userSeeder.run(10);
+  const users = await userSeeder.run(10);
+
+  console.log(users);
 
   const mfaTypesSeeder = new MFATypesSeeder(new MFATypesFactory());
-  await mfaTypesSeeder.run(1, { name: MFATypesEnum.NONE });
-  await mfaTypesSeeder.run(1, { name: MFATypesEnum.FINGERPRINT });
-  await mfaTypesSeeder.run(1, { name: MFATypesEnum.ONE_TIME_PASSWORD });
+  const noneMFAType = await mfaTypesSeeder.run(1, { name: MFATypesEnum.NONE });
+  console.log(noneMFAType);
+
+  const fingerprintMFAType = await mfaTypesSeeder.run(1, {
+    name: MFATypesEnum.FINGERPRINT,
+  });
+  console.log(fingerprintMFAType);
+
+  const optMFAType = await mfaTypesSeeder.run(1, {
+    name: MFATypesEnum.ONE_TIME_PASSWORD,
+  });
+  console.log(optMFAType);
 
   const verifySessionStagesSeeder = new VerifySessionStagesSeeder(
     new VerifySessionStagesFactory()
   );
-  await verifySessionStagesSeeder.run(1, {
-    name: VerifySessionStageEnum.REQUIRED,
-  });
-  await verifySessionStagesSeeder.run(1, {
-    name: VerifySessionStageEnum.COMPLETED,
-  });
-  await verifySessionStagesSeeder.run(1, {
-    name: VerifySessionStageEnum.NOT_REQUIRED,
-  });
+  console.log(
+    await verifySessionStagesSeeder.run(1, {
+      name: VerifySessionStageEnum.REQUIRED,
+    })
+  );
+
+  console.log(
+    await verifySessionStagesSeeder.run(1, {
+      name: VerifySessionStageEnum.COMPLETED,
+    })
+  );
+
+  console.log(
+    await verifySessionStagesSeeder.run(1, {
+      name: VerifySessionStageEnum.NOT_REQUIRED,
+    })
+  );
 
   const pushNotificationStagesSeeder = new PushNotificationStagesSeeder(
     new PushNotificationStagesFactory()
   );
-  await pushNotificationStagesSeeder.run(1, {
-    name: PushNotificationStageEnum.CREATED,
-  });
-  await pushNotificationStagesSeeder.run(1, {
-    name: PushNotificationStageEnum.SENT,
-  });
-  await pushNotificationStagesSeeder.run(1, {
-    name: PushNotificationStageEnum.ARRIVED,
-  });
+  console.log(
+    await pushNotificationStagesSeeder.run(1, {
+      name: PushNotificationStageEnum.CREATED,
+    })
+  );
+  console.log(
+    await pushNotificationStagesSeeder.run(1, {
+      name: PushNotificationStageEnum.SENT,
+    })
+  );
+  console.log(
+    await pushNotificationStagesSeeder.run(1, {
+      name: PushNotificationStageEnum.ARRIVED,
+    })
+  );
+
+  const accountsSeeder = new AccountsSeeder(new AccountsFactory());
+  console.log(
+    await accountsSeeder.run(1, {
+      userId: users[0].id,
+      mfaTypeId: noneMFAType[0].id,
+      password: '123',
+    })
+  );
+  console.log(
+    await accountsSeeder.run(1, {
+      userId: users[0].id,
+      mfaTypeId: fingerprintMFAType[0].id,
+      password: '123',
+    })
+  );
+  console.log(
+    await accountsSeeder.run(1, {
+      userId: users[0].id,
+      mfaTypeId: optMFAType[0].id,
+      password: '123',
+    })
+  );
 });
