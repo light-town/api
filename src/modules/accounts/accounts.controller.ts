@@ -5,7 +5,10 @@ import {
 } from '~/common/exceptions';
 import UsersService from '../users/users.service';
 import AccountsService from './accounts.service';
+import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { GetAccountResponse } from './accounts.dto';
 
+@ApiTags('/accounts')
 @Controller('/accounts')
 export default class AccountsController {
   public constructor(
@@ -13,8 +16,11 @@ export default class AccountsController {
     private readonly usersService: UsersService
   ) {}
 
+  @ApiOkResponse({ type: GetAccountResponse })
   @Get()
-  public async getAccount(@Query('key') accountKey: string = null) {
+  public async getAccount(
+    @Query('key') accountKey: string = null
+  ): Promise<GetAccountResponse> {
     const account = await this.accountsService.findOne({
       select: ['id', 'mfaType', 'userId'],
       where: { key: accountKey, isDeleted: false },
