@@ -45,16 +45,16 @@ describe('[Unit] [Auth Module] ...', () => {
       TEST_ACCOUNT_KEY,
       faker.random.word()
     );
-    const TEST_USER_ID = faker.random.uuid();
+    const TEST_USER_ID = faker.datatype.uuid();
     const TEST_USERNAME = faker.internet.userName();
-    const TEST_DEVICE_UUID = faker.random.uuid();
+    const TEST_DEVICE_UUID = faker.datatype.uuid();
 
     const payload: SignUpPayload = {
       accountKey: TEST_ACCOUNT_KEY,
       salt: TSET_SRP_VERIFIER.salt,
       verifier: TSET_SRP_VERIFIER.verifier,
       username: TEST_USERNAME,
-      deviceUuid: faker.random.uuid(),
+      deviceUuid: faker.datatype.uuid(),
     };
 
     jest
@@ -71,7 +71,7 @@ describe('[Unit] [Auth Module] ...', () => {
       .spyOn(usersService, 'create')
       .mockResolvedValueOnce(<any>{ id: TEST_USER_ID });
 
-    const TEST_ACCOUNT_ID = faker.random.uuid();
+    const TEST_ACCOUNT_ID = faker.datatype.uuid();
     const accountCreateFunc = jest
       .spyOn(accountsService, 'create')
       .mockResolvedValueOnce({ id: TEST_ACCOUNT_ID });
@@ -115,7 +115,7 @@ describe('[Unit] [Auth Module] ...', () => {
       salt: TSET_SRP_VERIFIER.salt,
       verifier: TSET_SRP_VERIFIER.verifier,
       username: TEST_USERNAME,
-      deviceUuid: faker.random.uuid(),
+      deviceUuid: faker.datatype.uuid(),
     };
 
     jest

@@ -91,14 +91,14 @@ describe('[Auth Module] [Controller]...', () => {
         where: { id: sessionUuid },
       });
 
-      const ephemeralPairKeys = core.srp.client.generateEphemeral();
+      const ephemeralPairKeys = core.srp.client.generateEphemeralKeyPair();
 
       const session = core.srp.client.deriveSession(
+        ephemeralPairKeys.secret,
+        serverPublicEphemeral,
         salt,
         TEST_ACCOUNT_KEY,
-        TEST_USER_PASSWORD,
-        ephemeralPairKeys.secret,
-        serverPublicEphemeral
+        TEST_SRP_VERIFIER.privateKey
       );
 
       const verifyStage = await sessionsService.findOneVerifyStage({

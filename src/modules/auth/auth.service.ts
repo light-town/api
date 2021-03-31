@@ -92,7 +92,9 @@ export class AuthService {
 
     if (!device) throw new ApiNotFoundException(`The device was not found`);
 
-    const ephemeral = core.srp.server.generateEphemeral(account.verifier);
+    const ephemeral = core.srp.server.generateEphemeralKeyPair(
+      account.verifier
+    );
 
     const session = await this.sessionsService.create({
       secret: ephemeral.secret,

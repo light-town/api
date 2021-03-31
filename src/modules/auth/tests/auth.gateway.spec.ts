@@ -36,10 +36,10 @@ describe('[Auth Gateway] ...', () => {
 
   it('should subscribe for updating a session status', async () => {
     const TEST_DEVICE = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
     };
     const TEST_SESSION = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       secret: faker.random.word(),
       expiresAt: new Date(Date.now()),
       deviceId: TEST_DEVICE.id,
@@ -48,7 +48,7 @@ describe('[Auth Gateway] ...', () => {
       },
     };
     const TEST_DEVICE_CLIENT = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       send: jest.fn(),
     };
 
@@ -103,10 +103,10 @@ describe('[Auth Gateway] ...', () => {
 
   it('should throw error while subscribe for updating a session status when device was not found', async () => {
     const TEST_DEVICE = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
     };
     const TEST_SESSION = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       secret: faker.random.word(),
       expiresAt: new Date(Date.now()),
       deviceId: TEST_DEVICE.id,
@@ -115,7 +115,7 @@ describe('[Auth Gateway] ...', () => {
       },
     };
     const TEST_DEVICE_CLIENT = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       send: jest.fn(),
     };
 
@@ -151,10 +151,10 @@ describe('[Auth Gateway] ...', () => {
 
   it('should throw error while subscribe for updating a session status when session was not found', async () => {
     const TEST_DEVICE = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
     };
     const TEST_SESSION = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       secret: faker.random.word(),
       expiresAt: new Date(Date.now()),
       deviceId: TEST_DEVICE.id,
@@ -163,7 +163,7 @@ describe('[Auth Gateway] ...', () => {
       },
     };
     const TEST_DEVICE_CLIENT = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       send: jest.fn(),
     };
 
@@ -215,10 +215,10 @@ describe('[Auth Gateway] ...', () => {
 
   it(`should throw error while subscribe for updating a session status when session status already ${VerifySessionStageEnum.COMPLETED} or ${VerifySessionStageEnum.NOT_REQUIRED}`, async () => {
     const TEST_DEVICE = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
     };
     const TEST_SESSION = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       secret: faker.random.word(),
       expiresAt: new Date(Date.now()),
       deviceId: TEST_DEVICE.id,
@@ -227,7 +227,7 @@ describe('[Auth Gateway] ...', () => {
       },
     };
     const TEST_DEVICE_CLIENT = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       send: jest.fn(),
     };
 
@@ -280,10 +280,10 @@ describe('[Auth Gateway] ...', () => {
   });
   it('should unsubscribe for updating a session status', async () => {
     const TEST_DEVICE = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
     };
     const TEST_SESSION = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       secret: faker.random.word(),
       expiresAt: new Date(Date.now()),
       deviceId: TEST_DEVICE.id,
@@ -292,7 +292,7 @@ describe('[Auth Gateway] ...', () => {
       },
     };
     const TEST_DEVICE_CLIENT = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       send: jest.fn(),
     };
 
@@ -316,10 +316,10 @@ describe('[Auth Gateway] ...', () => {
 
   it('should unsubscribe for updating a session status while client disconnecting', async () => {
     const TEST_DEVICE = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
     };
     const TEST_SESSION = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       secret: faker.random.word(),
       expiresAt: new Date(Date.now()),
       deviceId: TEST_DEVICE.id,
@@ -328,7 +328,7 @@ describe('[Auth Gateway] ...', () => {
       },
     };
     const TEST_DEVICE_CLIENT = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       send: jest.fn(),
     };
 
@@ -352,10 +352,10 @@ describe('[Auth Gateway] ...', () => {
 
   it('should send to all devices updated verify state session', async () => {
     const TEST_DEVICE = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
     };
     const TEST_SESSION = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       secret: faker.random.word(),
       expiresAt: new Date(Date.now()),
       deviceId: TEST_DEVICE.id,
@@ -364,7 +364,7 @@ describe('[Auth Gateway] ...', () => {
       },
     };
     const TEST_DEVICE_CLIENT = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       send: jest.fn(),
     };
 
@@ -403,10 +403,10 @@ describe('[Auth Gateway] ...', () => {
 
   it('should throw error while send to all devices updated verify state session when session was not found', async () => {
     const TEST_DEVICE = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
     };
     const TEST_SESSION = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       secret: faker.random.word(),
       expiresAt: new Date(Date.now()),
       deviceId: TEST_DEVICE.id,
@@ -415,7 +415,7 @@ describe('[Auth Gateway] ...', () => {
       },
     };
     const TEST_DEVICE_CLIENT = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       send: jest.fn(),
     };
 

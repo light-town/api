@@ -34,17 +34,17 @@ describe('[Unit] [Auth Module] ...', () => {
 
   it('should verify session', async () => {
     const TEST_DEVICE = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
     };
     const TEST_SESSION = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       verifyStage: {
         name: VerifySessionStageEnum.REQUIRED,
       },
     };
 
     const TEST_SESSION_VERIFY_STAGE = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
     };
 
     const findOneSessionFunc = jest
@@ -121,18 +121,18 @@ describe('[Unit] [Auth Module] ...', () => {
 
   it('should throw error when session was not found', async () => {
     const TEST_SESSION = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       verifyStage: {
         name: VerifySessionStageEnum.REQUIRED,
       },
     };
 
     const TEST_SESSION_VERIFY_STAGE = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
     };
 
     const TEST_DEVICE = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
     };
 
     const findOneSessionFunc = jest
@@ -176,18 +176,18 @@ describe('[Unit] [Auth Module] ...', () => {
 
   it(`should return current verify stage when session verify stage is not ${VerifySessionStageEnum.REQUIRED}`, async () => {
     const TEST_SESSION = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       verifyStage: {
         name: VerifySessionStageEnum.NOT_REQUIRED,
       },
     };
 
     const TEST_SESSION_VERIFY_STAGE = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
     };
 
     const TEST_DEVICE = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
     };
 
     const findOneSessionFunc = jest
@@ -224,14 +224,14 @@ describe('[Unit] [Auth Module] ...', () => {
 
   it(`should throw error when ${VerifySessionStageEnum.COMPLETED} session verify stage was not found`, async () => {
     const TEST_SESSION = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       verifyStage: {
         name: VerifySessionStageEnum.REQUIRED,
       },
     };
 
     const TEST_DEVICE = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
     };
 
     const findOneSessionFunc = jest

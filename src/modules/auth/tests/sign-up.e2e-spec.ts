@@ -138,7 +138,7 @@ describe('[E2E] [Auth Module] ...', () => {
     });
 
     it('should throw 404 error when device was not found', async () => {
-      const TEST_FAKE_DEVICE_UUID = faker.random.uuid();
+      const TEST_FAKE_DEVICE_UUID = faker.datatype.uuid();
 
       const TEST_USERNAME = faker.internet.userName();
       const TEST_USER_PASSWORD = faker.random.word();

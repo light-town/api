@@ -30,7 +30,7 @@ describe('[Users Module] ...', () => {
 
   it('should create a user', async () => {
     const TEST_USER_ENTITY: UserEntity = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       name: faker.internet.userName(),
       avatarUrl: faker.internet.avatar(),
       updatedAt: new Date(),
@@ -52,7 +52,7 @@ describe('[Users Module] ...', () => {
 
   it('should throw error when username is invalid', () => {
     const TEST_USER_ENTITY: UserEntity = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       name: faker.internet.userName(),
       avatarUrl: faker.internet.avatar(),
       updatedAt: new Date(),
@@ -71,13 +71,13 @@ describe('[Users Module] ...', () => {
   it('should find users', async () => {
     const TEST_FIND_OPTIONS: FindManyOptions<UserEntity> = {
       where: {
-        id: faker.random.uuid(),
+        id: faker.datatype.uuid(),
       },
     };
 
     const TEST_USERS_ENTITY: UserEntity[] = [
       {
-        id: faker.random.uuid(),
+        id: faker.datatype.uuid(),
         name: faker.internet.userName(),
         avatarUrl: faker.internet.avatar(),
         updatedAt: new Date(),
@@ -102,12 +102,12 @@ describe('[Users Module] ...', () => {
     const TEST_FIND_OPTIONS: FindOneOptions<UserEntity> = {
       select: ['id'],
       where: {
-        id: faker.random.uuid(),
+        id: faker.datatype.uuid(),
       },
     };
 
     const TEST_USER_ENTITY: UserEntity = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       name: faker.internet.userName(),
       avatarUrl: faker.internet.avatar(),
       updatedAt: new Date(),

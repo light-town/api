@@ -50,17 +50,17 @@ describe('[Push Notifications] ...', () => {
 
   it('should send a push notification', async () => {
     const TEST_DEVICE = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
     };
     const TEST_EVENT_PAYLOAD = {
       message: faker.random.word(),
     };
     const TEST_CREATED_STAGE: any = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       name: PushNotificationStageEnum.CREATED,
     };
     const TEST_PUSH_NOTIFICATION: any = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
     };
 
     const existsRecipientFunc = jest
@@ -115,7 +115,7 @@ describe('[Push Notifications] ...', () => {
 
   it('should throw error when exists recipient device was not found', async () => {
     const TEST_DEVICE = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
     };
     const TEST_EVENT_PAYLOAD = {
       message: faker.random.word(),
@@ -158,7 +158,7 @@ describe('[Push Notifications] ...', () => {
 
   it(`should throw error when ${PushNotificationStageEnum.CREATED} push notification stage was not found`, async () => {
     const TEST_DEVICE = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
     };
     const TEST_EVENT_PAYLOAD = {
       message: faker.random.word(),
@@ -207,17 +207,17 @@ describe('[Push Notifications] ...', () => {
 
   it('should just return new push notification when recipient device is not connected', async () => {
     const TEST_DEVICE = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
     };
     const TEST_EVENT_PAYLOAD = {
       message: faker.random.word(),
     };
     const TEST_CREATED_STAGE: any = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       name: PushNotificationStageEnum.CREATED,
     };
     const TEST_PUSH_NOTIFICATION: any = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
     };
 
     const existsRecipientFunc = jest
@@ -269,7 +269,7 @@ describe('[Push Notifications] ...', () => {
 
   it('should answer positive when checking exists recipient device', async () => {
     const TEST_DEVICE: DeviceEntity = new DeviceEntity();
-    TEST_DEVICE.id = faker.random.uuid();
+    TEST_DEVICE.id = faker.datatype.uuid();
 
     const findOneDeviceFunc = jest
       .spyOn(devicesService, 'findOne')
@@ -290,7 +290,7 @@ describe('[Push Notifications] ...', () => {
 
   it('should answer negative when checking not exists recipient device', async () => {
     const TEST_DEVICE: DeviceEntity = new DeviceEntity();
-    TEST_DEVICE.id = faker.random.uuid();
+    TEST_DEVICE.id = faker.datatype.uuid();
 
     const findOneDeviceFunc = jest
       .spyOn(devicesService, 'findOne')
@@ -311,11 +311,11 @@ describe('[Push Notifications] ...', () => {
 
   it('should confirm receiving push notification', async () => {
     const TEST_ARRIVED_STAGE: any = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       name: PushNotificationStageEnum.ARRIVED,
     };
     const TEST_PUSH_NOTIFICATION: any = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
     };
 
     const findOnePushNotificationFunc = jest
@@ -359,11 +359,11 @@ describe('[Push Notifications] ...', () => {
 
   it('should throw error while confirmimg receiving push notification when push notifiaction was not found', async () => {
     const TEST_ARRIVED_STAGE: any = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       name: PushNotificationStageEnum.ARRIVED,
     };
     const TEST_PUSH_NOTIFICATION: any = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
     };
 
     const findOnePushNotificationFunc = jest
@@ -400,7 +400,7 @@ describe('[Push Notifications] ...', () => {
 
   it(`should throw error while confirmimg receiving push notification when ${PushNotificationStageEnum.ARRIVED} push notification stage was not found`, async () => {
     const TEST_PUSH_NOTIFICATION: any = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
     };
 
     const findOnePushNotificationFunc = jest

@@ -45,7 +45,7 @@ describe('[Auth Module] ...', () => {
     });
 
     const TEST_USER: UserEntity = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       name: faker.internet.userName(),
       avatarUrl: faker.internet.avatar(),
       updatedAt: new Date(),
@@ -54,12 +54,12 @@ describe('[Auth Module] ...', () => {
     };
 
     const TEST_ACCOUNT: AccountEntity = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       key: TEST_ACCOUNT_KEY,
       userId: TEST_USER.id,
       salt: faker.random.word(),
       verifier: faker.random.word(),
-      mfaTypeId: faker.random.uuid(),
+      mfaTypeId: faker.datatype.uuid(),
       updatedAt: new Date(),
       createdAt: new Date(),
       isDeleted: false,

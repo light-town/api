@@ -29,7 +29,7 @@ describe('[Devices Module] ...', () => {
 
   it('should create new device', async () => {
     const TEST_DEVICE = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       os: OS.ANDROID,
       userAgent: faker.internet.userAgent(),
       hostname: faker.random.word(),
@@ -62,7 +62,7 @@ describe('[Devices Module] ...', () => {
 
   it('should throw validation error when os is null', async () => {
     const TEST_DEVICE = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       os: OS.ANDROID,
       userAgent: faker.internet.userAgent(),
       hostname: faker.random.word(),
@@ -91,19 +91,19 @@ describe('[Devices Module] ...', () => {
   it('should return all devices', async () => {
     const TEST_DEVICES = [
       {
-        id: faker.random.uuid(),
+        id: faker.datatype.uuid(),
         os: OS.ANDROID,
         userAgent: faker.internet.userAgent(),
         hostname: faker.random.word(),
       },
       {
-        id: faker.random.uuid(),
+        id: faker.datatype.uuid(),
         os: OS.ANDROID,
         userAgent: faker.internet.userAgent(),
         hostname: faker.random.word(),
       },
       {
-        id: faker.random.uuid(),
+        id: faker.datatype.uuid(),
         os: OS.ANDROID,
         userAgent: faker.internet.userAgent(),
         hostname: faker.random.word(),
@@ -132,7 +132,7 @@ describe('[Devices Module] ...', () => {
 
   it('should find one device', async () => {
     const TEST_DEVICE = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       os: OS.ANDROID,
       userAgent: faker.internet.userAgent(),
       hostname: faker.random.word(),
@@ -161,7 +161,7 @@ describe('[Devices Module] ...', () => {
   });
 
   it('should throw error while find one device when the device was not found', async () => {
-    const TEST_DEVICE_ID = faker.random.uuid();
+    const TEST_DEVICE_ID = faker.datatype.uuid();
     const findOneDeviceFunc = jest
       .spyOn(devicesService, 'findOne')
       .mockReturnValueOnce(undefined);
@@ -189,7 +189,7 @@ describe('[Devices Module] ...', () => {
 
   it('should detete device', async () => {
     const TEST_DEVICE = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       os: OS.ANDROID,
       userAgent: faker.internet.userAgent(),
       hostname: faker.random.word(),
@@ -227,7 +227,7 @@ describe('[Devices Module] ...', () => {
   });
 
   it('should throw error while deleting device when device was not found', async () => {
-    const TEST_DEVICE_ID = faker.random.uuid();
+    const TEST_DEVICE_ID = faker.datatype.uuid();
     const findOneDeviceFunc = jest
       .spyOn(devicesService, 'findOne')
       .mockReturnValueOnce(undefined);

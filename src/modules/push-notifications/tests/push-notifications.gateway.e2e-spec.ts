@@ -188,13 +188,13 @@ describe('[Push Notifications]', () => {
 
     const TEST_PAYLOADS = [
       {
-        type: faker.random.uuid(),
+        type: faker.datatype.uuid(),
       },
       {
-        type: faker.random.uuid(),
+        type: faker.datatype.uuid(),
       },
       {
-        type: faker.random.uuid(),
+        type: faker.datatype.uuid(),
       },
     ];
 

@@ -44,13 +44,13 @@ describe('[Unit] [Auth Module] ...', () => {
       TEST_ACCOUNT_KEY,
       TEST_USER_PASSWORD
     );
-    const TEST_CLIENT_EPHEMERAL = core.srp.client.generateEphemeral();
-    const TEST_SERVER_EPHEMERAL = core.srp.server.generateEphemeral(
+    const TEST_CLIENT_EPHEMERAL = core.srp.client.generateEphemeralKeyPair();
+    const TEST_SERVER_EPHEMERAL = core.srp.server.generateEphemeralKeyPair(
       TEST_CLIENT_VERIFIER.verifier
     );
 
     const TEST_ACCOUNT = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       key: TEST_ACCOUNT_KEY,
       salt: TEST_CLIENT_VERIFIER.salt,
       verifier: TEST_CLIENT_VERIFIER.verifier,
@@ -60,7 +60,7 @@ describe('[Unit] [Auth Module] ...', () => {
     };
 
     const TEST_SESSION = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       secret: TEST_SERVER_EPHEMERAL.secret,
       accountId: TEST_ACCOUNT.id,
       verifyStage: {
@@ -69,11 +69,11 @@ describe('[Unit] [Auth Module] ...', () => {
     };
 
     const TEST_CLIENT_SESSION = core.srp.client.deriveSession(
+      TEST_CLIENT_EPHEMERAL.secret,
+      TEST_SERVER_EPHEMERAL.public,
       TEST_ACCOUNT.salt,
       TEST_ACCOUNT_KEY,
-      TEST_USER_PASSWORD,
-      TEST_CLIENT_EPHEMERAL.secret,
-      TEST_SERVER_EPHEMERAL.public
+      TEST_CLIENT_VERIFIER.privateKey
     );
 
     const payload: SessionStartPayload = {
@@ -137,14 +137,14 @@ describe('[Unit] [Auth Module] ...', () => {
 
   it('should throw error when session was not found', async () => {
     const TEST_SESSION = {
-      id: faker.random.uuid(),
-      secret: faker.random.uuid(),
-      accountId: faker.random.uuid(),
+      id: faker.datatype.uuid(),
+      secret: faker.datatype.uuid(),
+      accountId: faker.datatype.uuid(),
     };
 
     const payload: SessionStartPayload = {
-      clientPublicEphemeralKey: faker.random.uuid(),
-      clientSessionProofKey: faker.random.uuid(),
+      clientPublicEphemeralKey: faker.datatype.uuid(),
+      clientSessionProofKey: faker.datatype.uuid(),
     };
 
     const sessionFindOneFunc = jest
@@ -188,7 +188,7 @@ describe('[Unit] [Auth Module] ...', () => {
     );
 
     const TEST_ACCOUNT = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       key: TEST_ACCOUNT_KEY,
       salt: TEST_CLIENT_VERIFIER.salt,
       verifier: TEST_CLIENT_VERIFIER.verifier,
@@ -198,15 +198,15 @@ describe('[Unit] [Auth Module] ...', () => {
     };
 
     const TEST_SESSION = {
-      id: faker.random.uuid(),
-      secret: faker.random.uuid(),
-      accountId: faker.random.uuid(),
+      id: faker.datatype.uuid(),
+      secret: faker.datatype.uuid(),
+      accountId: faker.datatype.uuid(),
       verifyStage: VerifySessionStageEnum.REQUIRED,
     };
 
     const payload: SessionStartPayload = {
-      clientPublicEphemeralKey: faker.random.uuid(),
-      clientSessionProofKey: faker.random.uuid(),
+      clientPublicEphemeralKey: faker.datatype.uuid(),
+      clientSessionProofKey: faker.datatype.uuid(),
     };
 
     const sessionFindOneFunc = jest
@@ -239,13 +239,13 @@ describe('[Unit] [Auth Module] ...', () => {
       TEST_ACCOUNT_KEY,
       TEST_USER_PASSWORD
     );
-    const TEST_CLIENT_EPHEMERAL = core.srp.client.generateEphemeral();
-    const TEST_SERVER_EPHEMERAL = core.srp.server.generateEphemeral(
+    const TEST_CLIENT_EPHEMERAL = core.srp.client.generateEphemeralKeyPair();
+    const TEST_SERVER_EPHEMERAL = core.srp.server.generateEphemeralKeyPair(
       TEST_CLIENT_VERIFIER.verifier
     );
 
     const TEST_ACCOUNT = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       key: TEST_ACCOUNT_KEY,
       salt: TEST_CLIENT_VERIFIER.salt,
       verifier: TEST_CLIENT_VERIFIER.verifier,
@@ -255,7 +255,7 @@ describe('[Unit] [Auth Module] ...', () => {
     };
 
     const TEST_SESSION = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       secret: TEST_SERVER_EPHEMERAL.secret,
       accountId: TEST_ACCOUNT.id,
       verifyStage: {
@@ -264,11 +264,11 @@ describe('[Unit] [Auth Module] ...', () => {
     };
 
     const TEST_CLIENT_SESSION = core.srp.client.deriveSession(
+      TEST_CLIENT_EPHEMERAL.secret,
+      TEST_SERVER_EPHEMERAL.public,
       TEST_ACCOUNT.salt,
       TEST_ACCOUNT_KEY,
-      TEST_USER_PASSWORD,
-      TEST_CLIENT_EPHEMERAL.secret,
-      TEST_SERVER_EPHEMERAL.public
+      TEST_CLIENT_VERIFIER.privateKey
     );
 
     const payload: SessionStartPayload = {

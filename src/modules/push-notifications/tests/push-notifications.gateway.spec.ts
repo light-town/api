@@ -42,19 +42,19 @@ describe('[Push Notifications] ...', () => {
   });
 
   it(`should subscribe to notify and send all push notifications`, async () => {
-    const TEST_DEVICE_ID = faker.random.uuid();
+    const TEST_DEVICE_ID = faker.datatype.uuid();
     const TEST_DEVICE_CLIENT: any = {
       send: jest.fn(),
       close: jest.fn(),
     };
     const TEST_STAGES: any = [
-      { id: faker.random.uuid(), name: PushNotificationStageEnum.CREATED },
-      { id: faker.random.uuid(), name: PushNotificationStageEnum.SENT },
+      { id: faker.datatype.uuid(), name: PushNotificationStageEnum.CREATED },
+      { id: faker.datatype.uuid(), name: PushNotificationStageEnum.SENT },
     ];
     const TEST_PUSH_NOTIFICATIONS: any = [
-      { id: faker.random.uuid() },
-      { id: faker.random.uuid() },
-      { id: faker.random.uuid() },
+      { id: faker.datatype.uuid() },
+      { id: faker.datatype.uuid() },
+      { id: faker.datatype.uuid() },
     ];
 
     const existsRecipientFunc = jest
@@ -133,7 +133,7 @@ describe('[Push Notifications] ...', () => {
   });
 
   it(`should throw error when '${PushNotificationStageEnum.CREATED}' and '${PushNotificationStageEnum.SENT}' push notification stages was not found`, async () => {
-    const TEST_DEVICE_ID = faker.random.uuid();
+    const TEST_DEVICE_ID = faker.datatype.uuid();
     const TEST_DEVICE_CLIENT: any = {
       send: jest.fn(),
       close: jest.fn(),
@@ -175,10 +175,10 @@ describe('[Push Notifications] ...', () => {
 
   it('should correctly unsubscribe from notifications', async () => {
     const TEST_DEVICE: any = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
     };
     const TEST_CLIENT_DEVICE: any = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       send: jest.fn(),
     };
 
@@ -197,19 +197,19 @@ describe('[Push Notifications] ...', () => {
 
   it('should correctly send push notification', async () => {
     const TEST_DEVICE: any = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
     };
     const TEST_CLIENT_DEVICE: any = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       send: jest.fn(),
     };
     const TEST_PUSH_NOTIFICATION: any = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       payload: {},
       recipientDeviceId: TEST_DEVICE.id,
     };
     const TEST_STAGE: any = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       name: PushNotificationStageEnum.SENT,
     };
 
@@ -269,7 +269,7 @@ describe('[Push Notifications] ...', () => {
 
   it('should find connected device', () => {
     const TEST_DEVICE = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
     };
     const TEST_CLIENT_DEVICE = new WebSocket('');
 
@@ -285,10 +285,10 @@ describe('[Push Notifications] ...', () => {
 
   it('should correctly find connected device', () => {
     const TEST_DEVICE = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
     };
     const TEST_CLIENT_DEVICE: any = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
     };
 
     (pushNotificationsGateway as any).connectedDevices.set(
@@ -302,10 +302,10 @@ describe('[Push Notifications] ...', () => {
   });
   it('should correctly delete client device from pool', () => {
     const TEST_DEVICE = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
     };
     const TEST_CLIENT_DEVICE: any = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
     };
 
     (pushNotificationsGateway as any).connectedDevices.set(
@@ -322,10 +322,10 @@ describe('[Push Notifications] ...', () => {
 
   it('should throw an error while sending a push notification that is not exists', async () => {
     const TEST_DEVICE: any = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
     };
     const TEST_PUSH_NOTIFICATION: any = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       payload: {},
       recipientDeviceId: TEST_DEVICE.id,
     };
@@ -353,10 +353,10 @@ describe('[Push Notifications] ...', () => {
 
   it('should throw error when send are being while client device not connected', async () => {
     const TEST_DEVICE: any = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
     };
     const TEST_PUSH_NOTIFICATION: any = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       payload: {},
       recipientDeviceId: TEST_DEVICE.id,
     };
@@ -384,13 +384,13 @@ describe('[Push Notifications] ...', () => {
 
   it(`should throw error when ${PushNotificationStageEnum.SENT} push notification stage was not found`, async () => {
     const TEST_DEVICE: any = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
     };
     const TEST_CLIENT_DEVICE: any = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
     };
     const TEST_PUSH_NOTIFICATION: any = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       payload: {},
       recipientDeviceId: TEST_DEVICE.id,
     };
@@ -425,14 +425,14 @@ describe('[Push Notifications] ...', () => {
 
   it('should confirm arrived notification', async () => {
     const TEST_DEVICE: any = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
     };
     const TEST_CLIENT_DEVICE: any = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       send: jest.fn(),
     };
     const TEST_PUSH_NOTIFICATION: any = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       payload: {},
       recipientDeviceId: TEST_DEVICE.id,
     };

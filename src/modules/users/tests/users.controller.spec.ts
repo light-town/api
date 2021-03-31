@@ -31,7 +31,7 @@ describe('[Users Module] [Controller] ...', () => {
 
   it('should get me infornation', async () => {
     const TEST_USER = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       name: faker.internet.userName(),
     };
     const TEST_TOKEN = jwtService.sign({ id: TEST_USER.id });

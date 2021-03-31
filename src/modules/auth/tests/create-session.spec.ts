@@ -35,7 +35,7 @@ describe('[Auth Module] [Service]...', () => {
 
   it('should create session', async () => {
     const TEST_ACCOUNT = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       key: core.common.generateAccountKey({
         versionCode: 'A3',
         secret: core.common.generateCryptoRandomString(32),
@@ -43,17 +43,17 @@ describe('[Auth Module] [Service]...', () => {
       salt: core.common.generateRandomSalt(32),
       verifier: core.common.generateRandomSalt(32),
       mfaType: {
-        id: faker.random.uuid(),
+        id: faker.datatype.uuid(),
         name: MFATypesEnum.NONE,
       },
     };
 
     const TEST_SESSION = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
     };
 
-    const TEST_DEVICE_ID = faker.random.uuid();
-    const TEST_DEVICE_UUID = faker.random.uuid();
+    const TEST_DEVICE_ID = faker.datatype.uuid();
+    const TEST_DEVICE_UUID = faker.datatype.uuid();
 
     const payload: SessionCreatePayload = {
       accountKey: TEST_ACCOUNT.key,
@@ -116,7 +116,7 @@ describe('[Auth Module] [Service]...', () => {
 
   it('should throw error when account is not found', async () => {
     const TEST_ACCOUNT = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       key: core.common.generateAccountKey({
         versionCode: 'A3',
         secret: core.common.generateCryptoRandomString(32),
@@ -124,7 +124,7 @@ describe('[Auth Module] [Service]...', () => {
       salt: core.common.generateRandomSalt(32),
       verifier: core.common.generateRandomSalt(32),
     };
-    const TEST_DEVICE_UUID = faker.random.uuid();
+    const TEST_DEVICE_UUID = faker.datatype.uuid();
 
     const payload: SessionCreatePayload = {
       accountKey: TEST_ACCOUNT.key,
@@ -158,7 +158,7 @@ describe('[Auth Module] [Service]...', () => {
 
   it('should throw error when device is not found', async () => {
     const TEST_ACCOUNT = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       key: core.common.generateAccountKey({
         versionCode: 'A3',
         secret: core.common.generateCryptoRandomString(32),
@@ -166,7 +166,7 @@ describe('[Auth Module] [Service]...', () => {
       salt: core.common.generateRandomSalt(32),
       verifier: core.common.generateRandomSalt(32),
     };
-    const TEST_DEVICE_UUID = faker.random.uuid();
+    const TEST_DEVICE_UUID = faker.datatype.uuid();
 
     const payload: SessionCreatePayload = {
       accountKey: TEST_ACCOUNT.key,

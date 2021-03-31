@@ -33,7 +33,7 @@ describe('[Devices Module] ...', () => {
 
   it('should create new device', async () => {
     const TEST_DEVICE = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       os: OS.ANDROID,
       userAgent: faker.internet.userAgent(),
       hostname: faker.random.word(),
@@ -66,19 +66,19 @@ describe('[Devices Module] ...', () => {
   it('should find devices', async () => {
     const TEST_DEVICES = [
       {
-        id: faker.random.uuid(),
+        id: faker.datatype.uuid(),
         os: OS.ANDROID,
         userAgent: faker.internet.userAgent(),
         hostname: faker.random.word(),
       },
       {
-        id: faker.random.uuid(),
+        id: faker.datatype.uuid(),
         os: OS.ANDROID,
         userAgent: faker.internet.userAgent(),
         hostname: faker.random.word(),
       },
       {
-        id: faker.random.uuid(),
+        id: faker.datatype.uuid(),
         os: OS.ANDROID,
         userAgent: faker.internet.userAgent(),
         hostname: faker.random.word(),
@@ -105,7 +105,7 @@ describe('[Devices Module] ...', () => {
 
   it('should update device information', async () => {
     const TEST_DEVICE = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       os: OS.ANDROID,
       userAgent: faker.internet.userAgent(),
       hostname: faker.random.word(),
@@ -114,7 +114,7 @@ describe('[Devices Module] ...', () => {
       id: TEST_DEVICE.id,
     };
     const TEST_UPDATE_PROPERTY = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
     };
 
     const findDevicesFunc = jest

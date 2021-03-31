@@ -26,12 +26,12 @@ describe('[Accounts Module] [Controller] ...', () => {
 
   it('should return account', async () => {
     const TEST_USER = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       name: faker.random.word(),
       avatarUrl: null,
     };
     const TEST_ACCOUNT = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       userId: TEST_USER.id,
       mfaType: {
         name: MFATypesEnum.NONE,
@@ -81,7 +81,7 @@ describe('[Accounts Module] [Controller] ...', () => {
 
   it('should throw error while getting account when acoount user was not found', async () => {
     const TEST_ACCOUNT = {
-      id: faker.random.uuid(),
+      id: faker.datatype.uuid(),
       mfaType: {
         name: MFATypesEnum.NONE,
       },
