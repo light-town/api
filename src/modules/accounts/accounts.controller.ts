@@ -1,4 +1,4 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import {
   ApiInternalServerException,
   ApiNotFoundException,
@@ -6,9 +6,10 @@ import {
 import UsersService from '../users/users.service';
 import AccountsService from './accounts.service';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
-import { GetAccountResponse } from './accounts.dto';
+import { GetAccountResponse, SetMultiFactorAuthPayload } from './accounts.dto';
+import AuthGuard from '~/modules/auth/auth.guard';
+import CurrentUser from '../auth/current-user';
 
-@ApiTags('/accounts')
 @Controller('/accounts')
 export default class AccountsController {
   public constructor(
@@ -16,6 +17,7 @@ export default class AccountsController {
     private readonly usersService: UsersService
   ) {}
 
+  @ApiTags('/accounts')
   @ApiOkResponse({ type: GetAccountResponse })
   @Get()
   public async getAccount(
@@ -51,5 +53,20 @@ export default class AccountsController {
       userAvatarUrl: user.avatarUrl,
       MFAType: account.mfaType.name,
     };
+  }
+
+  @AuthGuard()
+  @ApiTags('/accounts/settings')
+  @Post('/:accountUuid/settings/multi-factor-auth')
+  public setMultiFactorAuth(
+    @CurrentUser() user,
+    @Param('accountUuid') accountUuid: string,
+    @Body() payload: SetMultiFactorAuthPayload
+  ): Promise<void> {
+    return this.accountsService.setMultiFactorAuthType(
+      user.id,
+      accountUuid,
+      payload.type
+    );
   }
 }

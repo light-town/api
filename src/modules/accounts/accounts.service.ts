@@ -6,7 +6,10 @@ import {
   FindOneOptions,
   Repository,
 } from 'typeorm';
-import { ApiNotFoundException } from '~/common/exceptions';
+import {
+  ApiForbiddenException,
+  ApiNotFoundException,
+} from '~/common/exceptions';
 import { AccountEntity } from '~/db/entities/account.entity';
 import MFATypeEntity from '~/db/entities/mfa-type.entity';
 import { UserEntity } from '~/db/entities/user.entity';
@@ -78,6 +81,44 @@ export class AccountsService {
 
   public getManager(entityManager?: EntityManager) {
     return entityManager || this.accountsRepository.manager;
+  }
+
+  public async setMultiFactorAuthType(
+    userUuid: string,
+    accountUuid: string,
+    type: MFATypesEnum
+  ): Promise<void> {
+    const account = await this.findOne({
+      select: ['id', 'userId'],
+      where: {
+        id: accountUuid,
+        isDeleted: false,
+      },
+    });
+
+    if (!account) throw new ApiNotFoundException(`The account was not found`);
+
+    if (account.userId !== userUuid)
+      throw new ApiForbiddenException(`Аccess denied`);
+
+    const mfaType = await this.mfaTypesRepository.findOne({
+      select: ['id'],
+      where: {
+        name: type,
+        isDeleted: false,
+      },
+    });
+
+    if (!mfaType) throw new ApiNotFoundException(`The MFA type was not found`);
+
+    await this.accountsRepository.update(
+      {
+        id: account.id,
+      },
+      {
+        mfaTypeId: mfaType.id,
+      }
+    );
   }
 }
 

@@ -46,3 +46,11 @@ export class GetAccountResponse {
   })
   MFAType: string;
 }
+
+export class SetMultiFactorAuthPayload {
+  @ApiProperty({
+    description: 'The type of multi-factor authentication',
+    enum: MFATypesEnum,
+  })
+  type: MFATypesEnum;
+}

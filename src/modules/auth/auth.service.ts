@@ -183,7 +183,7 @@ export class AuthService {
       throw new ApiNotFoundException(`The session was not found`);
 
     const account = await this.accountsService.findOne({
-      select: ['id', 'salt', 'key', 'verifier', 'mfaType'],
+      select: ['id', 'salt', 'key', 'verifier', 'mfaType', 'userId'],
       where: { id: sessionEntity.accountId, isDeleted: false },
       join: {
         alias: 'accounts',
@@ -217,7 +217,7 @@ export class AuthService {
 
     return {
       token: this.jwtService.sign(
-        { userId: account.userId },
+        { id: account.userId },
         { expiresIn: expiresAt }
       ),
       serverSessionProof: session.proof,
