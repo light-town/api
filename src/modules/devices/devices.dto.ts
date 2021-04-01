@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum } from '~/common/validation';
+import { IsEnum, IsNotEmpty, IsString } from '~/common/validation';
 
 export enum OS {
   WINDOWS = 'Windows',
@@ -12,23 +12,33 @@ export enum OS {
 export class Device {
   @ApiProperty({
     description: 'The unique uuid of device',
+    required: true,
   })
-  id: string;
+  uuid: string;
 
   @ApiProperty({
     description: 'The OS device',
+    required: true,
   })
   os: OS;
 
   @ApiProperty({
     description: 'The network hostname',
+    required: true,
   })
   hostname: string;
 
   @ApiProperty({
     description: 'The user agent',
+    required: false,
   })
-  userAgent: string;
+  userAgent?: string;
+
+  @ApiProperty({
+    description: 'The model of device (Mobile)',
+    required: false,
+  })
+  model?: string;
 }
 
 export class DeviceCreatePayload {
@@ -39,11 +49,20 @@ export class DeviceCreatePayload {
   })
   @IsEnum(OS)
   os: OS;
+
+  @ApiProperty({
+    description: 'The model of device (Mobile)',
+    required: false,
+  })
+  @IsString()
+  @IsNotEmpty()
+  model?: string;
 }
 
 export class DeviceCreateResponse {
   @ApiProperty({
     description: 'The unique uuid of device',
+    required: true,
   })
   deviceUuid: string;
 }

@@ -11,6 +11,9 @@ export class DeviceEntity extends IEntity {
 
   @Column({ name: 'hostname' })
   public hostname: string;
+
+  @Column({ name: 'model', nullable: true })
+  public model?: string;
 }
 
 export default DeviceEntity;

@@ -38,6 +38,7 @@ export class DevicesController {
       os: payload.os,
       userAgent: req.header('user-agent'),
       hostname: req.ip.split(':').pop(),
+      model: payload.model,
     });
     return { deviceUuid: device.id };
   }

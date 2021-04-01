@@ -32,6 +32,7 @@ export class DevicesService {
         os: options.os,
         userAgent: options.userAgent,
         hostname: options.hostname,
+        model: options.model,
       })
     );
   }

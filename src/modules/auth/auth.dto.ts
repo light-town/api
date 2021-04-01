@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { VerifySessionStageEnum } from '../sessions/sessions.dto';
 import { IsString, IsNotEmpty, IsOptional } from '~/common/validation';
+import { OS, Device } from '../devices/devices.dto';
 
 export class SignUpPayload {
   @ApiProperty({
@@ -97,14 +98,22 @@ export class SessionVerifyType {
   @ApiProperty({
     description: 'The stage of verifying session',
     enum: VerifySessionStageEnum,
+    required: true,
   })
   stage: VerifySessionStageEnum;
 
   @ApiProperty({
     description: 'The MFA type of account authorization',
     enum: MFATypesEnum,
+    required: true,
   })
   MFAType: MFATypesEnum;
+
+  @ApiProperty({
+    description: 'The device that verifying session',
+    required: false,
+  })
+  verificationDevice?: Device;
 }
 
 export class SessionCreateResponse {

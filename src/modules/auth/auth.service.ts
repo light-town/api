@@ -25,6 +25,7 @@ import {
   MFATypesEnum,
 } from './auth.dto';
 import AuthGateway from './auth.gateway';
+import { OS } from '../devices/devices.dto';
 
 export const SESSION_EXPIRES_AT = 10 * 60 * 1000; // 10 minutes
 @Injectable()
@@ -124,6 +125,19 @@ export class AuthService {
         }
       );
 
+      const verificationDevice = await this.devicesService.findOne({
+        select: ['id', 'os', 'model', 'hostname', 'userAgent'],
+        where: {
+          id: lastVerifiedSessionsByMobileDevices[0].deviceId,
+          isDeleted: false,
+        },
+      });
+
+      if (!verificationDevice)
+        throw new ApiInternalServerException(
+          'The verification device was not found'
+        );
+
       return {
         sessionUuid: session.id,
         salt: account.salt,
@@ -131,6 +145,13 @@ export class AuthService {
         sessionVerify: {
           stage: VerifySessionStageEnum.REQUIRED,
           MFAType: account.mfaType.name,
+          verificationDevice: {
+            uuid: verificationDevice.id,
+            os: <OS>verificationDevice.os,
+            model: verificationDevice.model,
+            userAgent: verificationDevice.userAgent,
+            hostname: verificationDevice.hostname,
+          },
         },
       };
     }
