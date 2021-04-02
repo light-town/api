@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { IsEnum, IsNotEmpty, IsString } from 'class-validator';
 import { MFATypesEnum } from '../auth/auth.dto';
 
 export class CreateAccountDTO {
@@ -49,8 +50,18 @@ export class GetAccountResponse {
 
 export class SetMultiFactorAuthPayload {
   @ApiProperty({
+    description: 'The unique uuid of device',
+    required: true,
+  })
+  @IsString()
+  @IsNotEmpty()
+  deviceUuid: string;
+
+  @ApiProperty({
     description: 'The type of multi-factor authentication',
+    required: true,
     enum: MFATypesEnum,
   })
+  @IsEnum(MFATypesEnum)
   type: MFATypesEnum;
 }

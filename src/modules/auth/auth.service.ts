@@ -1,10 +1,9 @@
-import { Connection, MoreThan } from 'typeorm';
+import { Connection } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/typeorm';
 import { JwtService } from '@nestjs/jwt';
 import core from '@light-town/core';
 import {
-  ApiConflictException,
   ApiForbiddenException,
   ApiInternalServerException,
   ApiNotFoundException,
@@ -13,7 +12,7 @@ import AccountsService from '~/modules/accounts/accounts.service';
 import UsersService from '~/modules/users/users.service';
 import SessionsService from '~/modules/sessions/sessions.service';
 import DevicesService from '~/modules/devices/devices.service';
-import { VerifySessionStageEnum } from '~/modules/sessions/sessions.dto';
+import { SessionVerificationStageEnum } from '~/modules/sessions/sessions.dto';
 import PushNotificationsService from '~/modules/push-notifications/push-notifications.service';
 import {
   SignUpPayload,
@@ -31,47 +30,44 @@ export const SESSION_EXPIRES_AT = 10 * 60 * 1000; // 10 minutes
 @Injectable()
 export class AuthService {
   public constructor(
+    @InjectConnection()
+    private readonly connection: Connection,
     private readonly accountsService: AccountsService,
     private readonly usersService: UsersService,
     private readonly sessionsService: SessionsService,
     private readonly devicesService: DevicesService,
     private readonly jwtService: JwtService,
-    @InjectConnection()
-    private readonly connection: Connection,
     private readonly authGateway: AuthGateway,
     private readonly pushNotificationsService: PushNotificationsService
   ) {}
 
   public async signUp(options: SignUpPayload): Promise<void> {
-    await this.connection.transaction(async manager => {
-      const device = await this.devicesService.findOne(
-        {
-          select: ['id'],
-          where: { id: options.deviceUuid, isDeleted: false },
-        },
-        manager
-      );
+    /*  await this.connection.transaction(async manager => {
+      const accountsService = this.accountsService.withTransaction(manager);
+      const devicesService = this.devicesService.withTransaction(manager);
+      const usersService = this.usersService.withTransaction(manager); */
 
-      if (!device) throw new ApiNotFoundException(`The device was not found`);
-
-      const user = await this.usersService.create(
-        {
-          name: options.username,
-          avatarUrl: options.avatarUrl,
-        },
-        manager
-      );
-
-      await this.accountsService.create(
-        {
-          key: options.accountKey,
-          userId: user.id,
-          verifier: options.verifier,
-          salt: options.salt,
-        },
-        manager
-      );
+    const device = await this.devicesService.findOne({
+      select: ['id'],
+      where: { id: options.deviceUuid, isDeleted: false },
     });
+
+    if (!device) throw new ApiNotFoundException(`The device was not found`);
+
+    const user = await this.usersService.create({
+      name: options.username,
+      avatarUrl: options.avatarUrl,
+    });
+
+    if (!user) throw new ApiNotFoundException(`The user was not found`);
+
+    await this.accountsService.create({
+      key: options.accountKey,
+      userId: user.id,
+      verifier: options.verifier,
+      salt: options.salt,
+    });
+    /* }); */
   }
 
   public async createSession(
@@ -108,75 +104,75 @@ export class AuthService {
     });
 
     if (account.mfaType.name !== MFATypesEnum.NONE) {
-      const lastVerifiedSessionsByMobileDevices = (
-        await this.sessionsService.getLastVerifiedSessionsByMobileDevices(
-          account.id
-        )
-      ).filter(session => session.deviceId !== device.id);
-
-      if (!lastVerifiedSessionsByMobileDevices.length)
-        throw new ApiInternalServerException(`The verify device was not found`);
-
-      await this.pushNotificationsService.send(
-        lastVerifiedSessionsByMobileDevices[0].deviceId,
+      const verificationDevice = await this.devicesService.findOneVerificationDevice(
         {
-          action: 'VerifySession',
-          sessionUuid: session.id,
+          select: ['id', 'device'],
+          where: {
+            accountId: account.id,
+            isDeleted: false,
+          },
+          join: {
+            alias: 'verificationDevices',
+            leftJoinAndSelect: {
+              device: 'verificationDevices.device',
+            },
+          },
         }
       );
 
-      const verificationDevice = await this.devicesService.findOne({
-        select: ['id', 'os', 'model', 'hostname', 'userAgent'],
-        where: {
-          id: lastVerifiedSessionsByMobileDevices[0].deviceId,
-          isDeleted: false,
-        },
-      });
-
       if (!verificationDevice)
         throw new ApiInternalServerException(
-          'The verification device was not found'
+          `The verification device was not found`
         );
+
+      await this.pushNotificationsService.send(verificationDevice.deviceId, {
+        action: 'VerifySession',
+        sessionUuid: session.id,
+      });
 
       return {
         sessionUuid: session.id,
         salt: account.salt,
         serverPublicEphemeral: ephemeral.public,
-        sessionVerify: {
-          stage: VerifySessionStageEnum.REQUIRED,
+        sessionVerification: {
+          stage: SessionVerificationStageEnum.REQUIRED,
           MFAType: account.mfaType.name,
           verificationDevice: {
             uuid: verificationDevice.id,
-            os: <OS>verificationDevice.os,
-            model: verificationDevice.model,
-            userAgent: verificationDevice.userAgent,
-            hostname: verificationDevice.hostname,
+            os: <OS>verificationDevice.device.os,
+            model: verificationDevice.device.model,
+            hostname: verificationDevice.device.hostname,
           },
         },
       };
     }
 
-    const verifyStage = await this.sessionsService.findOneVerifyStage({
-      select: ['id'],
-      where: { name: VerifySessionStageEnum.COMPLETED, isDeleted: false },
-    });
+    const verificationStage = await this.sessionsService.findOneVerificationStage(
+      {
+        select: ['id'],
+        where: {
+          name: SessionVerificationStageEnum.COMPLETED,
+          isDeleted: false,
+        },
+      }
+    );
 
-    if (!verifyStage)
+    if (!verificationStage)
       throw new ApiInternalServerException(
-        `The '${VerifySessionStageEnum.COMPLETED}' session verify stage was not found`
+        `The '${SessionVerificationStageEnum.COMPLETED}' session verify stage was not found`
       );
 
     await this.sessionsService.update(
       { id: session.id },
-      { verifyStageId: verifyStage.id }
+      { verificationStageId: verificationStage.id }
     );
 
     return {
       sessionUuid: session.id,
       salt: account.salt,
       serverPublicEphemeral: ephemeral.public,
-      sessionVerify: {
-        stage: VerifySessionStageEnum.NOT_REQUIRED,
+      sessionVerification: {
+        stage: SessionVerificationStageEnum.NOT_REQUIRED,
         MFAType: account.mfaType.name,
       },
     };
@@ -186,8 +182,8 @@ export class AuthService {
     sessionUuid: string,
     options: SessionStartPayload
   ): Promise<SessionStartResponse> {
-    const sessionEntity = await this.sessionsService.findOne({
-      select: ['id', 'secret', 'accountId', 'verifyStage'],
+    const session = await this.sessionsService.findOne({
+      select: ['id', 'secret', 'accountId', 'verificationStage'],
       where: {
         id: sessionUuid,
         isDeleted: false,
@@ -195,17 +191,24 @@ export class AuthService {
       join: {
         alias: 'sessions',
         leftJoinAndSelect: {
-          verifyStage: 'sessions.verifyStage',
+          verificationStage: 'sessions.verificationStage',
         },
       },
     });
 
-    if (!sessionEntity)
-      throw new ApiNotFoundException(`The session was not found`);
+    if (!session) throw new ApiNotFoundException(`The session was not found`);
+
+    if (
+      ![
+        SessionVerificationStageEnum.NOT_REQUIRED,
+        SessionVerificationStageEnum.COMPLETED,
+      ].includes(<SessionVerificationStageEnum>session.verificationStage.name)
+    )
+      throw new ApiForbiddenException(`The session was not verified`);
 
     const account = await this.accountsService.findOne({
       select: ['id', 'salt', 'key', 'verifier', 'mfaType', 'userId'],
-      where: { id: sessionEntity.accountId, isDeleted: false },
+      where: { id: session.accountId, isDeleted: false },
       join: {
         alias: 'accounts',
         leftJoinAndSelect: {
@@ -214,14 +217,11 @@ export class AuthService {
       },
     });
 
-    if (
-      sessionEntity.verifyStage.name !== VerifySessionStageEnum.NOT_REQUIRED &&
-      sessionEntity.verifyStage.name !== VerifySessionStageEnum.COMPLETED
-    )
-      throw new ApiForbiddenException(`The session was not verified`);
+    if (!account)
+      throw new ApiInternalServerException('The account was not found');
 
-    const session = core.srp.server.deriveSession(
-      sessionEntity.secret,
+    const srpSession = core.srp.server.deriveSession(
+      session.secret,
       options.clientPublicEphemeralKey,
       account.salt,
       account.key,
@@ -232,74 +232,86 @@ export class AuthService {
     const expiresAt = new Date().getTime() + SESSION_EXPIRES_AT;
 
     await this.sessionsService.update(
-      { id: sessionEntity.id },
+      { id: session.id },
       { expiresAt: new Date(expiresAt) }
     );
 
     return {
-      token: this.jwtService.sign(
-        { id: account.userId },
-        { expiresIn: expiresAt }
-      ),
-      serverSessionProof: session.proof,
+      token: this.jwtService.sign({ id: account.userId }),
+      serverSessionProof: srpSession.proof,
     };
   }
 
   public async verifySession(
-    sessionUuid: string,
-    deviceUuid: string
+    sessionId: string,
+    deviceId: string
   ): Promise<SessionVerifyResponse> {
     const session = await this.sessionsService.findOne({
-      select: ['id', 'deviceId', 'verifyStage'],
+      select: ['id', 'deviceId', 'verificationStage', 'expiresAt'],
       where: {
-        id: sessionUuid,
+        id: sessionId,
         isDeleted: false,
-        expiresAt: MoreThan(new Date()),
+      },
+      join: {
+        alias: 'sessions',
+        leftJoinAndSelect: {
+          verificationStage: 'sessions.verificationStage',
+        },
       },
     });
 
     if (!session) throw new ApiNotFoundException(`The session was not found`);
 
-    if (session.verifyStage.name !== VerifySessionStageEnum.REQUIRED)
+    if (session.expiresAt.getTime() < new Date().getTime())
+      throw new ApiForbiddenException('The session is expired');
+
+    if (
+      session.verificationStage.name !== SessionVerificationStageEnum.REQUIRED
+    )
       return {
-        stage: session.verifyStage.name as VerifySessionStageEnum,
+        stage: session.verificationStage.name as SessionVerificationStageEnum,
       };
 
     const device = await this.devicesService.findOne({
       select: ['id'],
       where: {
-        id: deviceUuid,
+        id: deviceId,
         isDeleted: false,
       },
     });
 
     if (!device) throw new ApiNotFoundException(`The device was not found`);
 
-    if (device.id === session.deviceId) {
-      throw new ApiConflictException(
-        `The device to verify the session should be other than the device that created the session`
+    if (device.id !== session.verificationDeviceId) {
+      throw new ApiForbiddenException(
+        `The got device is not for verifying the session`
       );
     }
 
-    const verifyStage = await this.sessionsService.findOneVerifyStage({
-      select: ['id'],
-      where: { name: VerifySessionStageEnum.COMPLETED, isDeleted: false },
-    });
+    const verificationStage = await this.sessionsService.findOneVerificationStage(
+      {
+        select: ['id'],
+        where: {
+          name: SessionVerificationStageEnum.COMPLETED,
+          isDeleted: false,
+        },
+      }
+    );
 
-    if (!verifyStage)
+    if (!verificationStage)
       throw new ApiInternalServerException(
-        `The '${VerifySessionStageEnum.COMPLETED}' session verify stage was not found`
+        `The '${SessionVerificationStageEnum.COMPLETED}' session verify stage was not found`
       );
 
     await this.sessionsService.update(
       { id: session.id },
-      { verifyStageId: verifyStage.id }
+      { verificationStageId: verificationStage.id }
     );
 
     await this.authGateway.updatedSessionVerifyStage(session.id);
 
     return {
-      stage: VerifySessionStageEnum.COMPLETED,
+      stage: SessionVerificationStageEnum.COMPLETED,
     };
   }
 }

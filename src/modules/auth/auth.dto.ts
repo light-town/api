@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { VerifySessionStageEnum } from '../sessions/sessions.dto';
+import { SessionVerificationStageEnum } from '../sessions/sessions.dto';
 import { IsString, IsNotEmpty, IsOptional } from '~/common/validation';
-import { OS, Device } from '../devices/devices.dto';
+import { Device } from '../devices/devices.dto';
 
 export class SignUpPayload {
   @ApiProperty({
@@ -94,13 +94,13 @@ export enum MFATypesEnum {
   ONE_TIME_PASSWORD = 'ONE_TIME_PASSWORD',
 }
 
-export class SessionVerifyType {
+export class SessionVerificationType {
   @ApiProperty({
     description: 'The stage of verifying session',
-    enum: VerifySessionStageEnum,
+    enum: SessionVerificationStageEnum,
     required: true,
   })
-  stage: VerifySessionStageEnum;
+  stage: SessionVerificationStageEnum;
 
   @ApiProperty({
     description: 'The MFA type of account authorization',
@@ -135,7 +135,7 @@ export class SessionCreateResponse {
   @ApiProperty({
     description: 'The process info of verifying session',
   })
-  sessionVerify: SessionVerifyType;
+  sessionVerification: SessionVerificationType;
 }
 
 export class SessionStartResponse {
@@ -162,9 +162,9 @@ export class SessionVerifyPayload {
 export class SessionVerifyResponse {
   @ApiProperty({
     description: 'The current stage of session verifying',
-    enum: VerifySessionStageEnum,
+    enum: SessionVerificationStageEnum,
   })
-  stage: VerifySessionStageEnum;
+  stage: SessionVerificationStageEnum;
 }
 
 export class GetCsrfTokenResponse {

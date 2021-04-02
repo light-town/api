@@ -10,128 +10,97 @@ import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity
 import { SessionEntity } from '~/db/entities/session.entity';
 import AccountsService from '../accounts/accounts.service';
 import { DevicesService } from '../devices/devices.service';
-import { SessionCreateDTO, VerifySessionStageEnum } from './sessions.dto';
-import VerifySessionStageEntity from '~/db/entities/verify-session-stage.entity';
+import { SessionCreateDTO, SessionVerificationStageEnum } from './sessions.dto';
+import SessionVerificationStageEntity from '~/db/entities/session-verification-stage.entity';
 import Criteria from '~/common/criteria';
 import {
   ApiInternalServerException,
   ApiNotFoundException,
 } from '~/common/exceptions';
-import { OS } from '../devices/devices.dto';
+import TransactionFor from '~/common/with-transaction';
+import { ModuleRef } from '@nestjs/core';
 
 @Injectable()
-export class SessionsService {
+export class SessionsService extends TransactionFor {
   public constructor(
     @InjectRepository(SessionEntity)
     private readonly sessionsRepository: Repository<SessionEntity>,
-    @InjectRepository(VerifySessionStageEntity)
-    private readonly verifySessionStageRepository: Repository<VerifySessionStageEntity>,
+    @InjectRepository(SessionVerificationStageEntity)
+    private readonly sessionVerificationStageRepository: Repository<SessionVerificationStageEntity>,
     private readonly accountsService: AccountsService,
-    private readonly devicesService: DevicesService
-  ) {}
-
-  public async create(
-    options: SessionCreateDTO,
-    entityManager?: EntityManager
+    private readonly devicesService: DevicesService,
+    moduleRef: ModuleRef
   ) {
-    const manager = this.getManager(entityManager);
+    super(moduleRef);
+  }
 
-    const account = await this.accountsService.findOne(
-      {
-        select: ['id'],
-        where: { id: options.accountId },
-      },
-      manager
-    );
+  public async create(options: SessionCreateDTO) {
+    const account = await this.accountsService.findOne({
+      select: ['id'],
+      where: { id: options.accountId },
+    });
 
     if (!account) throw new ApiNotFoundException(`The account was not found`);
 
-    const device = await this.devicesService.findOne(
-      {
-        select: ['id'],
-        where: { id: options.deviceId },
-      },
-      manager
-    );
+    const device = await this.devicesService.findOne({
+      select: ['id'],
+      where: { id: options.deviceId },
+    });
 
     if (!device) throw new ApiNotFoundException(`The device was not found`);
 
-    const verifyStage = await this.verifySessionStageRepository.findOne({
-      select: ['id'],
-      where: {
-        name: VerifySessionStageEnum.REQUIRED,
-        isDeleted: false,
-      },
-    });
+    const sessionVerificationStage = await this.sessionVerificationStageRepository.findOne(
+      {
+        select: ['id'],
+        where: {
+          name: SessionVerificationStageEnum.REQUIRED,
+          isDeleted: false,
+        },
+      }
+    );
 
-    if (!verifyStage)
+    if (!sessionVerificationStage)
       throw new ApiInternalServerException(
-        `The '${VerifySessionStageEnum.REQUIRED}' verify session stage was not found`
+        `The '${SessionVerificationStageEnum.REQUIRED}' verify session stage was not found`
       );
 
-    return manager.save(
-      manager.create(SessionEntity, {
+    const verificationDevice = await this.devicesService.findOneVerificationDevice(
+      {
+        select: ['id'],
+        where: { id: options.verificationDeviceId, isDeleted: false },
+      }
+    );
+
+    return this.sessionsRepository.save(
+      this.sessionsRepository.create({
+        secret: options.secret,
         accountId: account.id,
         deviceId: device.id,
-        secret: options.secret,
-        verifyStageId: verifyStage.id,
+        verificationStageId: sessionVerificationStage.id,
+        verificationDeviceId: verificationDevice?.id,
       })
     );
   }
 
-  public getLastVerifiedSessionsByMobileDevices(accountId: string) {
-    return this.sessionsRepository
-      .createQueryBuilder('sessions')
-      .leftJoin('sessions.device', 'devices')
-      .leftJoin('sessions.verifyStage', 'verifyStages')
-      .where('devices.is_deleted = :deviceIsDeleted', {
-        deviceIsDeleted: false,
-      })
-      .andWhere('devices.os in (:...os)', { os: [OS.ANDROID, OS.IOS] })
-      .andWhere('sessions.account_id = :accountId', { accountId })
-      .andWhere('sessions.is_deleted = :accountIsDeleted', {
-        accountIsDeleted: false,
-      })
-      .andWhere('verifyStages.name in (:...verifyStages)', {
-        verifyStages: [
-          VerifySessionStageEnum.COMPLETED,
-          VerifySessionStageEnum.NOT_REQUIRED,
-        ],
-      })
-      .getMany();
+  public find(options: FindManyOptions<SessionEntity>) {
+    return this.sessionsRepository.find(options);
   }
 
-  public find(
-    options: FindManyOptions<SessionEntity>,
-    entityManager?: EntityManager
-  ) {
-    const manager = this.getManager(entityManager);
-    return manager.find(SessionEntity, options);
+  public findOne(options: FindOneOptions<SessionEntity>) {
+    return this.sessionsRepository.findOne(options);
   }
 
-  public findOne(
-    options: FindOneOptions<SessionEntity>,
-    entityManager?: EntityManager
+  public findOneVerificationStage(
+    options: FindOneOptions<SessionVerificationStageEntity>
   ) {
-    const manager = this.getManager(entityManager);
-    return manager.findOne(SessionEntity, options);
-  }
-
-  public findOneVerifyStage(
-    options: FindOneOptions<VerifySessionStageEntity>,
-    entityManager?: EntityManager
-  ) {
-    const manager = entityManager ?? this.verifySessionStageRepository.manager;
-    return manager.findOne(VerifySessionStageEntity, options);
+    return this.sessionVerificationStageRepository.findOne(options);
   }
 
   public update(
     criteria: Criteria<SessionEntity>,
-    partialEntity: QueryDeepPartialEntity<SessionEntity>,
-    entityManager?: EntityManager
+    partialEntity: QueryDeepPartialEntity<SessionEntity>
   ) {
-    const manager = this.getManager(entityManager);
-    return manager.update(SessionEntity, criteria, partialEntity);
+    return this.sessionsRepository.update(criteria, partialEntity);
   }
 
   public getManager(entityManager?: EntityManager) {

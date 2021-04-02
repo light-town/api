@@ -1,45 +1,40 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import {
-  EntityManager,
-  FindManyOptions,
-  FindOneOptions,
-  Repository,
-} from 'typeorm';
+import { ModuleRef } from '@nestjs/core';
+import { FindManyOptions, FindOneOptions, Repository } from 'typeorm';
 import {
   ApiForbiddenException,
   ApiNotFoundException,
 } from '~/common/exceptions';
-import { AccountEntity } from '~/db/entities/account.entity';
+import TransactionFor from '~/common/with-transaction';
+import AccountEntity from '~/db/entities/account.entity';
 import MFATypeEntity from '~/db/entities/mfa-type.entity';
-import { UserEntity } from '~/db/entities/user.entity';
+import UserEntity from '~/db/entities/user.entity';
 import { MFATypesEnum } from '../auth/auth.dto';
-import { UsersService } from '../users/users.service';
+import UsersService from '../users/users.service';
 import { CreateAccountDTO } from './accounts.dto';
+import DevicesService from '../devices/devices.service';
 
 @Injectable()
-export class AccountsService {
+export class AccountsService extends TransactionFor {
   public constructor(
     @InjectRepository(AccountEntity)
     private readonly accountsRepository: Repository<AccountEntity>,
     @InjectRepository(MFATypeEntity)
     private readonly mfaTypesRepository: Repository<MFATypeEntity>,
-    private readonly usersService: UsersService
-  ) {}
+    @Inject(forwardRef(() => DevicesService))
+    private readonly devicesService: DevicesService,
+    private readonly usersService: UsersService,
+    moduleRef: ModuleRef
+  ) {
+    super(moduleRef);
+  }
 
-  public async create(
-    payload: CreateAccountDTO,
-    entityManager?: EntityManager
-  ): Promise<any> {
-    const manager = this.getManager(entityManager);
-
-    const user: UserEntity = await this.usersService.findOne(
-      {
-        select: ['id'],
-        where: { id: payload.userId },
-      },
-      manager
-    );
+  public async create(payload: CreateAccountDTO): Promise<any> {
+    const user: UserEntity = await this.usersService.findOne({
+      select: ['id'],
+      where: { id: payload.userId, isDeleted: false },
+    });
 
     if (!user) throw new ApiNotFoundException(`The user was not found`);
 
@@ -52,8 +47,8 @@ export class AccountsService {
 
     if (!mfaType) throw new ApiNotFoundException(`The MFA type was not found`);
 
-    return await manager.save(
-      manager.create(AccountEntity, {
+    return await this.accountsRepository.save(
+      this.accountsRepository.create({
         key: payload.key,
         userId: user.id,
         salt: payload.salt,
@@ -63,42 +58,31 @@ export class AccountsService {
     );
   }
 
-  public find(
-    options: FindManyOptions<AccountEntity> = {},
-    entityManager?: EntityManager
-  ) {
-    const manager = this.getManager(entityManager);
-    return manager.find(AccountEntity, options);
+  public find(options: FindManyOptions<AccountEntity> = {}) {
+    return this.accountsRepository.find(options);
   }
 
-  public findOne(
-    options: FindOneOptions<AccountEntity> = {},
-    entityManager?: EntityManager
-  ) {
-    const manager = this.getManager(entityManager);
-    return manager.findOne(AccountEntity, options);
-  }
-
-  public getManager(entityManager?: EntityManager) {
-    return entityManager || this.accountsRepository.manager;
+  public findOne(options: FindOneOptions<AccountEntity> = {}) {
+    return this.accountsRepository.findOne(options);
   }
 
   public async setMultiFactorAuthType(
-    userUuid: string,
-    accountUuid: string,
+    userId: string,
+    accountId: string,
+    deviceId,
     type: MFATypesEnum
   ): Promise<void> {
     const account = await this.findOne({
       select: ['id', 'userId'],
       where: {
-        id: accountUuid,
+        id: accountId,
         isDeleted: false,
       },
     });
 
     if (!account) throw new ApiNotFoundException(`The account was not found`);
 
-    if (account.userId !== userUuid)
+    if (account.userId !== userId)
       throw new ApiForbiddenException(`Аccess denied`);
 
     const mfaType = await this.mfaTypesRepository.findOne({
@@ -111,6 +95,8 @@ export class AccountsService {
 
     if (!mfaType) throw new ApiNotFoundException(`The MFA type was not found`);
 
+    await this.devicesService.createVerificationDevice(deviceId, accountId);
+
     await this.accountsRepository.update(
       {
         id: account.id,
@@ -119,6 +105,14 @@ export class AccountsService {
         mfaTypeId: mfaType.id,
       }
     );
+  }
+
+  public async exists(id: string): Promise<boolean> {
+    const account = await this.accountsRepository.findOne({
+      select: ['id'],
+      where: { id, isDeleted: false },
+    });
+    return account !== undefined;
   }
 }
 

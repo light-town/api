@@ -66,6 +66,7 @@ export default class AccountsController {
     return this.accountsService.setMultiFactorAuthType(
       user.id,
       accountUuid,
+      payload.deviceUuid,
       payload.type
     );
   }

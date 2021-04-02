@@ -1,56 +1,36 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import {
-  EntityManager,
-  FindManyOptions,
-  FindOneOptions,
-  Repository,
-} from 'typeorm';
+import { Injectable } from '@nestjs/common';
+import { FindManyOptions, FindOneOptions, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from '~/db/entities/user.entity';
 import { CreateUserDTO } from './users.dto';
+import TransactionFor from '~/common/with-transaction';
+import { ModuleRef } from '@nestjs/core';
 
 @Injectable()
-export class UsersService {
+export class UsersService extends TransactionFor {
   public constructor(
     @InjectRepository(UserEntity)
-    public readonly usersRepository: Repository<UserEntity>
-  ) {}
+    public readonly usersRepository: Repository<UserEntity>,
+    moduleRef: ModuleRef
+  ) {
+    super(moduleRef);
+  }
 
-  public async create(
-    options: CreateUserDTO,
-    entityManager?: EntityManager
-  ): Promise<UserEntity> {
-    const manager = this.getManager(entityManager);
-
-    if (typeof options.name !== 'string')
-      throw new BadRequestException(`The user name must be 'string' type`);
-
-    return await manager.save(
-      manager.create(UserEntity, {
+  public async create(options: CreateUserDTO): Promise<UserEntity> {
+    return await this.usersRepository.save(
+      this.usersRepository.create({
         name: options.name,
         avatarUrl: options.avatarUrl,
       })
     );
   }
 
-  public find(
-    options: FindManyOptions<UserEntity>,
-    entityManager?: EntityManager
-  ) {
-    const manager = this.getManager(entityManager);
-    return manager.find(UserEntity, options);
+  public find(options: FindManyOptions<UserEntity>) {
+    return this.usersRepository.find(options);
   }
 
-  public findOne(
-    options: FindOneOptions<UserEntity>,
-    entityManager?: EntityManager
-  ) {
-    const manager = this.getManager(entityManager);
-    return manager.findOne(UserEntity, options);
-  }
-
-  public getManager(entityManager?: EntityManager) {
-    return entityManager || this.usersRepository.manager;
+  public findOne(options: FindOneOptions<UserEntity>) {
+    return this.usersRepository.findOne(options);
   }
 }
 

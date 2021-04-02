@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsNotEmpty, IsString } from '~/common/validation';
+import { IsEnum, IsNotEmpty, IsOptional, IsString } from '~/common/validation';
 
 export enum OS {
   WINDOWS = 'Windows',
@@ -54,6 +54,7 @@ export class DeviceCreatePayload {
     description: 'The model of device (Mobile)',
     required: false,
   })
+  @IsOptional()
   @IsString()
   @IsNotEmpty()
   model?: string;

@@ -1,6 +1,6 @@
 import * as faker from 'faker';
-import { VerifySessionStageEnum } from '~/modules/sessions/sessions.dto';
-import VerifySessionStageEntity from '../entities/verify-session-stage.entity';
+import { SessionVerificationStageEnum } from '~/modules/sessions/sessions.dto';
+import VerifySessionStageEntity from '../entities/session-verification-stage.entity';
 import Factory from './factory';
 import Seeder from './seeder';
 
@@ -10,10 +10,10 @@ export class VerifySessionStagesFactory
     const verifySessionStage = new VerifySessionStageEntity();
     verifySessionStage.name =
       name ||
-      Object.values(VerifySessionStageEnum)[
+      Object.values(SessionVerificationStageEnum)[
         faker.random.number({
           min: 0,
-          max: Object.values(VerifySessionStageEnum).length - 1,
+          max: Object.values(SessionVerificationStageEnum).length - 1,
         })
       ];
     return verifySessionStage;

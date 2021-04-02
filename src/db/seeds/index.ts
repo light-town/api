@@ -6,7 +6,7 @@ import { MFATypesEnum } from '~/modules/auth/auth.dto';
 import VerifySessionStagesSeeder, {
   VerifySessionStagesFactory,
 } from './verify-session-stages.seed';
-import { VerifySessionStageEnum } from '~/modules/sessions/sessions.dto';
+import { SessionVerificationStageEnum } from '~/modules/sessions/sessions.dto';
 import PushNotificationStagesSeeder, {
   PushNotificationStagesFactory,
 } from './push-notification-stages.seed';
@@ -42,19 +42,19 @@ createConnection().then(async (connection: Connection) => {
   );
   console.log(
     await verifySessionStagesSeeder.run(1, {
-      name: VerifySessionStageEnum.REQUIRED,
+      name: SessionVerificationStageEnum.REQUIRED,
     })
   );
 
   console.log(
     await verifySessionStagesSeeder.run(1, {
-      name: VerifySessionStageEnum.COMPLETED,
+      name: SessionVerificationStageEnum.COMPLETED,
     })
   );
 
   console.log(
     await verifySessionStagesSeeder.run(1, {
-      name: VerifySessionStageEnum.NOT_REQUIRED,
+      name: SessionVerificationStageEnum.NOT_REQUIRED,
     })
   );
 

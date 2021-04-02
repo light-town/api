@@ -10,17 +10,19 @@ import SubscribeEvent from '~/common/subscribe-event';
 import GatewayNamespacesEnum from '~/common/gateway-namespaces';
 import DevicesService from '../devices/devices.service';
 import SessionsService from '../sessions/sessions.service';
-import { VerifySessionStageEnum } from '../sessions/sessions.dto';
+import { SessionVerificationStageEnum } from '../sessions/sessions.dto';
 import {
   ApiConflictException,
+  ApiForbiddenException,
   ApiNotFoundException,
 } from '~/common/exceptions';
 
 export enum AuthEventsEnum {
   ERROR = 'ERROR',
-  SUBSCRIBE_SESSION_VERIFY = 'SUBSCRIBE_SESSION_VERIFY',
-  UPDATED_SESSION_VERIFY_STAGE = 'UPDATED_SESSION_VERIFY_STAGE',
-  UNSUBSCRIBE_SESSION_VERIFY = 'UNSUBSCRIBE_SESSION_VERIFY',
+  SUB_STATUS = 'SUB_STATUS',
+  SUB_CHANGE_SESSION_VERIFICATION_STAGE = 'SUB_CHANGE_SESSION_VERIFICATION_STAGE',
+  CHANGED_SESSION_VERIFICATION_STAGE = 'CHANGED_SESSION_VERIFICATION_STAGE',
+  UNSUB_CHANGE_SESSION_VERIFICATION_STAGE = 'UNSUB_CHANGE_SESSION_VERIFICATION_STAGE',
 }
 
 @WebSocketGateway()
@@ -45,7 +47,7 @@ export class AuthGateway
 
   @SubscribeEvent(
     GatewayNamespacesEnum.AUTH,
-    AuthEventsEnum.SUBSCRIBE_SESSION_VERIFY
+    AuthEventsEnum.SUB_CHANGE_SESSION_VERIFICATION_STAGE
   )
   public async onSubsSessionVerify(
     @ConnectedSocket() client: WebSocket,
@@ -62,7 +64,7 @@ export class AuthGateway
     if (!device) throw new ApiNotFoundException('The device was not found');
 
     const session = await this.sessionsService.findOne({
-      select: ['id', 'verifyStage'],
+      select: ['id', 'verificationStage', 'expiresAt'],
       where: {
         id: data.sessionUuid,
         isDeleted: false,
@@ -70,37 +72,54 @@ export class AuthGateway
       join: {
         alias: 'sessions',
         leftJoinAndSelect: {
-          verifyStage: 'sessions.verifyStage',
+          verificationStage: 'sessions.verificationStage',
         },
       },
     });
 
     if (!session) throw new ApiNotFoundException('The session was not found');
 
-    if (session.verifyStage?.name !== VerifySessionStageEnum.REQUIRED)
+    if (session.expiresAt.getTime() < new Date().getTime())
+      throw new ApiForbiddenException('The session is expired');
+
+    if (
+      session.verificationStage?.name !== SessionVerificationStageEnum.REQUIRED
+    )
       throw new ApiConflictException(
-        'The session verify is already completed or not require at all'
+        'The session verify has already completed or not required to  at all'
       );
 
     this.connectedDevices.set(client, {
       deviceUuid: device.id,
       sessionUuid: session.id,
     });
+
+    this.sendMessage(client, {
+      namespace: GatewayNamespacesEnum.AUTH,
+      event: AuthEventsEnum.SUB_STATUS,
+      status: 'ok',
+    });
   }
 
   @SubscribeEvent(
     GatewayNamespacesEnum.AUTH,
-    AuthEventsEnum.UNSUBSCRIBE_SESSION_VERIFY
+    AuthEventsEnum.UNSUB_CHANGE_SESSION_VERIFICATION_STAGE
   )
   public async onUnsubsSessionVerify(
     @ConnectedSocket() client: WebSocket
   ): Promise<void> {
     if (this.connectedDevices.has(client)) this.connectedDevices.delete(client);
+
+    this.sendMessage(client, {
+      namespace: GatewayNamespacesEnum.AUTH,
+      event: AuthEventsEnum.SUB_STATUS,
+      status: 'ok',
+    });
   }
 
   public async updatedSessionVerifyStage(sessionUuid: string) {
     const session = await this.sessionsService.findOne({
-      select: ['id', 'deviceId', 'verifyStage'],
+      select: ['id', 'deviceId', 'verificationStage'],
       where: {
         id: sessionUuid,
         isDeleted: false,
@@ -108,7 +127,7 @@ export class AuthGateway
       join: {
         alias: 'sessions',
         leftJoinAndSelect: {
-          verifyStage: 'sessions.verifyStage',
+          verificationStage: 'sessions.verificationStage',
         },
       },
     });
@@ -119,9 +138,9 @@ export class AuthGateway
       if (config.sessionUuid === session.id) {
         this.sendMessage(client, {
           namespace: GatewayNamespacesEnum.AUTH,
-          event: AuthEventsEnum.UPDATED_SESSION_VERIFY_STAGE,
+          event: AuthEventsEnum.CHANGED_SESSION_VERIFICATION_STAGE,
           data: {
-            stage: session.verifyStage.name,
+            stage: session.verificationStage.name,
           },
         });
       }
