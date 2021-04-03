@@ -25,6 +25,7 @@ import {
   SessionStartResponse,
   SessionVerifyResponse,
   MFATypesEnum,
+  RefreshTokenResponse,
 } from './auth.dto';
 import AuthGateway from './auth.gateway';
 import { OS } from '../devices/devices.dto';
@@ -326,6 +327,36 @@ export class AuthService {
 
     return {
       stage: SessionVerificationStageEnum.COMPLETED,
+    };
+  }
+
+  public async refreshToken(sessionId: string): Promise<RefreshTokenResponse> {
+    const session = await this.sessionsService.findOne({
+      select: ['id', 'expiresAt', 'account'],
+      where: {
+        id: sessionId,
+        isDeleted: false,
+      },
+      join: {
+        alias: 'sessions',
+        leftJoinAndSelect: {
+          account: 'sessions.account',
+        },
+      },
+    });
+
+    if (!session) throw new ApiNotFoundException(`The session was not found`);
+
+    if (session.expiresAt.getTime() < Date.now())
+      throw new ApiForbiddenException('The session is expired');
+
+    await this.sessionsService.update(
+      { id: session.id },
+      { expiresAt: new Date(Date.now() + SESSION_EXPIRES_AT) }
+    );
+
+    return {
+      token: this.jwtService.sign({ id: session.account.userId }),
     };
   }
 }

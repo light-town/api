@@ -80,7 +80,7 @@ export class SessionsService extends TransactionFor {
         secret: options.secret,
         accountId: account.id,
         deviceId: device.id,
-        expiresAt: new Date(Date.now() + 2 * SESSION_EXPIRES_AT),
+        expiresAt: new Date(Date.now() + SESSION_EXPIRES_AT),
         verificationStageId: sessionVerificationStage.id,
         verificationDeviceId: verificationDevice?.id,
       })

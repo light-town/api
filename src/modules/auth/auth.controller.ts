@@ -15,6 +15,7 @@ import {
   SessionVerifyPayload,
   SessionVerifyResponse,
   GetCsrfTokenResponse,
+  RefreshTokenResponse,
 } from './auth.dto';
 import { AuthService } from './auth.service';
 
@@ -64,6 +65,14 @@ export class AuthController {
     return {
       'X-CSRF-TOKEN': req.csrfToken(),
     };
+  }
+
+  @Post('/sessions/:sessionUuid/refresh-token')
+  @ApiCreatedResponse({ type: RefreshTokenResponse })
+  public refreshToken(
+    @Param('sessionUuid') sessionUuid: string
+  ): Promise<RefreshTokenResponse> {
+    return this.authService.refreshToken(sessionUuid);
   }
 }
 

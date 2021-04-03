@@ -173,3 +173,11 @@ export class GetCsrfTokenResponse {
   })
   'X-CSRF-TOKEN': string;
 }
+
+export class RefreshTokenResponse {
+  @ApiProperty({
+    description: 'The refreshed token',
+    required: true,
+  })
+  token: string;
+}
