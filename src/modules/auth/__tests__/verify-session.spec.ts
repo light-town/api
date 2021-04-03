@@ -1,10 +1,13 @@
-import { AuthService, SESSION_EXPIRES_AT } from '../auth.service';
+import { AuthService } from '../auth.service';
 import { createTestingModule } from './helpers/createTestingModule';
 import * as faker from 'faker';
 import * as dotenv from 'dotenv';
 import { TestingModule } from '@nestjs/testing';
 import SessionsService from '~/modules/sessions/sessions.service';
-import { SessionVerificationStageEnum } from '~/modules/sessions/sessions.dto';
+import {
+  SessionVerificationStageEnum,
+  SESSION_EXPIRES_AT,
+} from '~/modules/sessions/sessions.dto';
 import DevicesService from '~/modules/devices/devices.service';
 import {
   ApiForbiddenException,
@@ -40,7 +43,9 @@ describe('[Unit] [Auth Module] ...', () => {
     const TEST_SESSION = {
       id: faker.datatype.uuid(),
       expiresAt: new Date(new Date().getTime() + SESSION_EXPIRES_AT),
-      verificationDeviceId: TEST_DEVICE.id,
+      verificationDevice: {
+        deviceId: TEST_DEVICE.id,
+      },
       verificationStage: {
         name: SessionVerificationStageEnum.REQUIRED,
       },
@@ -76,7 +81,13 @@ describe('[Unit] [Auth Module] ...', () => {
 
     expect(findOneSessionFunc).toBeCalledTimes(2);
     expect(findOneSessionFunc.mock.calls[0][0]).toStrictEqual({
-      select: ['id', 'deviceId', 'verificationStage', 'expiresAt'],
+      select: [
+        'id',
+        'deviceId',
+        'verificationStage',
+        'expiresAt',
+        'verificationDevice',
+      ],
       where: {
         id: TEST_SESSION.id,
         isDeleted: false,
@@ -85,6 +96,7 @@ describe('[Unit] [Auth Module] ...', () => {
         alias: 'sessions',
         leftJoinAndSelect: {
           verificationStage: 'sessions.verificationStage',
+          verificationDevice: 'sessions.verificationDevice',
         },
       },
     });
@@ -130,7 +142,7 @@ describe('[Unit] [Auth Module] ...', () => {
   it('should throw error when session was not found', async () => {
     const TEST_SESSION = {
       id: faker.datatype.uuid(),
-      verifyStage: {
+      verificationStage: {
         name: SessionVerificationStageEnum.REQUIRED,
       },
     };
@@ -169,7 +181,13 @@ describe('[Unit] [Auth Module] ...', () => {
 
     expect(findOneSessionFunc).toBeCalledTimes(1);
     expect(findOneSessionFunc).toBeCalledWith({
-      select: ['id', 'deviceId', 'verificationStage', 'expiresAt'],
+      select: [
+        'id',
+        'deviceId',
+        'verificationStage',
+        'expiresAt',
+        'verificationDevice',
+      ],
       where: {
         id: TEST_SESSION.id,
         isDeleted: false,
@@ -178,6 +196,7 @@ describe('[Unit] [Auth Module] ...', () => {
         alias: 'sessions',
         leftJoinAndSelect: {
           verificationStage: 'sessions.verificationStage',
+          verificationDevice: 'sessions.verificationDevice',
         },
       },
     });
@@ -224,7 +243,13 @@ describe('[Unit] [Auth Module] ...', () => {
 
     expect(findOneSessionFunc).toBeCalledTimes(1);
     expect(findOneSessionFunc).toBeCalledWith({
-      select: ['id', 'deviceId', 'verificationStage', 'expiresAt'],
+      select: [
+        'id',
+        'deviceId',
+        'verificationStage',
+        'expiresAt',
+        'verificationDevice',
+      ],
       where: {
         id: TEST_SESSION.id,
         isDeleted: false,
@@ -233,6 +258,7 @@ describe('[Unit] [Auth Module] ...', () => {
         alias: 'sessions',
         leftJoinAndSelect: {
           verificationStage: 'sessions.verificationStage',
+          verificationDevice: 'sessions.verificationDevice',
         },
       },
     });
@@ -249,7 +275,7 @@ describe('[Unit] [Auth Module] ...', () => {
     const TEST_SESSION = {
       id: faker.datatype.uuid(),
       expiresAt: new Date(new Date().getTime() + SESSION_EXPIRES_AT),
-      verificationDeviceId: TEST_DEVICE.id,
+      verificationDevice: { deviceId: TEST_DEVICE.id },
       verificationStage: {
         name: SessionVerificationStageEnum.REQUIRED,
       },
@@ -292,7 +318,13 @@ describe('[Unit] [Auth Module] ...', () => {
 
     expect(findOneSessionFunc).toBeCalledTimes(1);
     expect(findOneSessionFunc).toBeCalledWith({
-      select: ['id', 'deviceId', 'verificationStage', 'expiresAt'],
+      select: [
+        'id',
+        'deviceId',
+        'verificationStage',
+        'expiresAt',
+        'verificationDevice',
+      ],
       where: {
         id: TEST_SESSION.id,
         isDeleted: false,
@@ -301,6 +333,7 @@ describe('[Unit] [Auth Module] ...', () => {
         alias: 'sessions',
         leftJoinAndSelect: {
           verificationStage: 'sessions.verificationStage',
+          verificationDevice: 'sessions.verificationDevice',
         },
       },
     });
@@ -324,8 +357,8 @@ describe('[Unit] [Auth Module] ...', () => {
 
     const TEST_SESSION = {
       id: faker.datatype.uuid(),
-      expiresAt: new Date(new Date().getTime() - SESSION_EXPIRES_AT),
-      verificationDeviceId: TEST_DEVICE.id,
+      expiresAt: new Date(Date.now() - SESSION_EXPIRES_AT),
+      verificationDevice: { deviceId: TEST_DEVICE.id },
       verificationStage: {
         name: SessionVerificationStageEnum.REQUIRED,
       },
@@ -361,7 +394,13 @@ describe('[Unit] [Auth Module] ...', () => {
 
     expect(findOneSessionFunc).toBeCalledTimes(1);
     expect(findOneSessionFunc).toBeCalledWith({
-      select: ['id', 'deviceId', 'verificationStage', 'expiresAt'],
+      select: [
+        'id',
+        'deviceId',
+        'verificationStage',
+        'expiresAt',
+        'verificationDevice',
+      ],
       where: {
         id: TEST_SESSION.id,
         isDeleted: false,
@@ -370,6 +409,7 @@ describe('[Unit] [Auth Module] ...', () => {
         alias: 'sessions',
         leftJoinAndSelect: {
           verificationStage: 'sessions.verificationStage',
+          verificationDevice: 'sessions.verificationDevice',
         },
       },
     });
@@ -383,7 +423,7 @@ describe('[Unit] [Auth Module] ...', () => {
     const TEST_SESSION = {
       id: faker.datatype.uuid(),
       expiresAt: new Date(new Date().getTime() + SESSION_EXPIRES_AT),
-      verificationDeviceId: faker.datatype.uuid(),
+      verificationDevice: { deviceId: faker.datatype.uuid() },
       verificationStage: {
         name: SessionVerificationStageEnum.REQUIRED,
       },
@@ -426,7 +466,13 @@ describe('[Unit] [Auth Module] ...', () => {
 
     expect(findOneSessionFunc).toBeCalledTimes(1);
     expect(findOneSessionFunc).toBeCalledWith({
-      select: ['id', 'deviceId', 'verificationStage', 'expiresAt'],
+      select: [
+        'id',
+        'deviceId',
+        'verificationStage',
+        'expiresAt',
+        'verificationDevice',
+      ],
       where: {
         id: TEST_SESSION.id,
         isDeleted: false,
@@ -435,6 +481,7 @@ describe('[Unit] [Auth Module] ...', () => {
         alias: 'sessions',
         leftJoinAndSelect: {
           verificationStage: 'sessions.verificationStage',
+          verificationDevice: 'sessions.verificationDevice',
         },
       },
     });

@@ -10,7 +10,11 @@ import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity
 import { SessionEntity } from '~/db/entities/session.entity';
 import AccountsService from '../accounts/accounts.service';
 import { DevicesService } from '../devices/devices.service';
-import { SessionCreateDTO, SessionVerificationStageEnum } from './sessions.dto';
+import {
+  SessionCreateDTO,
+  SessionVerificationStageEnum,
+  SESSION_EXPIRES_AT,
+} from './sessions.dto';
 import SessionVerificationStageEntity from '~/db/entities/session-verification-stage.entity';
 import Criteria from '~/common/criteria';
 import {
@@ -76,6 +80,7 @@ export class SessionsService extends TransactionFor {
         secret: options.secret,
         accountId: account.id,
         deviceId: device.id,
+        expiresAt: new Date(Date.now() + 2 * SESSION_EXPIRES_AT),
         verificationStageId: sessionVerificationStage.id,
         verificationDeviceId: verificationDevice?.id,
       })

@@ -12,7 +12,10 @@ import AccountsService from '~/modules/accounts/accounts.service';
 import UsersService from '~/modules/users/users.service';
 import SessionsService from '~/modules/sessions/sessions.service';
 import DevicesService from '~/modules/devices/devices.service';
-import { SessionVerificationStageEnum } from '~/modules/sessions/sessions.dto';
+import {
+  SessionVerificationStageEnum,
+  SESSION_EXPIRES_AT,
+} from '~/modules/sessions/sessions.dto';
 import PushNotificationsService from '~/modules/push-notifications/push-notifications.service';
 import {
   SignUpPayload,
@@ -26,7 +29,6 @@ import {
 import AuthGateway from './auth.gateway';
 import { OS } from '../devices/devices.dto';
 
-export const SESSION_EXPIRES_AT = 10 * 60 * 1000; // 10 minutes
 @Injectable()
 export class AuthService {
   public constructor(
@@ -125,7 +127,12 @@ export class AuthService {
           `The verification device was not found`
         );
 
-      await this.pushNotificationsService.send(verificationDevice.deviceId, {
+      await this.sessionsService.update(
+        { id: session.id },
+        { verificationDeviceId: verificationDevice.id }
+      );
+
+      await this.pushNotificationsService.send(verificationDevice.device.id, {
         action: 'VerifySession',
         sessionUuid: session.id,
       });
@@ -229,7 +236,7 @@ export class AuthService {
       options.clientSessionProofKey
     );
 
-    const expiresAt = new Date().getTime() + SESSION_EXPIRES_AT;
+    const expiresAt = Date.now() + SESSION_EXPIRES_AT;
 
     await this.sessionsService.update(
       { id: session.id },
@@ -247,7 +254,13 @@ export class AuthService {
     deviceId: string
   ): Promise<SessionVerifyResponse> {
     const session = await this.sessionsService.findOne({
-      select: ['id', 'deviceId', 'verificationStage', 'expiresAt'],
+      select: [
+        'id',
+        'deviceId',
+        'verificationStage',
+        'expiresAt',
+        'verificationDevice',
+      ],
       where: {
         id: sessionId,
         isDeleted: false,
@@ -256,6 +269,7 @@ export class AuthService {
         alias: 'sessions',
         leftJoinAndSelect: {
           verificationStage: 'sessions.verificationStage',
+          verificationDevice: 'sessions.verificationDevice',
         },
       },
     });
@@ -282,7 +296,7 @@ export class AuthService {
 
     if (!device) throw new ApiNotFoundException(`The device was not found`);
 
-    if (device.id !== session.verificationDeviceId) {
+    if (device.id !== session.verificationDevice.deviceId) {
       throw new ApiForbiddenException(
         `The got device is not for verifying the session`
       );

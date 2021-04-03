@@ -6,10 +6,12 @@ import {
 } from '~/common/exceptions';
 import GatewayNamespacesEnum from '~/common/gateway-namespaces';
 import DevicesService from '~/modules/devices/devices.service';
-import { SessionVerificationStageEnum } from '~/modules/sessions/sessions.dto';
+import {
+  SessionVerificationStageEnum,
+  SESSION_EXPIRES_AT,
+} from '~/modules/sessions/sessions.dto';
 import SessionsService from '~/modules/sessions/sessions.service';
 import AuthGateway, { AuthEventsEnum } from '../auth.gateway';
-import { SESSION_EXPIRES_AT } from '../auth.service';
 import createTestingModule from './helpers/createTestingModule';
 
 jest.mock('ws', () => function () {});
@@ -248,7 +250,7 @@ describe('[Auth Module] [Gateway]...', () => {
     } catch (e) {
       expect(e).toStrictEqual(
         new ApiConflictException(
-          'The session verify is already completed or not require at all'
+          'The session verify has already completed or not required at all'
         )
       );
     }

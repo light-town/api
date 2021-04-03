@@ -19,7 +19,7 @@ export class ApiException extends HttpException {
   private error: ApiError;
 
   constructor(error: ApiError, status: number) {
-    super('Api Error', status);
+    super(error.message, status);
 
     this.error = error;
   }

@@ -86,7 +86,7 @@ export class AuthGateway
       session.verificationStage?.name !== SessionVerificationStageEnum.REQUIRED
     )
       throw new ApiConflictException(
-        'The session verify has already completed or not required to  at all'
+        'The session verify has already completed or not required at all'
       );
 
     this.connectedDevices.set(client, {
