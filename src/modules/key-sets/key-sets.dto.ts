@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsNotEmpty } from '~/common/validation';
-import { IsNumber, IsPositive, ValidateNested } from 'class-validator';
+import { IsNumber, IsPositive, IsUUID, ValidateNested } from 'class-validator';
 
 export class EncPrivateKey {
   @ApiProperty({
@@ -109,4 +109,14 @@ export class PrimaryKeySet {
   })
   @ValidateNested()
   encSymmetricKey: EncSymmetricKey;
+}
+
+export class KeySet extends PrimaryKeySet {
+  @ApiProperty({
+    description: 'The unique uuid of key set',
+    required: true,
+  })
+  @IsString()
+  @IsUUID()
+  uuid: string;
 }

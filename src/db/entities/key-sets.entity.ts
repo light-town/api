@@ -14,6 +14,9 @@ export class KeySetEntity extends IEntity {
   @Column({ type: 'jsonb', name: 'enc_symmetric_key' })
   public encSymmetricKey: Record<string, any>;
 
+  @Column({ default: false })
+  public isPrimary: boolean;
+
   @Column({ type: 'uuid', name: 'account_id' })
   public accountId: string;
 

@@ -12,3 +12,5 @@ export const mockRepository = jest.fn(() => ({
     update: jest.fn(),
   },
 }));
+
+export default mockRepository;

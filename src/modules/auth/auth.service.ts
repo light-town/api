@@ -73,7 +73,12 @@ export class AuthService {
       this.vaultsService.create(primaryVault),
     ]);
 
-    await this.keySetsService.create(newAccount.id, newVault.id, primaryKeySet);
+    await this.keySetsService.create(
+      newAccount.id,
+      newVault.id,
+      primaryKeySet,
+      { primary: true }
+    );
   }
 
   public async createSession(

@@ -123,7 +123,8 @@ describe('[Auth Module] [Service] ...', () => {
     expect(keySetCreateFn).toHaveBeenCalledWith(
       TEST_ACCOUNT_UUID,
       TEST_VAULT.id,
-      payload.primaryKeySet
+      payload.primaryKeySet,
+      { primary: true }
     );
   });
 

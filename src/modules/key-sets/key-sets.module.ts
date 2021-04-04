@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import KeySetEntity from '~/db/entities/key-sets.entity';
 import AccountsModule from '../accounts/accounts.module';
 import VaultsModule from '../vaults/vaults.module';
+import KeySetsController from './key-sets.controller';
 import KeySetsService from './key-sets.service';
 
 @Module({
@@ -11,6 +12,7 @@ import KeySetsService from './key-sets.service';
     AccountsModule,
     VaultsModule,
   ],
+  controllers: [KeySetsController],
   providers: [KeySetsService],
   exports: [KeySetsService],
 })
