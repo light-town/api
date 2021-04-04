@@ -47,7 +47,7 @@ describe('[Auth Module] [Controller]...', () => {
 
   describe('[Start session] ...', () => {
     let TEST_DEVICE: DeviceEntity;
-    const TEST_USERNAME = faker.internet.userName();
+    const TEST_USER_NAME = faker.internet.userName();
     const TEST_USER_PASSWORD = faker.random.word();
     const TEST_ACCOUNT_KEY = core.common.generateAccountKey({
       versionCode: 'A3',
@@ -65,11 +65,29 @@ describe('[Auth Module] [Controller]...', () => {
       });
 
       const payload: SignUpPayload = {
-        username: TEST_USERNAME,
-        accountKey: TEST_ACCOUNT_KEY,
-        salt: TEST_SRP_VERIFIER.salt,
-        verifier: TEST_SRP_VERIFIER.verifier,
         deviceUuid: TEST_DEVICE.id,
+        account: {
+          key: TEST_ACCOUNT_KEY,
+          username: TEST_USER_NAME,
+        },
+        srp: {
+          verifier: TEST_SRP_VERIFIER.verifier,
+          salt: TEST_SRP_VERIFIER.salt,
+        },
+        primaryKeySet: {
+          publicKey: faker.datatype.uuid(),
+          encPrivateKey: <any>{
+            key: faker.datatype.uuid(),
+          },
+          encSymmetricKey: <any>{
+            key: faker.datatype.uuid(),
+          },
+        },
+        primaryVault: {
+          encVaultKey: <any>{
+            key: faker.datatype.uuid(),
+          },
+        },
       };
 
       await api.signUp(payload);

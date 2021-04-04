@@ -2,15 +2,18 @@ import { ApiProperty } from '@nestjs/swagger';
 import { SessionVerificationStageEnum } from '../sessions/sessions.dto';
 import { IsString, IsNotEmpty, IsOptional } from '~/common/validation';
 import { Device } from '../devices/devices.dto';
+import { IsEnum, ValidateNested } from 'class-validator';
+import { PrimaryKeySet } from '~/modules/key-sets/key-sets.dto';
+import { PrimaryVault } from '~/modules/vaults/vaults.dto';
 
-export class SignUpPayload {
+export class SRP {
   @ApiProperty({
-    description: 'The unique account key',
+    description: 'The verifier of SRP key',
     required: true,
   })
   @IsString()
   @IsNotEmpty()
-  accountKey: string;
+  verifier: string;
 
   @ApiProperty({
     description: 'The salt of SRP key',
@@ -19,14 +22,16 @@ export class SignUpPayload {
   @IsString()
   @IsNotEmpty()
   salt: string;
+}
 
+export class Account {
   @ApiProperty({
-    description: 'The verifier of SRP key',
+    description: 'The unique account key',
     required: true,
   })
   @IsString()
   @IsNotEmpty()
-  verifier: string;
+  key: string;
 
   @ApiProperty({
     description: 'The name of new user',
@@ -44,13 +49,44 @@ export class SignUpPayload {
   @IsString()
   @IsNotEmpty()
   avatarUrl?: string;
+}
 
+export class SignUpPayload {
   @ApiProperty({
     description: 'The unique uuid of device',
+    required: true,
   })
   @IsString()
   @IsNotEmpty()
   deviceUuid: string;
+
+  @ApiProperty({
+    description: 'The SRP auth configuration',
+    required: true,
+  })
+  @ValidateNested()
+  srp: SRP;
+
+  @ApiProperty({
+    description: 'The account configuration',
+    required: true,
+  })
+  @ValidateNested()
+  account: Account;
+
+  @ApiProperty({
+    description: 'The primary key set configuration',
+    required: true,
+  })
+  @ValidateNested()
+  primaryKeySet: PrimaryKeySet;
+
+  @ApiProperty({
+    description: 'The primary vault configuration',
+    required: true,
+  })
+  @ValidateNested()
+  primaryVault: PrimaryVault;
 }
 
 export class SessionCreatePayload {
@@ -64,6 +100,7 @@ export class SessionCreatePayload {
 
   @ApiProperty({
     description: 'The unique uuid of device',
+    required: true,
   })
   @IsString()
   @IsNotEmpty()
@@ -100,6 +137,7 @@ export class SessionVerificationType {
     enum: SessionVerificationStageEnum,
     required: true,
   })
+  @ValidateNested()
   stage: SessionVerificationStageEnum;
 
   @ApiProperty({
@@ -107,33 +145,39 @@ export class SessionVerificationType {
     enum: MFATypesEnum,
     required: true,
   })
+  @IsEnum(MFATypesEnum)
   MFAType: MFATypesEnum;
 
   @ApiProperty({
     description: 'The device that verifying session',
     required: false,
   })
+  @ValidateNested()
   verificationDevice?: Device;
 }
 
 export class SessionCreateResponse {
   @ApiProperty({
     description: 'The unique session id',
+    required: true,
   })
   sessionUuid: string;
 
   @ApiProperty({
     description: 'The verifier of SRP key',
+    required: true,
   })
   salt: string;
 
   @ApiProperty({
     description: 'The server public ephemeral key',
+    required: true,
   })
   serverPublicEphemeral: string;
 
   @ApiProperty({
     description: 'The process info of verifying session',
+    required: true,
   })
   sessionVerification: SessionVerificationType;
 }
@@ -141,11 +185,13 @@ export class SessionCreateResponse {
 export class SessionStartResponse {
   @ApiProperty({
     description: 'The JWT token that expires in 10 minutes',
+    required: true,
   })
   token: string;
 
   @ApiProperty({
     description: 'The server session proof',
+    required: true,
   })
   serverSessionProof: string;
 }
@@ -153,6 +199,7 @@ export class SessionStartResponse {
 export class SessionVerifyPayload {
   @ApiProperty({
     description: 'The unique device uuid that verify session',
+    required: true,
   })
   @IsString()
   @IsNotEmpty()
@@ -163,6 +210,7 @@ export class SessionVerifyResponse {
   @ApiProperty({
     description: 'The current stage of session verifying',
     enum: SessionVerificationStageEnum,
+    required: true,
   })
   stage: SessionVerificationStageEnum;
 }
@@ -170,6 +218,7 @@ export class SessionVerifyResponse {
 export class GetCsrfTokenResponse {
   @ApiProperty({
     description: 'Return a csrf token. Mobile devices need it',
+    required: true,
   })
   'X-CSRF-TOKEN': string;
 }

@@ -29,6 +29,8 @@ import {
 } from './auth.dto';
 import AuthGateway from './auth.gateway';
 import { OS } from '../devices/devices.dto';
+import KeySetsService from '../key-sets/key-sets.service';
+import VaultsService from '../vaults/vaults.service';
 
 @Injectable()
 export class AuthService {
@@ -41,36 +43,37 @@ export class AuthService {
     private readonly devicesService: DevicesService,
     private readonly jwtService: JwtService,
     private readonly authGateway: AuthGateway,
-    private readonly pushNotificationsService: PushNotificationsService
+    private readonly pushNotificationsService: PushNotificationsService,
+    private readonly keySetsService: KeySetsService,
+    private readonly vaultsService: VaultsService
   ) {}
 
   public async signUp(options: SignUpPayload): Promise<void> {
-    /*  await this.connection.transaction(async manager => {
-      const accountsService = this.accountsService.withTransaction(manager);
-      const devicesService = this.devicesService.withTransaction(manager);
-      const usersService = this.usersService.withTransaction(manager); */
+    const { deviceUuid, account, srp, primaryKeySet, primaryVault } = options;
 
     const device = await this.devicesService.findOne({
       select: ['id'],
-      where: { id: options.deviceUuid, isDeleted: false },
+      where: { id: deviceUuid, isDeleted: false },
     });
 
     if (!device) throw new ApiNotFoundException(`The device was not found`);
 
     const user = await this.usersService.create({
-      name: options.username,
-      avatarUrl: options.avatarUrl,
+      name: account.username,
+      avatarUrl: account.avatarUrl,
     });
 
-    if (!user) throw new ApiNotFoundException(`The user was not found`);
+    const [newAccount, newVault] = await Promise.all([
+      this.accountsService.create({
+        key: account.key,
+        userId: user.id,
+        verifier: srp.verifier,
+        salt: srp.salt,
+      }),
+      this.vaultsService.create(primaryVault),
+    ]);
 
-    await this.accountsService.create({
-      key: options.accountKey,
-      userId: user.id,
-      verifier: options.verifier,
-      salt: options.salt,
-    });
-    /* }); */
+    await this.keySetsService.create(newAccount.id, newVault.id, primaryKeySet);
   }
 
   public async createSession(

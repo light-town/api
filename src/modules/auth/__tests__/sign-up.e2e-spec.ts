@@ -13,7 +13,7 @@ import initDB from './helpers/initDatabase';
 import MFATypeEntity from '~/db/entities/mfa-type.entity';
 import { OS } from '~/modules/devices/devices.dto';
 
-describe('[E2E] [Auth Module] ...', () => {
+describe('[Auth Module] [Service] ...', () => {
   let connection: Connection;
   let app: INestApplication;
   let devicesService: DevicesService;
@@ -49,25 +49,41 @@ describe('[E2E] [Auth Module] ...', () => {
         os: OS.ANDROID,
         hostname: faker.internet.ip(),
       });
-
-      const TEST_USERNAME = faker.internet.userName();
+      const TEST_USER_NAME = faker.internet.userName();
       const TEST_USER_PASSWORD = faker.random.word();
       const TEST_ACCOUNT_KEY = core.common.generateAccountKey({
         versionCode: 'A3',
         secret: core.common.generateCryptoRandomString(32),
       });
-
       const TEST_SRP_VERIFIER = core.srp.client.deriveVerifier(
         TEST_ACCOUNT_KEY,
         TEST_USER_PASSWORD
       );
 
       const payload: SignUpPayload = {
-        username: TEST_USERNAME,
-        accountKey: TEST_ACCOUNT_KEY,
-        salt: TEST_SRP_VERIFIER.salt,
-        verifier: TEST_SRP_VERIFIER.verifier,
         deviceUuid: TEST_DEVICE.id,
+        account: {
+          key: TEST_ACCOUNT_KEY,
+          username: TEST_USER_NAME,
+        },
+        srp: {
+          verifier: TEST_SRP_VERIFIER.verifier,
+          salt: TEST_SRP_VERIFIER.salt,
+        },
+        primaryKeySet: {
+          publicKey: faker.datatype.uuid(),
+          encPrivateKey: <any>{
+            key: faker.datatype.uuid(),
+          },
+          encSymmetricKey: <any>{
+            key: faker.datatype.uuid(),
+          },
+        },
+        primaryVault: {
+          encVaultKey: <any>{
+            key: faker.datatype.uuid(),
+          },
+        },
       };
 
       const response = await api.signUp(payload);
@@ -80,11 +96,11 @@ describe('[E2E] [Auth Module] ...', () => {
       const users = connection.getRepository(UserEntity);
       expect(await users.count()).toEqual(1);
 
-      const newUser = await users.findOne({ where: { name: TEST_USERNAME } });
+      const newUser = await users.findOne({ where: { name: TEST_USER_NAME } });
       expect(newUser).toStrictEqual(
         users.create({
           id: newUser.id,
-          name: TEST_USERNAME,
+          name: TEST_USER_NAME,
           avatarUrl: null,
           updatedAt: newUser.updatedAt,
           createdAt: newUser.createdAt,
@@ -141,7 +157,7 @@ describe('[E2E] [Auth Module] ...', () => {
     it('should throw 404 error when device was not found', async () => {
       const TEST_FAKE_DEVICE_UUID = faker.datatype.uuid();
 
-      const TEST_USERNAME = faker.internet.userName();
+      const TEST_USER_NAME = faker.internet.userName();
       const TEST_USER_PASSWORD = faker.random.word();
       const TEST_ACCOUNT_KEY = core.common.generateAccountKey({
         versionCode: 'A3',
@@ -154,11 +170,29 @@ describe('[E2E] [Auth Module] ...', () => {
       );
 
       const payload: SignUpPayload = {
-        username: TEST_USERNAME,
-        accountKey: TEST_ACCOUNT_KEY,
-        salt: TEST_SRP_VERIFIER.salt,
-        verifier: TEST_SRP_VERIFIER.verifier,
         deviceUuid: TEST_FAKE_DEVICE_UUID,
+        account: {
+          key: TEST_ACCOUNT_KEY,
+          username: TEST_USER_NAME,
+        },
+        srp: {
+          verifier: TEST_SRP_VERIFIER.verifier,
+          salt: TEST_SRP_VERIFIER.salt,
+        },
+        primaryKeySet: {
+          publicKey: faker.datatype.uuid(),
+          encPrivateKey: <any>{
+            key: faker.datatype.uuid(),
+          },
+          encSymmetricKey: <any>{
+            key: faker.datatype.uuid(),
+          },
+        },
+        primaryVault: {
+          encVaultKey: <any>{
+            key: faker.datatype.uuid(),
+          },
+        },
       };
 
       const response = await api.signUp(payload);

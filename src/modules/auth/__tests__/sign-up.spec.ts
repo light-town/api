@@ -5,31 +5,33 @@ import { SignUpPayload } from '../auth.dto';
 import * as faker from 'faker';
 import * as dotenv from 'dotenv';
 import { TestingModule } from '@nestjs/testing';
-import { Connection } from 'typeorm';
-import { getConnectionToken } from '@nestjs/typeorm';
 import UsersService from '~/modules/users/users.service';
 import AccountsService from '~/modules/accounts/accounts.service';
 import DevicesService from '~/modules/devices/devices.service';
 import { ApiNotFoundException } from '~/common/exceptions';
+import VaultsService from '~/modules/vaults/vaults.service';
+import KeySetsService from '~/modules/key-sets/key-sets.service';
 
 dotenv.config();
 
-describe('[Unit] [Auth Module] ...', () => {
-  let connection: Connection;
+describe('[Auth Module] [Service] ...', () => {
   let moduleFixture: TestingModule;
   let authService: AuthService;
   let usersService: UsersService;
   let accountsService: AccountsService;
   let devicesService: DevicesService;
+  let keySetsService: KeySetsService;
+  let vaultsService: VaultsService;
 
   beforeAll(async () => {
     moduleFixture = await createTestingModule();
 
-    connection = moduleFixture.get<Connection>(getConnectionToken());
     authService = moduleFixture.get<AuthService>(AuthService);
     usersService = moduleFixture.get<UsersService>(UsersService);
     accountsService = moduleFixture.get<AccountsService>(AccountsService);
     devicesService = moduleFixture.get<DevicesService>(DevicesService);
+    vaultsService = moduleFixture.get<VaultsService>(VaultsService);
+    keySetsService = moduleFixture.get<KeySetsService>(KeySetsService);
   });
 
   afterEach(() => {
@@ -38,41 +40,47 @@ describe('[Unit] [Auth Module] ...', () => {
   });
 
   it('should sign up', async () => {
+    const TEST_USER_UUID = faker.datatype.uuid();
+    const TEST_USER_NAME = faker.internet.userName();
+    const TEST_ACCOUNT_UUID = faker.datatype.uuid();
     const TEST_ACCOUNT_KEY = core.common.generateAccountKey({
       versionCode: 'A3',
       secret: core.common.generateCryptoRandomString(32),
     });
-    const TSET_SRP_VERIFIER = core.srp.client.deriveVerifier(
+    const TEST_DEVICE_UUID = faker.datatype.uuid();
+    const TEST_SRP_VERIFIER = core.srp.client.deriveVerifier(
       TEST_ACCOUNT_KEY,
       faker.random.word()
     );
-    const TEST_USER_ID = faker.datatype.uuid();
-    const TEST_USERNAME = faker.internet.userName();
-    const TEST_DEVICE_UUID = faker.datatype.uuid();
-
-    const payload: SignUpPayload = {
-      accountKey: TEST_ACCOUNT_KEY,
-      salt: TSET_SRP_VERIFIER.salt,
-      verifier: TSET_SRP_VERIFIER.verifier,
-      username: TEST_USERNAME,
-      deviceUuid: faker.datatype.uuid(),
+    const TEST_VAULT = {
+      id: faker.datatype.uuid(),
     };
 
-    jest
-      .spyOn(accountsService, 'withTransaction')
-      .mockReturnValueOnce(accountsService);
-    jest
-      .spyOn(devicesService, 'withTransaction')
-      .mockReturnValueOnce(devicesService);
-    jest
-      .spyOn(usersService, 'withTransaction')
-      .mockReturnValueOnce(usersService);
-
-    jest
-      .spyOn(connection, 'transaction')
-      .mockImplementationOnce(async (fn: any) => {
-        return await fn();
-      });
+    const payload: SignUpPayload = {
+      deviceUuid: faker.datatype.uuid(),
+      account: {
+        key: TEST_ACCOUNT_KEY,
+        username: TEST_USER_NAME,
+      },
+      srp: {
+        verifier: TEST_SRP_VERIFIER.verifier,
+        salt: TEST_SRP_VERIFIER.salt,
+      },
+      primaryKeySet: {
+        publicKey: faker.datatype.uuid(),
+        encPrivateKey: <any>{
+          key: faker.datatype.uuid(),
+        },
+        encSymmetricKey: <any>{
+          key: faker.datatype.uuid(),
+        },
+      },
+      primaryVault: {
+        encVaultKey: <any>{
+          key: faker.datatype.uuid(),
+        },
+      },
+    };
 
     jest
       .spyOn(devicesService, 'findOne')
@@ -80,64 +88,81 @@ describe('[Unit] [Auth Module] ...', () => {
 
     const userCreateFunc = jest
       .spyOn(usersService, 'create')
-      .mockResolvedValueOnce(<any>{ id: TEST_USER_ID });
+      .mockResolvedValueOnce(<any>{ id: TEST_USER_UUID });
 
-    const TEST_ACCOUNT_ID = faker.datatype.uuid();
     const accountCreateFunc = jest
       .spyOn(accountsService, 'create')
-      .mockResolvedValueOnce({ id: TEST_ACCOUNT_ID });
+      .mockResolvedValueOnce(<any>{ id: TEST_ACCOUNT_UUID });
+
+    const vaultCreateFn = jest
+      .spyOn(vaultsService, 'create')
+      .mockResolvedValueOnce(<any>TEST_VAULT);
+
+    const keySetCreateFn = jest.spyOn(keySetsService, 'create');
 
     await authService.signUp(payload);
 
     expect(userCreateFunc).toHaveBeenCalledTimes(1);
     expect(userCreateFunc).toHaveBeenCalledWith({
-      name: TEST_USERNAME,
+      name: TEST_USER_NAME,
       avatarURL: undefined,
     });
 
     expect(accountCreateFunc).toBeCalledTimes(1);
     expect(accountCreateFunc).toBeCalledWith({
       key: TEST_ACCOUNT_KEY,
-      userId: TEST_USER_ID,
-      salt: TSET_SRP_VERIFIER.salt,
-      verifier: TSET_SRP_VERIFIER.verifier,
+      userId: TEST_USER_UUID,
+      salt: TEST_SRP_VERIFIER.salt,
+      verifier: TEST_SRP_VERIFIER.verifier,
     });
+
+    expect(vaultCreateFn).toHaveBeenCalledTimes(1);
+    expect(vaultCreateFn).toHaveBeenCalledWith(payload.primaryVault);
+
+    expect(keySetCreateFn).toHaveBeenCalledTimes(1);
+    expect(keySetCreateFn).toHaveBeenCalledWith(
+      TEST_ACCOUNT_UUID,
+      TEST_VAULT.id,
+      payload.primaryKeySet
+    );
   });
 
-  it('should throw error whene device was not found', async () => {
+  it('should throw an error whene device was not found', async () => {
     const TEST_ACCOUNT_KEY = core.common.generateAccountKey({
       versionCode: 'A3',
       secret: core.common.generateCryptoRandomString(32),
     });
-    const TSET_SRP_VERIFIER = core.srp.client.deriveVerifier(
+    const TEST_SRP_VERIFIER = core.srp.client.deriveVerifier(
       TEST_ACCOUNT_KEY,
       faker.random.word()
     );
-    const TEST_USERNAME = faker.internet.userName();
+    const TEST_USER_NAME = faker.internet.userName();
 
     const payload: SignUpPayload = {
-      accountKey: TEST_ACCOUNT_KEY,
-      salt: TSET_SRP_VERIFIER.salt,
-      verifier: TSET_SRP_VERIFIER.verifier,
-      username: TEST_USERNAME,
       deviceUuid: faker.datatype.uuid(),
+      account: {
+        key: TEST_ACCOUNT_KEY,
+        username: TEST_USER_NAME,
+      },
+      srp: {
+        verifier: TEST_SRP_VERIFIER.verifier,
+        salt: TEST_SRP_VERIFIER.salt,
+      },
+      primaryKeySet: {
+        publicKey: faker.datatype.uuid(),
+        encPrivateKey: <any>{
+          key: faker.datatype.uuid(),
+        },
+        encSymmetricKey: <any>{
+          key: faker.datatype.uuid(),
+        },
+      },
+      primaryVault: {
+        encVaultKey: <any>{
+          key: faker.datatype.uuid(),
+        },
+      },
     };
-
-    jest
-      .spyOn(accountsService, 'withTransaction')
-      .mockReturnValueOnce(accountsService);
-    jest
-      .spyOn(devicesService, 'withTransaction')
-      .mockReturnValueOnce(devicesService);
-    jest
-      .spyOn(usersService, 'withTransaction')
-      .mockReturnValueOnce(usersService);
-
-    jest
-      .spyOn(connection, 'transaction')
-      .mockImplementationOnce(async (fn: any) => {
-        return await fn();
-      });
 
     jest.spyOn(devicesService, 'findOne').mockResolvedValueOnce(undefined);
 

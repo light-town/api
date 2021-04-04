@@ -11,6 +11,8 @@ import VerifySessionStageEntity from '~/db/entities/session-verification-stage.e
 import PushNotificationStageEntity from '~/db/entities/push-notification-stage.entity';
 import PushNotificationEntity from '~/db/entities/push-notification.entity';
 import VerificationDeviceEntity from '~/db/entities/verification-devices.entity';
+import KeySetEntity from '~/db/entities/key-sets.entity';
+import VaultEntity from '~/db/entities/vault.entity';
 
 export const createTestingModule = () =>
   Test.createTestingModule({
@@ -33,6 +35,10 @@ export const createTestingModule = () =>
     .overrideProvider(getRepositoryToken(PushNotificationEntity))
     .useFactory({ factory: mockRepository })
     .overrideProvider(getRepositoryToken(PushNotificationStageEntity))
+    .useFactory({ factory: mockRepository })
+    .overrideProvider(getRepositoryToken(KeySetEntity))
+    .useFactory({ factory: mockRepository })
+    .overrideProvider(getRepositoryToken(VaultEntity))
     .useFactory({ factory: mockRepository })
     .overrideProvider(getConnectionToken())
     .useFactory({

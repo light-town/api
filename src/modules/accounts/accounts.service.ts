@@ -30,7 +30,7 @@ export class AccountsService extends TransactionFor {
     super(moduleRef);
   }
 
-  public async create(payload: CreateAccountDTO): Promise<any> {
+  public async create(payload: CreateAccountDTO): Promise<AccountEntity> {
     const user: UserEntity = await this.usersService.findOne({
       select: ['id'],
       where: { id: payload.userId, isDeleted: false },
