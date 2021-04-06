@@ -93,7 +93,7 @@ describe('[Key Set Module] [Controller] ...', () => {
       expect(getKeySetFn).toHaveBeenCalledTimes(1);
       expect(getKeySetFn).toHaveBeenCalledWith({
         accountId: TEST_ACCOUNT_UUID,
-        primary: TEST_IS_PRIMARY,
+        isPrimary: TEST_IS_PRIMARY,
       });
     });
   });
