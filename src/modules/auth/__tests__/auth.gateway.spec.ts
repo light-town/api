@@ -12,7 +12,7 @@ import {
 } from '~/modules/sessions/sessions.dto';
 import SessionsService from '~/modules/sessions/sessions.service';
 import AuthGateway, { AuthEventsEnum } from '../auth.gateway';
-import createTestingModule from './helpers/createTestingModule';
+import createModuleHelper from './helpers/create-module.helper';
 
 jest.mock('ws', () => function () {});
 
@@ -23,7 +23,7 @@ describe('[Auth Module] [Gateway]...', () => {
   let sessionsService: SessionsService;
 
   beforeAll(async () => {
-    moduleFixture = await createTestingModule();
+    moduleFixture = await createModuleHelper();
 
     authGateway = await moduleFixture.get<AuthGateway>(AuthGateway);
     devicesService = await moduleFixture.get<DevicesService>(DevicesService);

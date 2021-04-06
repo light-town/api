@@ -3,8 +3,8 @@ import { SessionVerificationStageEnum } from '../sessions/sessions.dto';
 import { IsString, IsNotEmpty, IsOptional } from '~/common/validation';
 import { Device } from '../devices/devices.dto';
 import { IsEnum, ValidateNested } from 'class-validator';
-import { PrimaryKeySet } from '~/modules/key-sets/key-sets.dto';
-import { PrimaryVault } from '~/modules/vaults/vaults.dto';
+import { CreateKeySetPayload } from '~/modules/key-sets/key-sets.dto';
+import { CreateVaultPayload } from '~/modules/vaults/vaults.dto';
 
 export class SRP {
   @ApiProperty({
@@ -79,14 +79,14 @@ export class SignUpPayload {
     required: true,
   })
   @ValidateNested()
-  primaryKeySet: PrimaryKeySet;
+  primaryKeySet: CreateKeySetPayload;
 
   @ApiProperty({
     description: 'The primary vault configuration',
     required: true,
   })
   @ValidateNested()
-  primaryVault: PrimaryVault;
+  primaryVault: CreateVaultPayload;
 }
 
 export class SessionCreatePayload {

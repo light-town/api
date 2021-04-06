@@ -3,7 +3,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { PassportModule } from '@nestjs/passport';
 import UserEntity from '~/db/entities/user.entity';
-import { mockRepository } from '~/../__tests__/__mocks__/mockRepository';
+import { mockRepository } from '~/../__tests__/__mocks__/mock-repository';
 import UsersModule from '~/modules/users/users.module';
 import JwtStrategy from '~/modules/auth/jwt.strategy';
 import * as dotenv from 'dotenv';

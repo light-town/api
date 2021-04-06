@@ -4,8 +4,12 @@ import VerifySessionStagesSeeder, {
   VerifySessionStagesFactory,
 } from '~/db/seeds/verify-session-stages.seed';
 import { SessionVerificationStageEnum } from '~/modules/sessions/sessions.dto';
+import PushNotificationStagesSeeder, {
+  PushNotificationStagesFactory,
+} from '~/db/seeds/push-notification-stages.seed';
+import { PushNotificationStageEnum } from '~/modules/push-notifications/push-notifications.dto';
 
-export const initDB = async () => {
+export const initDatabaseHelper = async () => {
   const mfaTypesSeeder = new MFATypesSeeder(new MFATypesFactory());
   await mfaTypesSeeder.run(1, { name: MFATypesEnum.NONE });
   await mfaTypesSeeder.run(1, { name: MFATypesEnum.FINGERPRINT });
@@ -23,6 +27,19 @@ export const initDB = async () => {
   await verifySessionStagesSeeder.run(1, {
     name: SessionVerificationStageEnum.NOT_REQUIRED,
   });
+
+  const pushNotificationStagesSeeder = new PushNotificationStagesSeeder(
+    new PushNotificationStagesFactory()
+  );
+  await pushNotificationStagesSeeder.run(1, {
+    name: PushNotificationStageEnum.CREATED,
+  });
+  await pushNotificationStagesSeeder.run(1, {
+    name: PushNotificationStageEnum.SENT,
+  });
+  await pushNotificationStagesSeeder.run(1, {
+    name: PushNotificationStageEnum.ARRIVED,
+  });
 };
 
-export default initDB;
+export default initDatabaseHelper;

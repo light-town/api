@@ -1,6 +1,6 @@
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { mockRepository } from '~/../__tests__/__mocks__/mockRepository';
+import { mockRepository } from '~/../__tests__/__mocks__/mock-repository';
 import DeviceEntity from '~/db/entities/device.entity';
 import DevicesModule from '~/modules/devices/devices.module';
 import initApp from '~/utils/init-app';

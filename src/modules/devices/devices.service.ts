@@ -5,8 +5,6 @@ import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity
 import { DeviceEntity } from '~/db/entities/device.entity';
 import Criteria from '~/common/criteria';
 import { DeviceCreatePayload } from './devices.dto';
-import TransactionFor from '~/common/with-transaction';
-import { ModuleRef } from '@nestjs/core';
 import VerificationDeviceEntity from '~/db/entities/verification-devices.entity';
 import AccountsService from '../accounts/accounts.service';
 import { ApiNotFoundException } from '~/common/exceptions';
@@ -16,18 +14,15 @@ export class DeviceCreateOptions extends DeviceCreatePayload {
   hostname: string;
 }
 @Injectable()
-export class DevicesService extends TransactionFor {
+export class DevicesService {
   public constructor(
     @InjectRepository(DeviceEntity)
     private readonly devicesRepository: Repository<DeviceEntity>,
     @InjectRepository(VerificationDeviceEntity)
     private readonly verificationDeviceRepository: Repository<VerificationDeviceEntity>,
     @Inject(forwardRef(() => AccountsService))
-    private readonly accountsService: AccountsService,
-    moduleRef: ModuleRef
-  ) {
-    super(moduleRef);
-  }
+    private readonly accountsService: AccountsService
+  ) {}
 
   public async create(options: DeviceCreateOptions): Promise<DeviceEntity> {
     return await this.devicesRepository.save(

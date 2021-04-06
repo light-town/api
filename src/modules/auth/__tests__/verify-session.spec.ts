@@ -1,5 +1,5 @@
 import { AuthService } from '../auth.service';
-import { createTestingModule } from './helpers/createTestingModule';
+import createModuleHelper from './helpers/create-module.helper';
 import * as faker from 'faker';
 import * as dotenv from 'dotenv';
 import { TestingModule } from '@nestjs/testing';
@@ -24,7 +24,7 @@ describe('[Unit] [Auth Module] ...', () => {
   let devicesService: DevicesService;
 
   beforeAll(async () => {
-    moduleFixture = await createTestingModule();
+    moduleFixture = await createModuleHelper();
 
     sessionsService = moduleFixture.get<SessionsService>(SessionsService);
     authService = moduleFixture.get<AuthService>(AuthService);

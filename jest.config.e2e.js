@@ -6,6 +6,7 @@ module.exports = {
     '^.+\\.ts$': 'ts-jest',
   },
   coverageDirectory: 'coverage',
+  coveragePathIgnorePatterns: ['__tests__'],
   testEnvironment: 'node',
   moduleNameMapper: {
     '^~/(.*)$': '<rootDir>/src/$1',

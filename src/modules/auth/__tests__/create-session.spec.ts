@@ -1,5 +1,5 @@
 import { AuthService } from '../auth.service';
-import { createTestingModule } from './helpers/createTestingModule';
+import { createModuleHelper } from './helpers/create-module.helper';
 import core from '@light-town/core';
 import { MFATypesEnum, SessionCreatePayload } from '../auth.dto';
 import * as faker from 'faker';
@@ -22,7 +22,7 @@ describe('[Auth Module] [Service]...', () => {
   let devicesService: DevicesService;
 
   beforeAll(async () => {
-    moduleFixture = await createTestingModule();
+    moduleFixture = await createModuleHelper();
 
     authService = moduleFixture.get<AuthService>(AuthService);
     accountsService = moduleFixture.get<AccountsService>(AccountsService);

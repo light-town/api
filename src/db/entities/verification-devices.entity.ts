@@ -3,7 +3,7 @@ import { IEntity } from './entity.interface';
 import DeviceEntity from './device.entity';
 import AccountEntity from './account.entity';
 
-@Entity('verification-devices')
+@Entity('verification_devices')
 export class VerificationDeviceEntity extends IEntity {
   @Column({ type: 'uuid', name: 'account_id' })
   public accountId: string;

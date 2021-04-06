@@ -21,22 +21,17 @@ import {
   ApiInternalServerException,
   ApiNotFoundException,
 } from '~/common/exceptions';
-import TransactionFor from '~/common/with-transaction';
-import { ModuleRef } from '@nestjs/core';
 
 @Injectable()
-export class SessionsService extends TransactionFor {
+export class SessionsService {
   public constructor(
     @InjectRepository(SessionEntity)
     private readonly sessionsRepository: Repository<SessionEntity>,
     @InjectRepository(SessionVerificationStageEntity)
     private readonly sessionVerificationStageRepository: Repository<SessionVerificationStageEntity>,
     private readonly accountsService: AccountsService,
-    private readonly devicesService: DevicesService,
-    moduleRef: ModuleRef
-  ) {
-    super(moduleRef);
-  }
+    private readonly devicesService: DevicesService
+  ) {}
 
   public async create(options: SessionCreateDTO) {
     const account = await this.accountsService.findOne({

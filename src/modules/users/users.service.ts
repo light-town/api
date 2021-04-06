@@ -3,18 +3,13 @@ import { FindManyOptions, FindOneOptions, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from '~/db/entities/user.entity';
 import { CreateUserDTO } from './users.dto';
-import TransactionFor from '~/common/with-transaction';
-import { ModuleRef } from '@nestjs/core';
 
 @Injectable()
-export class UsersService extends TransactionFor {
+export class UsersService {
   public constructor(
     @InjectRepository(UserEntity)
-    public readonly usersRepository: Repository<UserEntity>,
-    moduleRef: ModuleRef
-  ) {
-    super(moduleRef);
-  }
+    public readonly usersRepository: Repository<UserEntity>
+  ) {}
 
   public async create(options: CreateUserDTO): Promise<UserEntity> {
     return await this.usersRepository.save(

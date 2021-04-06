@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import UserEntity from '~/db/entities/user.entity';
-import { mockRepository } from '~/../__tests__/__mocks__/mockRepository';
+import { mockRepository } from '~/../__tests__/__mocks__/mock-repository';
 import AccountsModule from '~/modules/accounts/accounts.module';
 import AccountEntity from '~/db/entities/account.entity';
 import MFATypeEntity from '~/db/entities/mfa-type.entity';

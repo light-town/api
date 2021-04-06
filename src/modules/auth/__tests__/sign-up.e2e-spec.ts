@@ -1,6 +1,6 @@
-import { createTestingE2EModule } from './helpers/createTestingE2EModule';
+import { createE2EModuleHelper } from './helpers/create-e2e-module.helper';
 import { Connection, getConnection } from 'typeorm';
-import { Api } from './helpers/api';
+import { Api } from './helpers/api.helper';
 import { MFATypesEnum, SignUpPayload } from '../auth.dto';
 import core from '@light-town/core';
 import * as faker from 'faker';
@@ -9,7 +9,7 @@ import AccountEntity from '~/db/entities/account.entity';
 import { INestApplication } from '@nestjs/common';
 import DeviceEntity from '~/db/entities/device.entity';
 import DevicesService from '~/modules/devices/devices.service';
-import initDB from './helpers/initDatabase';
+import initDatabaseHelper from '~/../__tests__/helpers/init-database.helper';
 import MFATypeEntity from '~/db/entities/mfa-type.entity';
 import { OS } from '~/modules/devices/devices.dto';
 
@@ -20,14 +20,14 @@ describe('[Auth Module] [Service] ...', () => {
   let api: Api;
 
   beforeAll(async () => {
-    app = await createTestingE2EModule();
+    app = await createE2EModuleHelper();
 
     api = new Api(app);
 
     connection = getConnection();
     await connection.synchronize(true);
 
-    await initDB();
+    await initDatabaseHelper();
 
     devicesService = app.get<DevicesService>(DevicesService);
   });
@@ -80,9 +80,10 @@ describe('[Auth Module] [Service] ...', () => {
           },
         },
         primaryVault: {
-          encVaultKey: <any>{
+          encKey: <any>{
             key: faker.datatype.uuid(),
           },
+          encMetadata: {},
         },
       };
 
@@ -189,9 +190,10 @@ describe('[Auth Module] [Service] ...', () => {
           },
         },
         primaryVault: {
-          encVaultKey: <any>{
+          encKey: <any>{
             key: faker.datatype.uuid(),
           },
+          encMetadata: {},
         },
       };
 

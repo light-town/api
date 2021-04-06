@@ -1,12 +1,10 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ModuleRef } from '@nestjs/core';
 import { FindManyOptions, FindOneOptions, Repository } from 'typeorm';
 import {
   ApiForbiddenException,
   ApiNotFoundException,
 } from '~/common/exceptions';
-import TransactionFor from '~/common/with-transaction';
 import AccountEntity from '~/db/entities/account.entity';
 import MFATypeEntity from '~/db/entities/mfa-type.entity';
 import UserEntity from '~/db/entities/user.entity';
@@ -16,7 +14,7 @@ import { CreateAccountDTO } from './accounts.dto';
 import DevicesService from '../devices/devices.service';
 
 @Injectable()
-export class AccountsService extends TransactionFor {
+export class AccountsService {
   public constructor(
     @InjectRepository(AccountEntity)
     private readonly accountsRepository: Repository<AccountEntity>,
@@ -24,11 +22,8 @@ export class AccountsService extends TransactionFor {
     private readonly mfaTypesRepository: Repository<MFATypeEntity>,
     @Inject(forwardRef(() => DevicesService))
     private readonly devicesService: DevicesService,
-    private readonly usersService: UsersService,
-    moduleRef: ModuleRef
-  ) {
-    super(moduleRef);
-  }
+    private readonly usersService: UsersService
+  ) {}
 
   public async create(payload: CreateAccountDTO): Promise<AccountEntity> {
     const user: UserEntity = await this.usersService.findOne({

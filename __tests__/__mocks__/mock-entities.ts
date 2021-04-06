@@ -1,5 +1,5 @@
 import { getConnectionToken, getRepositoryToken } from '@nestjs/typeorm';
-import mockRepository from './mockRepository';
+import mockRepository from './mock-repository';
 import UserEntity from '~/db/entities/user.entity';
 import AccountEntity from '~/db/entities/account.entity';
 import DeviceEntity from '~/db/entities/device.entity';

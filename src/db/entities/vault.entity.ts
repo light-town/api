@@ -4,7 +4,10 @@ import { IEntity } from './entity.interface';
 @Entity('vaults')
 export class VaultEntity extends IEntity {
   @Column({ type: 'jsonb', name: 'enc_key' })
-  public encKey: Record<string, any>;
+  encKey: Record<string, any>;
+
+  @Column({ type: 'jsonb', name: 'enc_metadata' })
+  encMetadata: Record<string, any>;
 }
 
 export default VaultEntity;

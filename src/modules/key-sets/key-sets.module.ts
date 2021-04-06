@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import KeySetEntity from '~/db/entities/key-sets.entity';
 import AccountsModule from '../accounts/accounts.module';
@@ -10,7 +10,7 @@ import KeySetsService from './key-sets.service';
   imports: [
     TypeOrmModule.forFeature([KeySetEntity]),
     AccountsModule,
-    VaultsModule,
+    forwardRef(() => VaultsModule),
   ],
   controllers: [KeySetsController],
   providers: [KeySetsService],

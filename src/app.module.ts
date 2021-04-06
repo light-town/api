@@ -23,3 +23,5 @@ import VaultsModule from './modules/vaults/vaults.module';
   ],
 })
 export class AppModule {}
+
+export default AppModule;

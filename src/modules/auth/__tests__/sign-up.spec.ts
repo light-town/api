@@ -1,5 +1,5 @@
 import { AuthService } from '../auth.service';
-import { createTestingModule } from './helpers/createTestingModule';
+import { createModuleHelper } from './helpers/create-module.helper';
 import core from '@light-town/core';
 import { SignUpPayload } from '../auth.dto';
 import * as faker from 'faker';
@@ -24,7 +24,7 @@ describe('[Auth Module] [Service] ...', () => {
   let vaultsService: VaultsService;
 
   beforeAll(async () => {
-    moduleFixture = await createTestingModule();
+    moduleFixture = await createModuleHelper();
 
     authService = moduleFixture.get<AuthService>(AuthService);
     usersService = moduleFixture.get<UsersService>(UsersService);
@@ -76,9 +76,10 @@ describe('[Auth Module] [Service] ...', () => {
         },
       },
       primaryVault: {
-        encVaultKey: <any>{
+        encKey: <any>{
           key: faker.datatype.uuid(),
         },
+        encMetadata: {},
       },
     };
 
@@ -159,9 +160,10 @@ describe('[Auth Module] [Service] ...', () => {
         },
       },
       primaryVault: {
-        encVaultKey: <any>{
+        encKey: <any>{
           key: faker.datatype.uuid(),
         },
+        encMetadata: {},
       },
     };
 

@@ -2,14 +2,14 @@ import { TestingModule } from '@nestjs/testing';
 import * as faker from 'faker';
 import { ApiNotFoundException } from '~/common/exceptions';
 import KeySetsService from '../key-sets.service';
-import createTestingModule from './helpers/createTestingModule';
+import createModuleHelper from './helpers/create-module.helper';
 
 describe('[Key Set Module] [Service] ...', () => {
   let moduleFixture: TestingModule;
   let keySetsService: KeySetsService;
 
   beforeAll(async () => {
-    moduleFixture = await createTestingModule();
+    moduleFixture = await createModuleHelper();
 
     keySetsService = moduleFixture.get<KeySetsService>(KeySetsService);
   });
@@ -25,10 +25,10 @@ describe('[Key Set Module] [Service] ...', () => {
       const TEST_KEY_SET = {
         id: faker.datatype.uuid(),
         publicKey: faker.datatype.uuid(),
-        encPrivateKey: <any>{
+        encPrivateKey: {
           key: faker.datatype.uuid(),
         },
-        encSymmetricKey: <any>{
+        encSymmetricKey: {
           key: faker.datatype.uuid(),
         },
       };
@@ -38,13 +38,11 @@ describe('[Key Set Module] [Service] ...', () => {
         .mockResolvedValueOnce(<any>TEST_KEY_SET);
 
       expect(
-        await keySetsService.getPrimaryKeySet(TEST_ACCOUNT_UUID)
-      ).toStrictEqual({
-        uuid: TEST_KEY_SET.id,
-        publicKey: TEST_KEY_SET.publicKey,
-        encPrivateKey: TEST_KEY_SET.encPrivateKey,
-        encSymmetricKey: TEST_KEY_SET.encSymmetricKey,
-      });
+        await keySetsService.getKeySet({
+          accountId: TEST_ACCOUNT_UUID,
+          primary: true,
+        })
+      ).toStrictEqual(TEST_KEY_SET);
 
       expect(findOneKeySetFn).toHaveBeenCalledTimes(1);
       expect(findOneKeySetFn).toHaveBeenCalledWith({
@@ -57,7 +55,7 @@ describe('[Key Set Module] [Service] ...', () => {
       });
     });
 
-    it('should throw an error when key set was not found', async () => {
+    it('should throw an error when primary key set was not found', async () => {
       const TEST_ACCOUNT_UUID = faker.datatype.uuid();
 
       const findOneKeySetFn = jest
@@ -65,7 +63,10 @@ describe('[Key Set Module] [Service] ...', () => {
         .mockResolvedValueOnce(undefined);
 
       try {
-        await keySetsService.getPrimaryKeySet(TEST_ACCOUNT_UUID);
+        await keySetsService.getKeySet({
+          accountId: TEST_ACCOUNT_UUID,
+          primary: true,
+        });
       } catch (e) {
         expect(e).toStrictEqual(
           new ApiNotFoundException('The primary key set was not found')
@@ -91,10 +92,10 @@ describe('[Key Set Module] [Service] ...', () => {
         {
           id: faker.datatype.uuid(),
           publicKey: faker.datatype.uuid(),
-          encPrivateKey: <any>{
+          encPrivateKey: {
             key: faker.datatype.uuid(),
           },
-          encSymmetricKey: <any>{
+          encSymmetricKey: {
             key: faker.datatype.uuid(),
           },
         },
@@ -104,14 +105,9 @@ describe('[Key Set Module] [Service] ...', () => {
         .spyOn(keySetsService, 'find')
         .mockResolvedValueOnce(<any>TEST_KEY_SETS);
 
-      expect(await keySetsService.getKeySets(TEST_ACCOUNT_UUID)).toStrictEqual(
-        TEST_KEY_SETS.map(keySet => ({
-          uuid: keySet.id,
-          publicKey: keySet.publicKey,
-          encPrivateKey: keySet.encPrivateKey,
-          encSymmetricKey: keySet.encSymmetricKey,
-        }))
-      );
+      expect(
+        await keySetsService.getKeySets({ accountId: TEST_ACCOUNT_UUID })
+      ).toStrictEqual(TEST_KEY_SETS);
 
       expect(findKeySetFn).toHaveBeenCalledTimes(1);
       expect(findKeySetFn).toHaveBeenCalledWith({

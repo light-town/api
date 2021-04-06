@@ -87,7 +87,7 @@ export class EncSymmetricKey {
   salt: string;
 }
 
-export class PrimaryKeySet {
+export class CreateKeySetPayload {
   @ApiProperty({
     description: 'The RSA public key',
     required: true,
@@ -111,7 +111,7 @@ export class PrimaryKeySet {
   encSymmetricKey: EncSymmetricKey;
 }
 
-export class KeySet extends PrimaryKeySet {
+export class KeySet extends CreateKeySetPayload {
   @ApiProperty({
     description: 'The unique uuid of key set',
     required: true,

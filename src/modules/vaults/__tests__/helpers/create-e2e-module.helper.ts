@@ -1,11 +1,10 @@
 import { Test } from '@nestjs/testing';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { AuthModule } from '~/modules/auth/auth.module';
+import AppModule from '~/app.module';
 import initApp from '~/utils/init-app';
 
-export const createTestingE2EModule = async () => {
+export const createE2EModuleHelper = async () => {
   const moduleFixture = await Test.createTestingModule({
-    imports: [TypeOrmModule.forRoot(), AuthModule],
+    imports: [AppModule],
   }).compile();
 
   const app = await initApp(moduleFixture.createNestApplication());
@@ -14,4 +13,4 @@ export const createTestingE2EModule = async () => {
   return app;
 };
 
-export default createTestingE2EModule;
+export default createE2EModuleHelper;

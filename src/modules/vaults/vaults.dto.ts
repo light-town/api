@@ -28,11 +28,41 @@ export class EncVaultKey {
   key: string;
 }
 
-export class PrimaryVault {
+export class Vault {
+  @ApiProperty({
+    description: 'The unique uuid of vault',
+    required: true,
+  })
+  @ValidateNested()
+  uuid: string;
+
   @ApiProperty({
     description: 'The encrypted vault key',
     required: true,
   })
   @ValidateNested()
-  encVaultKey: EncVaultKey;
+  encKey: EncVaultKey;
+
+  @ApiProperty({
+    description: 'The encrypted metadata of vault',
+    required: true,
+  })
+  @ValidateNested()
+  encMetadata: any;
+}
+
+export class CreateVaultPayload {
+  @ApiProperty({
+    description: 'The encrypted vault key',
+    required: true,
+  })
+  @ValidateNested()
+  encKey: EncVaultKey;
+
+  @ApiProperty({
+    description: 'The encrypted metadata of vault',
+    required: true,
+  })
+  @ValidateNested()
+  encMetadata: any;
 }
