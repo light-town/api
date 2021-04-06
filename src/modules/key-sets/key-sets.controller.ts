@@ -19,7 +19,7 @@ export class KeySetsController {
     return this.keySetsService.formatAll(
       await this.keySetsService.getKeySets({
         accountId,
-        primary: primary || undefined,
+        isPrimary: primary || undefined,
       })
     );
   }
