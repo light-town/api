@@ -57,7 +57,6 @@ export default class WsAdapter extends AbstractWsAdapter {
         filter(result => result)
       )
       .subscribe(response => {
-        console.log(response);
         client.send(JSON.stringify(response));
       });
   }

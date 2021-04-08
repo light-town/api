@@ -4,7 +4,7 @@ import { IsString, IsNotEmpty, IsOptional } from '~/common/validation';
 import { Device } from '../devices/devices.dto';
 import { IsEnum, ValidateNested } from 'class-validator';
 import { CreateKeySetPayload } from '~/modules/key-sets/key-sets.dto';
-import { CreateVaultPayload } from '~/modules/vaults/vaults.dto';
+import { CreateVault } from '~/modules/vaults/vaults.dto';
 
 export class SRP {
   @ApiProperty({
@@ -86,7 +86,7 @@ export class SignUpPayload {
     required: true,
   })
   @ValidateNested()
-  primaryVault: CreateVaultPayload;
+  primaryVault: CreateVault;
 }
 
 export class SessionCreatePayload {

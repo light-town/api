@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsNotEmpty } from '~/common/validation';
 import { ValidateNested } from 'class-validator';
+import { CreateKeySetPayload as CreateKeySet } from '~/modules/key-sets/key-sets.dto';
 
 export class EncVaultKey {
   @ApiProperty({
@@ -51,7 +52,7 @@ export class Vault {
   encMetadata: any;
 }
 
-export class CreateVaultPayload {
+export class CreateVault {
   @ApiProperty({
     description: 'The encrypted vault key',
     required: true,
@@ -65,4 +66,20 @@ export class CreateVaultPayload {
   })
   @ValidateNested()
   encMetadata: any;
+}
+
+export class CreateVaultPayload {
+  @ApiProperty({
+    description: 'The key set creation configuration',
+    required: true,
+  })
+  @ValidateNested()
+  keySet: CreateKeySet;
+
+  @ApiProperty({
+    description: 'The vault creation configuration',
+    required: true,
+  })
+  @ValidateNested()
+  vault: CreateVault;
 }

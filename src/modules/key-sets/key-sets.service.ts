@@ -61,7 +61,14 @@ export class KeySetsService {
     options: GetKeySetOption = { primary: false }
   ): Promise<KeySetEntity> {
     const keySet = await this.findOne({
-      select: ['id', 'publicKey', 'encPrivateKey', 'encSymmetricKey'],
+      select: [
+        'id',
+        'vaultId',
+        'publicKey',
+        'encPrivateKey',
+        'encSymmetricKey',
+        'isPrimary',
+      ],
       where: {
         accountId: options.accountId,
         vaultId: options.vaultId,
@@ -77,8 +84,19 @@ export class KeySetsService {
   }
 
   public async getKeySets(options: GetKeySetsOption): Promise<KeySetEntity[]> {
+    Object.keys(options).forEach(
+      key => options[key] === undefined && delete options[key]
+    );
+
     return this.find({
-      select: ['id', 'publicKey', 'encPrivateKey', 'encSymmetricKey'],
+      select: [
+        'id',
+        'vaultId',
+        'publicKey',
+        'encPrivateKey',
+        'encSymmetricKey',
+        'isPrimary',
+      ],
       where: {
         ...options,
         isDeleted: false,
@@ -106,9 +124,11 @@ export class KeySetsService {
   private normalize(keySet: KeySetEntity): KeySet {
     return {
       uuid: keySet.id,
+      vaultUuid: keySet.vaultId,
       publicKey: keySet.publicKey,
       encPrivateKey: <EncPrivateKey>keySet.encPrivateKey,
       encSymmetricKey: <EncSymmetricKey>keySet.encSymmetricKey,
+      isPrimary: keySet.isPrimary,
     };
   }
 

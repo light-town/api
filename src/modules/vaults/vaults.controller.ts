@@ -8,9 +8,8 @@ import {
   Param,
   Post,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import AuthGuard from '~/modules/auth/auth.guard';
-import { CreateKeySetPayload } from '~/modules/key-sets/key-sets.dto';
 import KeySetsService from '~/modules/key-sets/key-sets.service';
 import { Vault, CreateVaultPayload } from './vaults.dto';
 import VaultsService from './vaults.service';
@@ -25,10 +24,11 @@ export class VaultsController {
     private readonly keySetsService: KeySetsService
   ) {}
 
+  @ApiOkResponse({ type: Vault })
   @Post('/accounts/:accountUuid/vaults')
   public async createVault(
     @Param('accountUuid') accountUuid: string,
-    @Body() payload: { keySet: CreateKeySetPayload; vault: CreateVaultPayload }
+    @Body() payload: CreateVaultPayload
   ): Promise<Vault> {
     const newVault = await this.vaultsService.create(payload.vault);
 
@@ -37,6 +37,7 @@ export class VaultsController {
     return this.vaultsService.format(newVault);
   }
 
+  @ApiOkResponse({ type: [Vault] })
   @Get('/accounts/:accountUuid/vaults')
   public async getVaults(
     @Param('accountUuid') accountUuid: string
@@ -46,6 +47,7 @@ export class VaultsController {
     );
   }
 
+  @ApiOkResponse({ type: Vault })
   @Get('/accounts/:accountUuid/vaults/:vaultUuid')
   public async getVault(
     @Param('accountUuid') accountUuid: string,

@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { FindManyOptions, FindOneOptions, In, Repository } from 'typeorm';
 import VaultEntity from '~/db/entities/vault.entity';
 import KeySetsService from '../key-sets/key-sets.service';
-import { EncVaultKey, CreateVaultPayload, Vault } from './vaults.dto';
+import { EncVaultKey, CreateVault, Vault } from './vaults.dto';
 
 @Injectable()
 export class VaultsService {
@@ -14,7 +14,7 @@ export class VaultsService {
     private readonly keySetsService: KeySetsService
   ) {}
 
-  public async create(vault: CreateVaultPayload): Promise<VaultEntity> {
+  public async create(vault: CreateVault): Promise<VaultEntity> {
     return this.vaultsRepository.save(
       this.vaultsRepository.create({
         encKey: vault.encKey,
