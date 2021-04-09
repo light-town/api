@@ -10,7 +10,7 @@ export class CreateAccountDTO {
   mfaType?: MFATypesEnum;
 }
 
-export class GetAccountResponse {
+export class Account {
   @ApiProperty({
     description: 'The account uuid',
   })

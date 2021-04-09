@@ -57,10 +57,10 @@ export class DevicesService {
   }
 
   public async createVerificationDevice(
-    deviceId,
-    accountId
+    deviceId: string,
+    accountId: string
   ): Promise<VerificationDeviceEntity> {
-    const accountExists = await this.accountsService.exists(accountId);
+    const accountExists = await this.accountsService.exists({ id: accountId });
 
     if (!accountExists)
       throw new ApiNotFoundException('The account was not found');

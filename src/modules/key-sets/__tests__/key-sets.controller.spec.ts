@@ -22,11 +22,14 @@ describe('[Key Set Module] [Controller] ...', () => {
   });
 
   describe('Getting key sets', () => {
-    it('should return all key sets', async () => {
+    it('should return all key sets of the account', async () => {
       const TEST_ACCOUNT_UUID = faker.datatype.uuid();
       const TEST_KEY_SETS = [
         {
           id: faker.datatype.uuid(),
+          creatorAccountId: faker.datatype.uuid(),
+          ownerAccountId: faker.datatype.uuid(),
+          ownerTeamId: null,
           publicKey: faker.datatype.uuid(),
           encPrivateKey: {
             key: faker.datatype.uuid(),
@@ -34,6 +37,7 @@ describe('[Key Set Module] [Controller] ...', () => {
           encSymmetricKey: {
             key: faker.datatype.uuid(),
           },
+          isPrimary: false,
         },
       ];
       const TEST_IS_PRIMARY = false;
@@ -47,23 +51,30 @@ describe('[Key Set Module] [Controller] ...', () => {
       ).toStrictEqual(
         TEST_KEY_SETS.map(keySet => ({
           uuid: keySet.id,
+          creatorAccountUuid: keySet.creatorAccountId,
+          ownerAccountUuid: keySet.ownerAccountId,
+          ownerTeamUuid: keySet.ownerTeamId,
           publicKey: keySet.publicKey,
           encPrivateKey: keySet.encPrivateKey,
           encSymmetricKey: keySet.encSymmetricKey,
+          isPrimary: keySet.isPrimary,
         }))
       );
 
       expect(getKeySetFn).toHaveBeenCalledTimes(1);
       expect(getKeySetFn).toHaveBeenCalledWith({
-        accountId: TEST_ACCOUNT_UUID,
+        ownerAccountId: TEST_ACCOUNT_UUID,
       });
     });
 
-    it('should return the primary key set', async () => {
+    it('should return the primary key set of the account', async () => {
       const TEST_ACCOUNT_UUID = faker.datatype.uuid();
       const TEST_KEY_SETS = [
         {
           id: faker.datatype.uuid(),
+          creatorAccountId: faker.datatype.uuid(),
+          ownerAccountId: faker.datatype.uuid(),
+          ownerTeamId: null,
           publicKey: faker.datatype.uuid(),
           encPrivateKey: {
             key: faker.datatype.uuid(),
@@ -71,6 +82,7 @@ describe('[Key Set Module] [Controller] ...', () => {
           encSymmetricKey: {
             key: faker.datatype.uuid(),
           },
+          isPrimary: false,
         },
       ];
       const TEST_IS_PRIMARY = true;
@@ -84,15 +96,19 @@ describe('[Key Set Module] [Controller] ...', () => {
       ).toStrictEqual(
         TEST_KEY_SETS.map(keySet => ({
           uuid: keySet.id,
+          creatorAccountUuid: keySet.creatorAccountId,
+          ownerAccountUuid: keySet.ownerAccountId,
+          ownerTeamUuid: keySet.ownerTeamId,
           publicKey: keySet.publicKey,
           encPrivateKey: keySet.encPrivateKey,
           encSymmetricKey: keySet.encSymmetricKey,
+          isPrimary: keySet.isPrimary,
         }))
       );
 
       expect(getKeySetFn).toHaveBeenCalledTimes(1);
       expect(getKeySetFn).toHaveBeenCalledWith({
-        accountId: TEST_ACCOUNT_UUID,
+        ownerAccountId: TEST_ACCOUNT_UUID,
         isPrimary: TEST_IS_PRIMARY,
       });
     });

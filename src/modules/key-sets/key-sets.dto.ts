@@ -127,11 +127,28 @@ export class KeySet extends CreateKeySetPayload {
   uuid: string;
 
   @ApiProperty({
-    description: 'The unique uuid of the vault',
+    description: 'The unique uuid of the creator account',
     required: true,
   })
-  @IsBoolean()
-  vaultUuid: string;
+  @IsString()
+  @IsUUID()
+  creatorAccountUuid: string;
+
+  @ApiProperty({
+    description: 'The unique uuid of the owner account',
+    required: false,
+  })
+  @IsString()
+  @IsUUID()
+  ownerAccountUuid?: string;
+
+  @ApiProperty({
+    description: 'The unique uuid of the owner team',
+    required: false,
+  })
+  @IsString()
+  @IsUUID()
+  ownerTeamUuid?: string;
 
   @ApiProperty({
     description: 'The primary flag',

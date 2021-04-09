@@ -99,7 +99,7 @@ describe('[Auth Module] [Service] ...', () => {
       .spyOn(vaultsService, 'create')
       .mockResolvedValueOnce(<any>TEST_VAULT);
 
-    const keySetCreateFn = jest.spyOn(keySetsService, 'create');
+    jest.spyOn(keySetsService, 'create').mockResolvedValueOnce(<any>{});
 
     await authService.signUp(payload);
 
@@ -118,14 +118,17 @@ describe('[Auth Module] [Service] ...', () => {
     });
 
     expect(vaultCreateFn).toHaveBeenCalledTimes(1);
-    expect(vaultCreateFn).toHaveBeenCalledWith(payload.primaryVault);
-
-    expect(keySetCreateFn).toHaveBeenCalledTimes(1);
-    expect(keySetCreateFn).toHaveBeenCalledWith(
+    expect(vaultCreateFn).toHaveBeenCalledWith(
       TEST_ACCOUNT_UUID,
-      TEST_VAULT.id,
+      payload.primaryVault
+    );
+
+    expect(keySetsService.create).toHaveBeenCalledTimes(1);
+    expect(keySetsService.create).toHaveBeenCalledWith(
+      TEST_ACCOUNT_UUID,
+      TEST_ACCOUNT_UUID,
       payload.primaryKeySet,
-      { primary: true }
+      { isAccountOwner: true, isPrimary: true }
     );
   });
 

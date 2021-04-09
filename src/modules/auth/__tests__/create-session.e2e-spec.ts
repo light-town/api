@@ -192,7 +192,6 @@ describe('[Auth Module] [Service]...', () => {
       });
 
       await accountsService.setMultiFactorAuthType(
-        user.id,
         account.id,
         TEST_DEVICE.id,
         MFATypesEnum.FINGERPRINT

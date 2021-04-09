@@ -2,75 +2,110 @@ import {
   Body,
   Controller,
   Delete,
-  forwardRef,
   Get,
-  Inject,
   Param,
   Post,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiInternalServerException,
+  ApiNotFoundException,
+} from '~/common/exceptions';
 import AuthGuard from '~/modules/auth/auth.guard';
-import KeySetsService from '~/modules/key-sets/key-sets.service';
+import CurrentAccount from '../auth/current-account';
+import KeySetVaultsService from '../key-set-vaults/key-set-vaults.service';
+import KeySetsService from '../key-sets/key-sets.service';
 import { Vault, CreateVaultPayload } from './vaults.dto';
 import VaultsService from './vaults.service';
 
 @AuthGuard()
-@ApiTags('accounts/vaults')
-@Controller()
+@ApiTags('/vaults')
+@Controller('/vaults')
 export class VaultsController {
   public constructor(
     private readonly vaultsService: VaultsService,
     @Inject(forwardRef(() => KeySetsService))
-    private readonly keySetsService: KeySetsService
+    private readonly keySetsService: KeySetsService,
+    @Inject(forwardRef(() => KeySetVaultsService))
+    private readonly keySetVaultsService: KeySetVaultsService
   ) {}
 
   @ApiOkResponse({ type: Vault })
-  @Post('/accounts/:accountUuid/vaults')
+  @Post()
   public async createVault(
-    @Param('accountUuid') accountUuid: string,
+    @CurrentAccount() account,
     @Body() payload: CreateVaultPayload
   ): Promise<Vault> {
-    const newVault = await this.vaultsService.create(payload.vault);
+    /// [TODO] check permitions
 
-    await this.keySetsService.create(accountUuid, newVault.id, payload.keySet);
+    const primaryKeySet = await this.keySetsService.getKeySet({
+      ownerAccountId: account.id,
+      isPrimary: true,
+    });
 
-    return this.vaultsService.format(newVault);
+    return this.vaultsService.format(
+      await this.vaultsService.create(account.id, payload),
+      account.id,
+      primaryKeySet?.id
+    );
   }
 
   @ApiOkResponse({ type: [Vault] })
-  @Get('/accounts/:accountUuid/vaults')
-  public async getVaults(
-    @Param('accountUuid') accountUuid: string
-  ): Promise<Vault[]> {
-    return this.vaultsService.formatAll(
-      await this.vaultsService.getVaults(accountUuid)
-    );
+  @Get()
+  public async getVaults(@CurrentAccount() account): Promise<Vault[]> {
+    /// [TODO] check permitions
+    /// [TODO] endpoint for getting the vaults of the key set - /key-sets/:keySetUuid/vaults/
+
+    const foundKeySets = await this.keySetsService.getKeySets({
+      ownerAccountId: account.id,
+    });
+
+    const foundVaults: Vault[] = [];
+
+    for (const keySet of foundKeySets) {
+      const vaults = await this.vaultsService.getVaults(keySet.id);
+
+      for (const vault of vaults) {
+        foundVaults.push(
+          this.vaultsService.format(vault, account.id, keySet.id)
+        );
+      }
+    }
+
+    return foundVaults;
   }
 
   @ApiOkResponse({ type: Vault })
-  @Get('/accounts/:accountUuid/vaults/:vaultUuid')
+  @Get('/:vaultUuid')
   public async getVault(
-    @Param('accountUuid') accountUuid: string,
+    @CurrentAccount() account,
     @Param('vaultUuid') vaultUuid: string
   ): Promise<Vault> {
-    return this.vaultsService.format(
-      await this.vaultsService.getVault(vaultUuid)
-    );
+    /// [TODO] check permitions
+
+    const vault = await this.vaultsService.getVault({ id: vaultUuid });
+
+    if (!vault) throw new ApiNotFoundException('The vault was not found');
+
+    const keySet = await this.keySetVaultsService.getKeySet(vault.id);
+
+    if (!keySet)
+      throw new ApiInternalServerException('The key set was not found');
+
+    return this.vaultsService.format(vault, account.id, keySet.id);
   }
 
-  @Delete('/accounts/:accountUuid/vaults/:vaultUuid')
+  @Delete('/:vaultUuid')
   public async deleteVault(
-    @Param('accountUuid') accountUuid: string,
+    @CurrentAccount() account,
     @Param('vaultUuid') vaultUuid: string
   ): Promise<void> {
-    const keySets = await this.keySetsService.getKeySets({
-      vaultId: vaultUuid,
-    });
+    /// [TODO] check permitions
+    /// [TODO] delete key set ???
 
-    await Promise.all([
-      keySets.map(keySet => this.keySetsService.deleteKeySet(keySet.id)),
-      this.vaultsService.deleteVault(vaultUuid),
-    ]);
+    await this.vaultsService.deleteVault(vaultUuid);
   }
 }
 

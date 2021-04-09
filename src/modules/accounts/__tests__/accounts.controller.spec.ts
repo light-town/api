@@ -1,108 +1,114 @@
-import { INestApplication } from '@nestjs/common';
+import { TestingModule } from '@nestjs/testing';
 import * as faker from 'faker';
+import { ApiForbiddenException } from '~/common/exceptions';
 import { MFATypesEnum } from '~/modules/auth/auth.dto';
-import UsersService from '~/modules/users/users.service';
+import AccountsController from '../accounts.controller';
 import AccountsService from '../accounts.service';
-import Api from './helpers/api';
-import createTestingModule from './helpers/createTestingModule';
+import createTestingModule from './helpers/create-module.helper';
 
 describe('[Accounts Module] [Controller] ...', () => {
-  let app: INestApplication;
-  let api: Api;
+  let app: TestingModule;
+  let accountsController: AccountsController;
   let accountsService: AccountsService;
-  let usersService: UsersService;
 
   beforeAll(async () => {
     app = await createTestingModule();
-    api = new Api(app);
 
+    accountsController = app.get<AccountsController>(AccountsController);
     accountsService = app.get<AccountsService>(AccountsService);
-    usersService = app.get<UsersService>(UsersService);
   });
 
-  afterAll(async () => {
-    await app.close();
+  afterEach(async () => {
+    jest.clearAllMocks();
+    jest.resetAllMocks();
   });
 
-  it('should return account', async () => {
+  it('should return all accounts', async () => {
     const TEST_USER = {
       id: faker.datatype.uuid(),
       name: faker.random.word(),
       avatarUrl: null,
     };
-    const TEST_ACCOUNT = {
-      id: faker.datatype.uuid(),
-      userId: TEST_USER.id,
-      mfaType: {
-        name: MFATypesEnum.NONE,
+    const TEST_ACCOUNTS = [
+      {
+        id: faker.datatype.uuid(),
+        userId: TEST_USER.id,
+        user: TEST_USER,
+        mfaType: {
+          name: MFATypesEnum.NONE,
+        },
       },
-    };
-    const TEST_ACCOUNT_KEY = faker.random.word();
+    ];
 
     jest
-      .spyOn(accountsService, 'findOne')
-      .mockResolvedValueOnce(<any>TEST_ACCOUNT);
+      .spyOn(accountsService, 'getAccounts')
+      .mockResolvedValueOnce(<any>TEST_ACCOUNTS);
 
-    jest.spyOn(usersService, 'findOne').mockResolvedValueOnce(<any>TEST_USER);
+    expect(await accountsController.getAccounts(undefined)).toStrictEqual(
+      TEST_ACCOUNTS.map(a => ({
+        accountUuid: a.id,
+        accountName: a.user.name,
+        accountAvatarUrl: a.user.avatarUrl,
+        userUuid: a.user.id,
+        userName: a.user.name,
+        userAvatarUrl: a.user.avatarUrl,
+        MFAType: a.mfaType.name,
+      }))
+    );
 
-    const response = await api.getAccount(TEST_ACCOUNT_KEY);
-
-    expect(response.status).toEqual(200);
-    expect(response.body).toStrictEqual({
-      data: {
-        accountUuid: TEST_ACCOUNT.id,
-        accountName: TEST_USER.name,
-        accountAvatarUrl: TEST_USER.avatarUrl,
-        userUuid: TEST_USER.id,
-        userName: TEST_USER.name,
-        userAvatarUrl: TEST_USER.avatarUrl,
-        MFAType: TEST_ACCOUNT.mfaType.name,
-      },
-      statusCode: 200,
-    });
+    expect(accountsService.getAccounts).toHaveBeenCalledTimes(1);
+    expect(accountsService.getAccounts).toHaveBeenCalledWith({});
   });
 
-  it('should throw error while getting account when account key is not correct', async () => {
-    const TEST_ACCOUNT_KEY = faker.random.word();
-
-    jest.spyOn(accountsService, 'findOne').mockResolvedValueOnce(undefined);
-
-    const response = await api.getAccount(TEST_ACCOUNT_KEY);
-
-    expect(response.status).toEqual(404);
-    expect(response.body).toStrictEqual({
-      error: {
-        type: 'Not Found',
-        message: 'The account was not found',
-      },
-      statusCode: 404,
-    });
-  });
-
-  it('should throw error while getting account when acoount user was not found', async () => {
+  it('should set multi-factor auth for account', async () => {
+    const TEST_DEVICE = {
+      id: faker.datatype.uuid(),
+    };
     const TEST_ACCOUNT = {
       id: faker.datatype.uuid(),
-      mfaType: {
-        name: MFATypesEnum.NONE,
-      },
     };
-    const TEST_ACCOUNT_KEY = faker.random.word();
+    const TEST_MFA_TYPE = MFATypesEnum.FINGERPRINT;
 
     jest
-      .spyOn(accountsService, 'findOne')
-      .mockResolvedValueOnce(<any>TEST_ACCOUNT);
+      .spyOn(accountsService, 'setMultiFactorAuthType')
+      .mockResolvedValueOnce();
 
-    jest.spyOn(usersService, 'findOne').mockResolvedValueOnce(undefined);
-
-    const response = await api.getAccount(TEST_ACCOUNT_KEY);
-
-    expect(response.status).toEqual(500);
-    expect(response.body).toStrictEqual({
-      error: {
-        type: 'Internal Server Error',
-        message: 'The account user was not found',
-      },
-      statusCode: 500,
+    await accountsController.setMultiFactorAuth(TEST_ACCOUNT, TEST_ACCOUNT.id, {
+      deviceUuid: TEST_DEVICE.id,
+      type: TEST_MFA_TYPE,
     });
+
+    expect(accountsService.setMultiFactorAuthType).toHaveBeenCalledTimes(1);
+    expect(accountsService.setMultiFactorAuthType).toHaveBeenCalledWith(
+      TEST_ACCOUNT.id,
+      TEST_DEVICE.id,
+      TEST_MFA_TYPE
+    );
+  });
+
+  it('should throw an error when some account want to set multi-factor auth for other account', async () => {
+    const TEST_DEVICE = {
+      id: faker.datatype.uuid(),
+    };
+    const TEST_ACCOUNT = {
+      id: faker.datatype.uuid(),
+    };
+    const TEST_OWNER_ACCOUNT = {
+      id: faker.datatype.uuid(),
+    };
+
+    jest.spyOn(accountsService, 'setMultiFactorAuthType');
+
+    try {
+      await accountsController.setMultiFactorAuth(
+        TEST_ACCOUNT,
+        TEST_OWNER_ACCOUNT.id,
+        { deviceUuid: TEST_DEVICE.id, type: MFATypesEnum.FINGERPRINT }
+      );
+    } catch (e) {
+      expect(e).toStrictEqual(new ApiForbiddenException('Аccess denied'));
+    }
+
+    expect(accountsService.setMultiFactorAuthType).toHaveBeenCalledTimes(0);
   });
 });

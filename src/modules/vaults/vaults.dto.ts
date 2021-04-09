@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsNotEmpty } from '~/common/validation';
-import { ValidateNested } from 'class-validator';
+import { IsUUID, ValidateNested } from 'class-validator';
 import { CreateKeySetPayload as CreateKeySet } from '~/modules/key-sets/key-sets.dto';
 
 export class EncVaultKey {
@@ -34,7 +34,8 @@ export class Vault {
     description: 'The unique uuid of vault',
     required: true,
   })
-  @ValidateNested()
+  @IsString()
+  @IsUUID()
   uuid: string;
 
   @ApiProperty({
@@ -50,9 +51,25 @@ export class Vault {
   })
   @ValidateNested()
   encMetadata: any;
+
+  @ApiProperty({
+    description: 'The unique uuid of key set',
+    required: true,
+  })
+  @IsString()
+  @IsUUID()
+  keySetUuid: any;
+
+  @ApiProperty({
+    description: 'The unique uuid of account',
+    required: true,
+  })
+  @IsString()
+  @IsUUID()
+  accountUuid: any;
 }
 
-export class CreateVault {
+export class CreateVaultPayload {
   @ApiProperty({
     description: 'The encrypted vault key',
     required: true,
@@ -66,20 +83,4 @@ export class CreateVault {
   })
   @ValidateNested()
   encMetadata: any;
-}
-
-export class CreateVaultPayload {
-  @ApiProperty({
-    description: 'The key set creation configuration',
-    required: true,
-  })
-  @ValidateNested()
-  keySet: CreateKeySet;
-
-  @ApiProperty({
-    description: 'The vault creation configuration',
-    required: true,
-  })
-  @ValidateNested()
-  vault: CreateVault;
 }

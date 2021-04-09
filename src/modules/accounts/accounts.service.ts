@@ -1,17 +1,21 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindManyOptions, FindOneOptions, Repository } from 'typeorm';
-import {
-  ApiForbiddenException,
-  ApiNotFoundException,
-} from '~/common/exceptions';
+import { ApiNotFoundException } from '~/common/exceptions';
 import AccountEntity from '~/db/entities/account.entity';
 import MFATypeEntity from '~/db/entities/mfa-type.entity';
 import UserEntity from '~/db/entities/user.entity';
 import { MFATypesEnum } from '../auth/auth.dto';
 import UsersService from '../users/users.service';
-import { CreateAccountDTO } from './accounts.dto';
+import { CreateAccountDTO, Account } from './accounts.dto';
 import DevicesService from '../devices/devices.service';
+
+export class FindAccountOptions {
+  id?: string;
+  key?: string;
+  userId?: string;
+  mfaTypeId?: string;
+}
 
 @Injectable()
 export class AccountsService {
@@ -62,7 +66,6 @@ export class AccountsService {
   }
 
   public async setMultiFactorAuthType(
-    userId: string,
     accountId: string,
     deviceId,
     type: MFATypesEnum
@@ -76,9 +79,6 @@ export class AccountsService {
     });
 
     if (!account) throw new ApiNotFoundException(`The account was not found`);
-
-    if (account.userId !== userId)
-      throw new ApiForbiddenException(`Аccess denied`);
 
     const mfaType = await this.mfaTypesRepository.findOne({
       select: ['id'],
@@ -102,12 +102,60 @@ export class AccountsService {
     );
   }
 
-  public async exists(id: string): Promise<boolean> {
+  public async exists(options: FindAccountOptions): Promise<boolean> {
     const account = await this.accountsRepository.findOne({
       select: ['id'],
-      where: { id, isDeleted: false },
+      where: { ...options, isDeleted: false },
     });
     return account !== undefined;
+  }
+
+  public async getAccount(options: FindAccountOptions): Promise<AccountEntity> {
+    return this.findOne({
+      select: ['id', 'key', 'mfaTypeId', 'userId'],
+      where: { ...options, isDeleted: false },
+      join: {
+        alias: 'accounts',
+        leftJoinAndSelect: {
+          user: 'accounts.user',
+        },
+      },
+    });
+  }
+
+  public async getAccounts(
+    options: FindAccountOptions
+  ): Promise<AccountEntity[]> {
+    return this.find({
+      select: ['id', 'key', 'mfaTypeId', 'userId'],
+      where: { ...options, isDeleted: false },
+      join: {
+        alias: 'accounts',
+        leftJoinAndSelect: {
+          user: 'accounts.user',
+        },
+      },
+    });
+  }
+
+  public format(account: AccountEntity): Account {
+    return this.normalize(account);
+  }
+
+  public formatAll(accounts: AccountEntity[]): Account[] {
+    return accounts.map(a => this.normalize(a));
+  }
+
+  public normalize(account: AccountEntity): Account {
+    return {
+      accountUuid: account.id,
+      accountName: account.user.name,
+      accountAvatarUrl: account.user.avatarUrl,
+      userUuid: account.user.id,
+      userName: account.user.name,
+      userAvatarUrl: account.user.avatarUrl,
+      MFAType: account.mfaType.name,
+    };
   }
 }
 

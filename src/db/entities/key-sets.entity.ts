@@ -1,14 +1,14 @@
 import { Column, Entity, ManyToOne, JoinColumn } from 'typeorm';
 import { IEntity } from './entity.interface';
 import AccountEntity from './account.entity';
-import VaultEntity from './vault.entity';
+import TeamEntity from './team.entity';
 
 @Entity('key_sets')
 export class KeySetEntity extends IEntity {
-  @Column({ name: 'public_key' })
+  @Column({ name: 'public_key', nullable: true })
   public publicKey: string;
 
-  @Column({ type: 'jsonb', name: 'enc_private_key' })
+  @Column({ type: 'jsonb', name: 'enc_private_key', nullable: true })
   public encPrivateKey: Record<string, any>;
 
   @Column({ type: 'jsonb', name: 'enc_symmetric_key' })
@@ -17,25 +17,35 @@ export class KeySetEntity extends IEntity {
   @Column({ default: false })
   public isPrimary: boolean;
 
-  @Column({ type: 'uuid', name: 'account_id' })
-  public accountId: string;
-
-  @Column({ type: 'uuid', name: 'vault_id' })
-  public vaultId: string;
+  @Column({ type: 'uuid', name: 'creator_account_id' })
+  public creatorAccountId: string;
 
   @ManyToOne(() => AccountEntity)
   @JoinColumn({
-    name: 'account_id',
+    name: 'creator_account_id',
     referencedColumnName: 'id',
   })
-  public account?: AccountEntity;
+  public creatorAccount?: AccountEntity;
 
-  @ManyToOne(() => VaultEntity)
+  @Column({ type: 'uuid', name: 'owner_account_id', nullable: true })
+  public ownerAccountId?: string;
+
+  @ManyToOne(() => AccountEntity)
   @JoinColumn({
-    name: 'vault_id',
+    name: 'owner_account_id',
     referencedColumnName: 'id',
   })
-  public vault?: VaultEntity;
+  public ownerAccount?: AccountEntity;
+
+  @Column({ type: 'uuid', name: 'owner_team_id', nullable: true })
+  public ownerTeamId?: string;
+
+  @ManyToOne(() => TeamEntity)
+  @JoinColumn({
+    name: 'owner_team_id',
+    referencedColumnName: 'id',
+  })
+  public ownerTeam?: TeamEntity;
 }
 
 export default KeySetEntity;

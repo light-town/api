@@ -8,6 +8,7 @@ import SessionsModule from './modules/sessions/sessions.module';
 import PushNotificationsModule from './modules/push-notifications/push-notifications.module';
 import KeySetsModule from './modules/key-sets/key-sets.module';
 import VaultsModule from './modules/vaults/vaults.module';
+import KeySetVaultsModule from './modules/key-set-vaults/key-set-vaults.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import VaultsModule from './modules/vaults/vaults.module';
     PushNotificationsModule,
     KeySetsModule,
     VaultsModule,
+    KeySetVaultsModule,
   ],
 })
 export class AppModule {}

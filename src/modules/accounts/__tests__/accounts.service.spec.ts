@@ -4,20 +4,17 @@ import { UserEntity } from '~/db/entities/user.entity';
 import { AccountsService } from '../accounts.service';
 import { Repository } from 'typeorm';
 import { AccountEntity } from '~/db/entities/account.entity';
-import { createTestingModule } from './helpers/createTestingModule';
+import { createModuleHelper } from './helpers/create-module.helper';
 import { UsersService } from '~/modules/users/users.service';
 import core from '@light-town/core';
 import MFATypeEntity from '~/db/entities/mfa-type.entity';
-import { INestApplication } from '@nestjs/common';
-import {
-  ApiForbiddenException,
-  ApiNotFoundException,
-} from '~/common/exceptions';
+import { ApiNotFoundException } from '~/common/exceptions';
 import { MFATypesEnum } from '~/modules/auth/auth.dto';
 import DevicesService from '~/modules/devices/devices.service';
+import { TestingModule } from '@nestjs/testing';
 
 describe('[Account Module] [Service]...', () => {
-  let app: INestApplication;
+  let app: TestingModule;
   let accountsService: AccountsService;
   let usersService: UsersService;
   let devicesService: DevicesService;
@@ -25,7 +22,7 @@ describe('[Account Module] [Service]...', () => {
   let mfaTypesRepository: Repository<MFATypeEntity>;
 
   beforeAll(async () => {
-    app = await createTestingModule();
+    app = await createModuleHelper();
 
     accountsService = app.get<AccountsService>(AccountsService);
     acoountsRepository = app.get<Repository<AccountEntity>>(
@@ -209,12 +206,8 @@ describe('[Account Module] [Service]...', () => {
 
   describe('[Settings] ...', () => {
     it('should set MFA type to user acoount', async () => {
-      const TEST_USER = {
-        id: faker.datatype.uuid(),
-      };
       const TEST_ACCOUNT = {
         id: faker.datatype.uuid(),
-        userId: TEST_USER.id,
       };
       const TEST_DEVICE = {
         id: faker.datatype.uuid(),
@@ -235,7 +228,6 @@ describe('[Account Module] [Service]...', () => {
         .mockImplementationOnce((): any => {});
 
       await accountsService.setMultiFactorAuthType(
-        TEST_USER.id,
         TEST_ACCOUNT.id,
         TEST_DEVICE.id,
         TEST_MFA_TYPE.name
@@ -278,12 +270,8 @@ describe('[Account Module] [Service]...', () => {
     });
 
     it('should throw error when account was not found', async () => {
-      const TEST_USER = {
-        id: faker.datatype.uuid(),
-      };
       const TEST_ACCOUNT = {
         id: faker.datatype.uuid(),
-        userId: TEST_USER.id,
       };
       const TEST_DEVICE = {
         id: faker.datatype.uuid(),
@@ -297,7 +285,6 @@ describe('[Account Module] [Service]...', () => {
 
       try {
         await accountsService.setMultiFactorAuthType(
-          TEST_USER.id,
           TEST_ACCOUNT.id,
           TEST_DEVICE.id,
           TEST_MFA_TYPE.name
@@ -324,54 +311,6 @@ describe('[Account Module] [Service]...', () => {
         jest.spyOn(devicesService, 'createVerificationDevice')
       ).toHaveBeenCalledTimes(0);
 
-      expect(jest.spyOn(acoountsRepository, 'update')).toHaveBeenCalledTimes(0);
-    });
-
-    it('should throw error when user is not owner account', async () => {
-      const TEST_USER = {
-        id: faker.datatype.uuid(),
-      };
-      const TEST_ACCOUNT = {
-        id: faker.datatype.uuid(),
-        userId: faker.datatype.uuid(),
-      };
-      const TEST_DEVICE = {
-        id: faker.datatype.uuid(),
-      };
-      const TEST_MFA_TYPE = {
-        id: faker.datatype.uuid(),
-        name: MFATypesEnum.FINGERPRINT,
-      };
-
-      jest
-        .spyOn(accountsService, 'findOne')
-        .mockResolvedValueOnce(<any>TEST_ACCOUNT);
-
-      try {
-        await accountsService.setMultiFactorAuthType(
-          TEST_USER.id,
-          TEST_ACCOUNT.id,
-          TEST_DEVICE.id,
-          TEST_MFA_TYPE.name
-        );
-      } catch (e) {
-        expect(e).toStrictEqual(new ApiForbiddenException('Аccess denied'));
-      }
-
-      expect(jest.spyOn(accountsService, 'findOne')).toHaveBeenCalledTimes(1);
-      expect(jest.spyOn(accountsService, 'findOne')).toHaveBeenCalledWith({
-        select: ['id', 'userId'],
-        where: {
-          id: TEST_ACCOUNT.id,
-          isDeleted: false,
-        },
-      });
-      expect(jest.spyOn(mfaTypesRepository, 'findOne')).toHaveBeenCalledTimes(
-        0
-      );
-      expect(
-        jest.spyOn(devicesService, 'createVerificationDevice')
-      ).toHaveBeenCalledTimes(0);
       expect(jest.spyOn(acoountsRepository, 'update')).toHaveBeenCalledTimes(0);
     });
   });

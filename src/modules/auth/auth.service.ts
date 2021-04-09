@@ -63,22 +63,21 @@ export class AuthService {
       avatarUrl: account.avatarUrl,
     });
 
-    const [newAccount, newVault] = await Promise.all([
-      this.accountsService.create({
-        key: account.key,
-        userId: user.id,
-        verifier: srp.verifier,
-        salt: srp.salt,
-      }),
-      this.vaultsService.create(primaryVault),
-    ]);
+    const newAccount = await this.accountsService.create({
+      key: account.key,
+      userId: user.id,
+      verifier: srp.verifier,
+      salt: srp.salt,
+    });
 
     await this.keySetsService.create(
       newAccount.id,
-      newVault.id,
+      newAccount.id,
       primaryKeySet,
-      { primary: true }
+      { isAccountOwner: true, isPrimary: true }
     );
+
+    await this.vaultsService.create(newAccount.id, primaryVault);
   }
 
   public async createSession(
@@ -253,7 +252,7 @@ export class AuthService {
     );
 
     return {
-      token: this.jwtService.sign({ id: account.userId }),
+      token: this.jwtService.sign({ id: account.id }),
       serverSessionProof: srpSession.proof,
     };
   }
@@ -364,7 +363,7 @@ export class AuthService {
     );
 
     return {
-      token: this.jwtService.sign({ id: session.account.userId }),
+      token: this.jwtService.sign({ id: session.account.id }),
     };
   }
 }

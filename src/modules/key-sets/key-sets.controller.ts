@@ -2,7 +2,7 @@ import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import AuthGuard from '../auth/auth.guard';
 import { KeySet } from './key-sets.dto';
-import KeySetsService from './key-sets.service';
+import KeySetsService, { FindKeySetOptions } from './key-sets.service';
 
 @ApiTags('/accounts/key-sets')
 @AuthGuard()
@@ -13,14 +13,15 @@ export class KeySetsController {
   @ApiOkResponse({ type: [KeySet] })
   @Get('/accounts/:accountUuid/key-sets')
   public async getKeySets(
-    @Param('accountUuid') accountId: string,
+    @Param('accountUuid') accountUuid: string,
     @Query('primary') primary: boolean
   ): Promise<KeySet[]> {
+    const options: FindKeySetOptions = { ownerAccountId: accountUuid };
+
+    if (primary) options.isPrimary = true;
+
     return this.keySetsService.formatAll(
-      await this.keySetsService.getKeySets({
-        accountId,
-        isPrimary: primary || undefined,
-      })
+      await this.keySetsService.getKeySets(options)
     );
   }
 }

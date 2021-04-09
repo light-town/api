@@ -1,7 +1,7 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 
-export const CurrentUser = createParamDecorator(
+export const CurrentAccount = createParamDecorator(
   (data: unknown, ctx: ExecutionContext) => ctx.getArgByIndex(0).user
 );
 
-export default CurrentUser;
+export default CurrentAccount;
