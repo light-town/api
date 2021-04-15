@@ -7,6 +7,7 @@ import {
   ApiForbiddenException,
   ApiInternalServerException,
   ApiNotFoundException,
+  ApiUnauthorizedException,
 } from '~/common/exceptions';
 import AccountsService from '~/modules/accounts/accounts.service';
 import UsersService from '~/modules/users/users.service';
@@ -235,26 +236,30 @@ export class AuthService {
     if (!account)
       throw new ApiInternalServerException('The account was not found');
 
-    const srpSession = core.srp.server.deriveSession(
-      session.secret,
-      options.clientPublicEphemeralKey,
-      account.salt,
-      account.key,
-      account.verifier,
-      options.clientSessionProofKey
-    );
+    try {
+      const srpSession = core.srp.server.deriveSession(
+        session.secret,
+        options.clientPublicEphemeralKey,
+        account.salt,
+        account.key,
+        account.verifier,
+        options.clientSessionProofKey
+      );
 
-    const expiresAt = Date.now() + SESSION_EXPIRES_AT;
+      const expiresAt = Date.now() + SESSION_EXPIRES_AT;
 
-    await this.sessionsService.update(
-      { id: session.id },
-      { expiresAt: new Date(expiresAt) }
-    );
+      await this.sessionsService.update(
+        { id: session.id },
+        { expiresAt: new Date(expiresAt) }
+      );
 
-    return {
-      token: this.jwtService.sign({ id: account.id }),
-      serverSessionProof: srpSession.proof,
-    };
+      return {
+        token: this.jwtService.sign({ id: account.id }),
+        serverSessionProof: srpSession.proof,
+      };
+    } catch (e) {
+      throw new ApiUnauthorizedException('The authentication fails');
+    }
   }
 
   public async verifySession(

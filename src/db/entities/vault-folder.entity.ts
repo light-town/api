@@ -1,0 +1,42 @@
+import { Column, Entity, ManyToOne, JoinColumn } from 'typeorm';
+import AccountEntity from './account.entity';
+import VaultEntity from './vault.entity';
+import { IEntity } from './entity.interface';
+
+@Entity('vault_folders')
+export class VaultFolderEntity extends IEntity {
+  @Column({ type: 'jsonb', name: 'enc_overview' })
+  encOverview: Record<string, any>;
+
+  @Column({ type: 'uuid', name: 'vault_id' })
+  public vaultId: string;
+
+  @ManyToOne(() => VaultEntity)
+  @JoinColumn({
+    name: 'vault_id',
+    referencedColumnName: 'id',
+  })
+  public vault?: VaultEntity;
+
+  @Column({ type: 'uuid', name: 'creator_account_id' })
+  public creatorAccountId: string;
+
+  @ManyToOne(() => AccountEntity)
+  @JoinColumn({
+    name: 'creator_account_id',
+    referencedColumnName: 'id',
+  })
+  public creatorAccount?: AccountEntity;
+
+  @Column({ type: 'uuid', name: 'parent_folder_id', nullable: true })
+  public parentFolderId?: string;
+
+  @ManyToOne(() => VaultFolderEntity)
+  @JoinColumn({
+    name: 'parent_folder_id',
+    referencedColumnName: 'id',
+  })
+  public parentFolder?: VaultFolderEntity;
+}
+
+export default VaultFolderEntity;

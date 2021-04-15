@@ -127,12 +127,13 @@ export class AccountsService {
     options: FindAccountOptions
   ): Promise<AccountEntity[]> {
     return this.find({
-      select: ['id', 'key', 'mfaTypeId', 'userId'],
+      select: ['id', 'key', 'mfaTypeId', 'userId', 'user', 'mfaType'],
       where: { ...options, isDeleted: false },
       join: {
         alias: 'accounts',
         leftJoinAndSelect: {
           user: 'accounts.user',
+          mfaType: 'accounts.mfaType',
         },
       },
     });

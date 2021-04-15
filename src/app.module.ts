@@ -9,6 +9,8 @@ import PushNotificationsModule from './modules/push-notifications/push-notificat
 import KeySetsModule from './modules/key-sets/key-sets.module';
 import VaultsModule from './modules/vaults/vaults.module';
 import KeySetVaultsModule from './modules/key-set-vaults/key-set-vaults.module';
+import VaultItemsModule from './modules/vault-items/vault-items.module';
+import VaultFoldersModule from './modules/vault-folders/vault-folders.module';
 
 @Module({
   imports: [
@@ -22,6 +24,8 @@ import KeySetVaultsModule from './modules/key-set-vaults/key-set-vaults.module';
     KeySetsModule,
     VaultsModule,
     KeySetVaultsModule,
+    VaultItemsModule,
+    VaultFoldersModule,
   ],
 })
 export class AppModule {}

@@ -1,0 +1,23 @@
+import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import VaultItemEntity from '~/db/entities/vault-item.entity';
+import AccountsModule from '../accounts/accounts.module';
+import VaultFoldersModule from '../vault-folders/vault-folders.module';
+import VaultsModule from '../vaults/vaults.module';
+import VaultItemsController from './vault-items.controller';
+import VaultItemsService from './vault-items.service';
+
+@Module({
+  imports: [
+    TypeOrmModule.forFeature([VaultItemEntity]),
+    VaultsModule,
+    AccountsModule,
+    VaultFoldersModule,
+  ],
+  controllers: [VaultItemsController],
+  providers: [VaultItemsService],
+  exports: [VaultItemsService],
+})
+export class VaultItemsModule {}
+
+export default VaultItemsModule;

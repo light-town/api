@@ -49,11 +49,6 @@ describe('[Key Set Module] [Controller] ...', () => {
     await connection.close();
   });
 
-  afterEach(() => {
-    jest.clearAllMocks();
-    jest.restoreAllMocks();
-  });
-
   describe('Creating key sets', () => {
     let user;
     let account;

@@ -13,6 +13,8 @@ import KeySetEntity from '~/db/entities/key-sets.entity';
 import VaultEntity from '~/db/entities/vault.entity';
 import { TestingModuleBuilder } from '@nestjs/testing';
 import { KeySetVaultEntity } from '~/db/entities/key-set-vaults.entity';
+import VaultItemEntity from '~/db/entities/vault-item.entity';
+import VaultFolderEntity from '~/db/entities/vault-folder.entity';
 
 export default (app: TestingModuleBuilder) => {
   const entities = [
@@ -28,6 +30,8 @@ export default (app: TestingModuleBuilder) => {
     KeySetEntity,
     VaultEntity,
     KeySetVaultEntity,
+    VaultItemEntity,
+    VaultFolderEntity,
   ];
 
   entities.forEach(e =>

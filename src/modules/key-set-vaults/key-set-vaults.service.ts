@@ -5,6 +5,7 @@ import { ApiNotFoundException } from '~/common/exceptions';
 import KeySetEntity, {
   KeySetVaultEntity,
 } from '~/db/entities/key-set-vaults.entity';
+import VaultEntity from '~/db/entities/vault.entity';
 import KeySetsService from '../key-sets/key-sets.service';
 import VaultsService from '../vaults/vaults.service';
 
@@ -83,6 +84,21 @@ export class KeySetVaultsService {
         },
       })
     )?.keySet;
+  }
+
+  public async getVault(keySetId: string): Promise<VaultEntity> {
+    return (
+      await this.keySetVaultRepository.findOne({
+        select: ['id'],
+        where: { keySetId, isDeleted: false },
+        join: {
+          alias: 'keySetVaults',
+          leftJoinAndSelect: {
+            vault: 'keySetVaults.vault',
+          },
+        },
+      })
+    )?.vault;
   }
 }
 
