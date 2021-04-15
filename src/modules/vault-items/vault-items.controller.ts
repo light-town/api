@@ -21,12 +21,11 @@ export class VaultItemsController {
     @Body() payload: CreateVaultItemPayload
   ): Promise<VaultItem> {
     return this.vaultItemsService.format(
-      await this.vaultItemsService.create(
-        account.id,
-        vaultUuid,
-        folderUuid,
-        payload
-      )
+      await this.vaultItemsService.create(account.id, vaultUuid, folderUuid, {
+        encOverview: payload?.encOverview,
+        encDetails: payload?.encDetails,
+        categoryId: payload?.categoryUuid,
+      })
     );
   }
 

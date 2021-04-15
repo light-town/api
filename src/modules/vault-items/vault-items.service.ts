@@ -5,12 +5,14 @@ import { ApiNotFoundException } from '~/common/exceptions';
 import VaultItemEntity from '~/db/entities/vault-item.entity';
 import AccountsService from '../accounts/accounts.service';
 import VaultFoldersService from '../vault-folders/vault-folders.service';
+import VaultItemCategoriesService from '../vault-item-categories/vault-item-categories.service';
 import VaultsService from '../vaults/vaults.service';
 import { VaultItem } from './vault-items.dto';
 
 export class CreateVaultItemPayload {
   encOverview: Record<string, any>;
   encDetails: Record<string, any>;
+  categoryId: string;
 }
 
 export class FindVaultItemOptions {
@@ -26,7 +28,8 @@ export class VaultItemsService {
     private readonly vaultItemsRepository: Repository<VaultItemEntity>,
     private readonly vaultsService: VaultsService,
     private readonly accountsService: AccountsService,
-    private readonly vaultFoldersService: VaultFoldersService
+    private readonly vaultFoldersService: VaultFoldersService,
+    private readonly vaultItemCategoriesService: VaultItemCategoriesService
   ) {}
 
   public async create(
@@ -35,10 +38,13 @@ export class VaultItemsService {
     folderId: string,
     payload: CreateVaultItemPayload
   ) {
-    const [account, vault, folder] = await Promise.all([
+    const [account, vault, folder, category] = await Promise.all([
       this.accountsService.getAccount({ id: accountId }),
       this.vaultsService.getVault({ id: vaultId }),
       this.vaultFoldersService.getVaultFolder({ id: folderId }),
+      this.vaultItemCategoriesService.getVaultItemCategory({
+        id: payload.categoryId,
+      }),
     ]);
 
     if (!account) throw new ApiNotFoundException('The account was not found');
@@ -48,12 +54,16 @@ export class VaultItemsService {
     if (!folder)
       throw new ApiNotFoundException('The vault folder was not found');
 
+    if (!category)
+      throw new ApiNotFoundException('The vault item category was not found');
+
     return this.vaultItemsRepository.save(
       this.vaultItemsRepository.create({
         encOverview: payload.encOverview,
         encDetails: payload.encDetails,
         vaultId: vault.id,
         folderId: folder.id,
+        categoryId: category.id,
         creatorAccountId: account.id,
       })
     );
@@ -74,6 +84,7 @@ export class VaultItemsService {
       encDetails: vaultItem?.encDetails,
       vaultUuid: vaultItem?.vaultId,
       folderUuid: vaultItem?.folderId,
+      categoryUuid: vaultItem?.categoryId,
       creatorAccountUuid: vaultItem?.creatorAccountId,
       lastUpdatedAt: vaultItem?.updatedAt.toISOString(),
       createdAt: vaultItem?.createdAt.toISOString(),
@@ -102,6 +113,7 @@ export class VaultItemsService {
       'encDetails',
       'vaultId',
       'folderId',
+      'categoryId',
       'creatorAccountId',
       'updatedAt',
       'createdAt',
@@ -128,6 +140,7 @@ export class VaultItemsService {
       'encDetails',
       'vaultId',
       'folderId',
+      'categoryId',
       'creatorAccountId',
       'updatedAt',
       'createdAt',

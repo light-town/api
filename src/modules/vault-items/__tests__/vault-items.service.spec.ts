@@ -9,6 +9,7 @@ import createModuleHelper from './helpers/create-module.helper';
 import core from '@light-town/core';
 import AccountsService from '~/modules/accounts/accounts.service';
 import VaultFoldersService from '~/modules/vault-folders/vault-folders.service';
+import VaultItemCategoriesService from '~/modules/vault-item-categories/vault-item-categories.service';
 
 describe('[Vault Items Module] [Service] ...', () => {
   let moduleFixture: TestingModule;
@@ -16,6 +17,7 @@ describe('[Vault Items Module] [Service] ...', () => {
   let vaultsService: VaultsService;
   let accountsService: AccountsService;
   let vaultFoldersService: VaultFoldersService;
+  let vaultItemCategoriesService: VaultItemCategoriesService;
 
   let vaultItemsService: VaultItemsService;
   let vaultItemsRepository: Repository<VaultItemEntity>;
@@ -25,6 +27,9 @@ describe('[Vault Items Module] [Service] ...', () => {
 
     vaultsService = moduleFixture.get<VaultsService>(VaultsService);
     accountsService = moduleFixture.get<AccountsService>(AccountsService);
+    vaultItemCategoriesService = moduleFixture.get<VaultItemCategoriesService>(
+      VaultItemCategoriesService
+    );
     vaultFoldersService = moduleFixture.get<VaultFoldersService>(
       VaultFoldersService
     );
@@ -51,6 +56,9 @@ describe('[Vault Items Module] [Service] ...', () => {
         id: faker.datatype.uuid(),
       };
       const TEST_VAULT_FOLDER = {
+        id: faker.datatype.uuid(),
+      };
+      const TEST_VAULT_ITEM_CATEGORY = {
         id: faker.datatype.uuid(),
       };
       const TEST_PAYLOAD = await core.vaults.vaultItem.encryptVaultItem(
@@ -92,6 +100,10 @@ describe('[Vault Items Module] [Service] ...', () => {
         .mockResolvedValueOnce(<any>TEST_VAULT_FOLDER);
 
       jest
+        .spyOn(vaultItemCategoriesService, 'getVaultItemCategory')
+        .mockResolvedValueOnce(<any>TEST_VAULT_ITEM_CATEGORY);
+
+      jest
         .spyOn(vaultItemsRepository, 'create')
         .mockImplementationOnce((i): any => i);
 
@@ -103,7 +115,7 @@ describe('[Vault Items Module] [Service] ...', () => {
         TEST_ACCOUNT.id,
         TEST_VAULT.id,
         TEST_VAULT_FOLDER.id,
-        TEST_PAYLOAD
+        { ...TEST_PAYLOAD, categoryId: TEST_VAULT_ITEM_CATEGORY.id }
       );
 
       expect(vaultItem).toStrictEqual(TEST_VAULT_ITEM);
@@ -125,6 +137,7 @@ describe('[Vault Items Module] [Service] ...', () => {
         vaultId: TEST_VAULT.id,
         creatorAccountId: TEST_ACCOUNT.id,
         folderId: TEST_VAULT_FOLDER.id,
+        categoryId: TEST_VAULT_ITEM_CATEGORY.id,
       });
 
       expect(vaultItemsRepository.save).toHaveBeenCalledTimes(1);
@@ -134,6 +147,7 @@ describe('[Vault Items Module] [Service] ...', () => {
         creatorAccountId: TEST_ACCOUNT.id,
         vaultId: TEST_VAULT.id,
         folderId: TEST_VAULT_FOLDER.id,
+        categoryId: TEST_VAULT_ITEM_CATEGORY.id,
       });
     });
   });

@@ -3,6 +3,7 @@ import { IEntity } from './entity.interface';
 import AccountEntity from './account.entity';
 import VaultEntity from './vault.entity';
 import VaultFolderEntity from './vault-folder.entity';
+import VaultItemCategoryEntity from './vault-item-category.entity';
 
 @Entity('vault_items')
 export class VaultItemEntity extends IEntity {
@@ -41,6 +42,16 @@ export class VaultItemEntity extends IEntity {
     referencedColumnName: 'id',
   })
   public folder?: VaultFolderEntity;
+
+  @Column({ type: 'uuid', name: 'category_id' })
+  public categoryId: string;
+
+  @ManyToOne(() => VaultItemCategoryEntity)
+  @JoinColumn({
+    name: 'category_id',
+    referencedColumnName: 'id',
+  })
+  public category?: VaultItemCategoryEntity;
 }
 
 export default VaultItemEntity;

@@ -12,6 +12,7 @@ import Api from './helpers/api.helper';
 import initDatabaseHelper from '~/../__tests__/helpers/init-database.helper';
 import createVaultItemHelper from '~/../__tests__/helpers/create-vault-item.helper';
 import createVaultFolderHelper from '~/../__tests__/helpers/create-vault-folder.helper';
+import createVaultItemCategoryHelper from '~/../__tests__/helpers/create-vault-item-category.helper';
 
 describe('[Vault Items Module] [Service] ...', () => {
   let app: INestApplication;
@@ -71,6 +72,12 @@ describe('[Vault Items Module] [Service] ...', () => {
 
   describe('[Creating] ...', () => {
     it('create vault item', async () => {
+      const category = await createVaultItemCategoryHelper(app, {
+        accountId: context.account.id,
+        vaultId: context.primaryVault.id,
+        vaultKey: context.primaryVault.key,
+      });
+
       const folder = await createVaultFolderHelper(app, {
         accountId: context.account.id,
         vaultId: context.primaryVault.id,
@@ -122,6 +129,7 @@ describe('[Vault Items Module] [Service] ...', () => {
         {
           encOverview,
           encDetails,
+          categoryUuid: category.id,
         },
         context.token
       );
@@ -134,6 +142,7 @@ describe('[Vault Items Module] [Service] ...', () => {
           encDetails,
           vaultUuid: context.primaryVault.id,
           folderUuid: folder.id,
+          categoryUuid: category.id,
           creatorAccountUuid: context.account.id,
           lastUpdatedAt: response.body?.data?.lastUpdatedAt,
           createdAt: response.body?.data?.createdAt,

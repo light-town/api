@@ -15,6 +15,14 @@ export class CreateVaultItemPayload {
   })
   @IsObject()
   encDetails: Record<string, any>;
+
+  @ApiProperty({
+    description: 'The vault item category uuid',
+    required: true,
+  })
+  @IsString()
+  @IsUUID()
+  categoryUuid: string;
 }
 
 export class VaultItem {
@@ -54,6 +62,14 @@ export class VaultItem {
   @IsString()
   @IsUUID()
   folderUuid: string;
+
+  @ApiProperty({
+    description: 'The unique uuid of vault item category',
+    required: true,
+  })
+  @IsString()
+  @IsUUID()
+  categoryUuid: string;
 
   @ApiProperty({
     description: 'The unique uuid of creator account',

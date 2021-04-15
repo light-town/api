@@ -3,6 +3,7 @@ import core from '@light-town/core';
 import * as faker from 'faker';
 import VaultItemsController from '~/modules/vault-items/vault-items.controller';
 import VaultItemsService from '~/modules/vault-items/vault-items.service';
+import createVaultItemCategoryHelper from './create-vault-item-category.helper';
 
 export interface CreateVaultItemOptions {
   accountId: string;
@@ -11,6 +12,7 @@ export interface CreateVaultItemOptions {
   folderId: string;
   overview?: Record<string, any>;
   details?: Record<string, any>;
+  categoryId?: string;
 }
 
 export const createVaultItemHelper = async (
@@ -60,6 +62,15 @@ export const createVaultItemHelper = async (
     {
       encOverview,
       encDetails,
+      categoryUuid:
+        options.categoryId ??
+        (
+          await createVaultItemCategoryHelper(app, {
+            accountId: options.accountId,
+            vaultId: options.vaultId,
+            vaultKey: options.vaultKey,
+          })
+        ).id,
     }
   );
 
