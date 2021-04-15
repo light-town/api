@@ -11,6 +11,7 @@ import VaultsModule from './modules/vaults/vaults.module';
 import KeySetVaultsModule from './modules/key-set-vaults/key-set-vaults.module';
 import VaultItemsModule from './modules/vault-items/vault-items.module';
 import VaultFoldersModule from './modules/vault-folders/vault-folders.module';
+import VaultItemCategoriesModule from './modules/vault-item-categories/vault-item-categories.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import VaultFoldersModule from './modules/vault-folders/vault-folders.module';
     KeySetVaultsModule,
     VaultItemsModule,
     VaultFoldersModule,
+    VaultItemCategoriesModule,
   ],
 })
 export class AppModule {}

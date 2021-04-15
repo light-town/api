@@ -1,7 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsNotEmpty } from '~/common/validation';
 import { IsUUID, ValidateNested } from 'class-validator';
-import { CreateKeySetPayload as CreateKeySet } from '~/modules/key-sets/key-sets.dto';
 
 export class EncVaultKey {
   @ApiProperty({

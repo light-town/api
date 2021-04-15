@@ -66,14 +66,14 @@ export class VaultFolder {
   parentFolderUuid: string;
 
   @ApiProperty({
-    description: 'The datetime of last updating vault item',
+    description: 'The datetime of last updating vault folder',
     required: true,
   })
   @IsDate()
   lastUpdatedAt: string;
 
   @ApiProperty({
-    description: 'The datetime of creating vault item',
+    description: 'The datetime of creating vault folder',
     required: true,
   })
   @IsDate()
