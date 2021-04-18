@@ -5,6 +5,7 @@ import { ApiNotFoundException } from '~/common/exceptions';
 import VaultEntity from '~/db/entities/vault.entity';
 import KeySetVaultsService from '../key-set-vaults/key-set-vaults.service';
 import KeySetsService from '../key-sets/key-sets.service';
+import VaultItemCategoriesService from '../vault-item-categories/vault-item-categories.service';
 import { EncVaultKey, CreateVaultPayload, Vault } from './vaults.dto';
 
 export class FindVaultOptions {
@@ -19,7 +20,9 @@ export class VaultsService {
     @Inject(forwardRef(() => KeySetVaultsService))
     private readonly keySetVaultsService: KeySetVaultsService,
     @Inject(forwardRef(() => KeySetsService))
-    private readonly keySetsService: KeySetsService
+    private readonly keySetsService: KeySetsService,
+    @Inject(forwardRef(() => VaultItemCategoriesService))
+    private readonly vaultItemCategoriesService: VaultItemCategoriesService
   ) {}
 
   public async create(
@@ -41,6 +44,17 @@ export class VaultsService {
         encKey: payload.encKey,
         encMetadata: payload.encMetadata,
       })
+    );
+
+    /// [TODO] replace from here
+    await Promise.all(
+      payload.encCategories.map(c =>
+        this.vaultItemCategoriesService.createVaultItemCategory(
+          accountId,
+          newVault.id,
+          { encOverview: c.encOverview }
+        )
+      )
     );
 
     /// [TODO] replace from here

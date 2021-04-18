@@ -59,14 +59,14 @@ export class AuthService {
 
     if (!device) throw new ApiNotFoundException(`The device was not found`);
 
-    const user = await this.usersService.create({
+    const newUser = await this.usersService.create({
       name: account.username,
       avatarUrl: account.avatarUrl,
     });
 
     const newAccount = await this.accountsService.create({
       key: account.key,
-      userId: user.id,
+      userId: newUser.id,
       verifier: srp.verifier,
       salt: srp.salt,
     });

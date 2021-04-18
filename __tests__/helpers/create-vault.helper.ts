@@ -41,6 +41,7 @@ export const createVaultHelper = async (
     {
       encKey,
       encMetadata,
+      encCategories: [],
     }
   );
 

@@ -88,6 +88,7 @@ describe('[Auth Module] [Controller]...', () => {
             key: faker.datatype.uuid(),
           },
           encMetadata: {},
+          encCategories: [],
         },
       };
 

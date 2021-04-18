@@ -84,6 +84,7 @@ describe('[Auth Module] [Service] ...', () => {
             key: faker.datatype.uuid(),
           },
           encMetadata: {},
+          encCategories: [],
         },
       };
 
@@ -194,6 +195,7 @@ describe('[Auth Module] [Service] ...', () => {
             key: faker.datatype.uuid(),
           },
           encMetadata: {},
+          encCategories: [],
         },
       };
 

@@ -85,6 +85,7 @@ export const createAccountHelper = async (
     primaryVault: {
       encKey: encVaultKey,
       encMetadata,
+      encCategories: [],
     },
   });
 

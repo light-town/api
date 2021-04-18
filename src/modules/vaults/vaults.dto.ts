@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsNotEmpty } from '~/common/validation';
 import { IsUUID, ValidateNested } from 'class-validator';
+import { CreateVaultItemCategoryOptions } from '../vault-item-categories/vault-item-categories.dto';
 
 export class EncVaultKey {
   @ApiProperty({
@@ -77,9 +78,15 @@ export class CreateVaultPayload {
   encKey: EncVaultKey;
 
   @ApiProperty({
-    description: 'The encrypted metadata of vault',
+    description: 'The encrypted metadata of the vault',
     required: true,
   })
   @ValidateNested()
   encMetadata: any;
+
+  @ApiProperty({
+    description: 'The encrypted categories of the vault',
+    required: true,
+  })
+  encCategories: CreateVaultItemCategoryOptions[];
 }

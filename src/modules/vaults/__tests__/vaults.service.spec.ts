@@ -42,6 +42,7 @@ describe('[Vaults Module] [Service] ...', () => {
           key: faker.random.word(),
         },
         encMetadata: {},
+        encCategories: [],
       };
       const TEST_VAULT: DeepPartial<VaultEntity> = {
         id: faker.datatype.uuid(),
@@ -83,7 +84,6 @@ describe('[Vaults Module] [Service] ...', () => {
 
   describe('[Getting] ...', () => {
     it('should return all vaults', async () => {
-      const TEST_ACCOUNT_ID = faker.datatype.uuid();
       const TEST_PRIMARY_KEY_SET = faker.datatype.uuid();
       const TEST_VAULTS = [
         {

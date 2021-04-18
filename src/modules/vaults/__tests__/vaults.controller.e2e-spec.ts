@@ -98,6 +98,7 @@ describe('[Vaults Module] [Controller] ...', () => {
           {
             encKey,
             encMetadata,
+            encCategories: [],
           },
           context.token
         );
