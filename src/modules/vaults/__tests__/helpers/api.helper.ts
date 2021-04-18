@@ -33,6 +33,18 @@ export class Api {
       .delete(`/vaults/${vaultUuid}`)
       .set('Authorization', `Bearer ${accessToken}`);
   }
+
+  getKeySetVaults(keySetUuid: string, accessToken: string) {
+    return this.handle
+      .get(`/key-sets/${keySetUuid}/vaults/`)
+      .set('Authorization', `Bearer ${accessToken}`);
+  }
+
+  getKeySetVault(keySetUuid: string, vaultUuid: string, accessToken: string) {
+    return this.handle
+      .get(`/key-sets/${keySetUuid}/vaults/${vaultUuid}`)
+      .set('Authorization', `Bearer ${accessToken}`);
+  }
 }
 
 export default Api;

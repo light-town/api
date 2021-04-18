@@ -84,6 +84,7 @@ describe('[Vaults Module] [Service] ...', () => {
   describe('[Getting] ...', () => {
     it('should return all vaults', async () => {
       const TEST_ACCOUNT_ID = faker.datatype.uuid();
+      const TEST_PRIMARY_KEY_SET = faker.datatype.uuid();
       const TEST_VAULTS = [
         {
           id: faker.datatype.uuid(),
@@ -108,19 +109,17 @@ describe('[Vaults Module] [Service] ...', () => {
 
       jest.spyOn(vaultsService, 'find').mockResolvedValueOnce(<any>TEST_VAULTS);
 
-      expect(await vaultsService.getVaults(TEST_ACCOUNT_ID)).toStrictEqual(
-        TEST_VAULTS
+      expect(
+        await vaultsService.getVaultsByKeySet(TEST_PRIMARY_KEY_SET)
+      ).toStrictEqual(TEST_VAULTS);
+
+      expect(keySetVaultsService.getVaultIds).toHaveBeenCalledTimes(1);
+      expect(keySetVaultsService.getVaultIds).toHaveBeenCalledWith(
+        TEST_PRIMARY_KEY_SET
       );
 
-      expect(
-        jest.spyOn(keySetVaultsService, 'getVaultIds')
-      ).toHaveBeenCalledTimes(1);
-      expect(
-        jest.spyOn(keySetVaultsService, 'getVaultIds')
-      ).toHaveBeenCalledWith(TEST_ACCOUNT_ID);
-
-      expect(jest.spyOn(vaultsService, 'find')).toHaveBeenCalledTimes(1);
-      expect(jest.spyOn(vaultsService, 'find')).toHaveBeenCalledWith({
+      expect(vaultsService.find).toHaveBeenCalledTimes(1);
+      expect(vaultsService.find).toHaveBeenCalledWith({
         select: ['id', 'encKey', 'encMetadata'],
         where: {
           id: In(TEST_VAULTS.map(v => v.id)),

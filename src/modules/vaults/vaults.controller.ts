@@ -22,7 +22,7 @@ import VaultsService from './vaults.service';
 
 @AuthGuard()
 @ApiTags('/vaults')
-@Controller('/vaults')
+@Controller()
 export class VaultsController {
   public constructor(
     private readonly vaultsService: VaultsService,
@@ -33,7 +33,7 @@ export class VaultsController {
   ) {}
 
   @ApiOkResponse({ type: Vault })
-  @Post()
+  @Post('/vaults')
   public async createVault(
     @CurrentAccount() account,
     @Body() payload: CreateVaultPayload
@@ -53,10 +53,9 @@ export class VaultsController {
   }
 
   @ApiOkResponse({ type: [Vault] })
-  @Get()
+  @Get('/vaults')
   public async getVaults(@CurrentAccount() account): Promise<Vault[]> {
     /// [TODO] check permitions
-    /// [TODO] endpoint for getting the vaults of the key set - /key-sets/:keySetUuid/vaults/
 
     const foundKeySets = await this.keySetsService.getKeySets({
       ownerAccountId: account.id,
@@ -65,7 +64,7 @@ export class VaultsController {
     const foundVaults: Vault[] = [];
 
     for (const keySet of foundKeySets) {
-      const vaults = await this.vaultsService.getVaults(keySet.id);
+      const vaults = await this.vaultsService.getVaultsByKeySet(keySet.id);
 
       for (const vault of vaults) {
         foundVaults.push(
@@ -78,7 +77,7 @@ export class VaultsController {
   }
 
   @ApiOkResponse({ type: Vault })
-  @Get('/:vaultUuid')
+  @Get('/vaults/:vaultUuid')
   public async getVault(
     @CurrentAccount() account,
     @Param('vaultUuid') vaultUuid: string
@@ -97,15 +96,83 @@ export class VaultsController {
     return this.vaultsService.format(vault, account.id, keySet.id);
   }
 
-  @Delete('/:vaultUuid')
+  @Delete('/vaults/:vaultUuid')
   public async deleteVault(
     @CurrentAccount() account,
     @Param('vaultUuid') vaultUuid: string
   ): Promise<void> {
     /// [TODO] check permitions
-    /// [TODO] delete key set ???
+
+    const keySets = await this.keySetVaultsService.getKeySets(vaultUuid);
+
+    for (const keySet of keySets) {
+      if (keySet.isPrimary) continue;
+
+      const vaultsCount = await this.keySetVaultsService.getVaultIds(keySet.id);
+
+      if (vaultsCount.length !== 1) continue;
+
+      await this.keySetsService.deleteKeySet(keySet.id);
+    }
 
     await this.vaultsService.deleteVault(vaultUuid);
+  }
+
+  @ApiOkResponse({ type: [Vault] })
+  @Get('/key-sets/:keySetUuid/vaults')
+  public async getKeySetVaults(
+    @CurrentAccount() account,
+    @Param('keySetUuid') keySetUuid: string
+  ): Promise<Vault[]> {
+    /// [TODO] check permitions
+
+    if (
+      !(await this.keySetsService.exists({
+        id: keySetUuid,
+        ownerAccountId: account.id,
+      }))
+    )
+      throw new ApiNotFoundException('The key set was not found');
+
+    const foundVaults = await this.vaultsService.getVaultsByKeySet(keySetUuid);
+
+    const formatedVaults: Vault[] = [];
+
+    for (const vault of foundVaults) {
+      formatedVaults.push(
+        this.vaultsService.format(vault, account.id, keySetUuid)
+      );
+    }
+
+    return formatedVaults;
+  }
+
+  @ApiOkResponse({ type: Vault })
+  @Get('/key-sets/:keySetUuid/vaults/:vaultUuid')
+  public async getKeySetVault(
+    @CurrentAccount() account,
+    @Param('vaultUuid') vaultUuid: string,
+    @Param('keySetUuid') keySetUuid: string
+  ): Promise<Vault> {
+    /// [TODO] check permitions
+
+    if (
+      !(await this.keySetsService.exists({
+        id: keySetUuid,
+        ownerAccountId: account.id,
+      }))
+    )
+      throw new ApiNotFoundException('The key set was not found');
+
+    const foundVault = await this.vaultsService.getVault({ id: vaultUuid });
+    const foundVaultIds = await this.keySetVaultsService.getVaultIds(
+      keySetUuid
+    );
+
+    if (!foundVaultIds.includes(foundVault?.id))
+      throw new ApiNotFoundException('The vault was not found');
+
+    return this.vaultsService.format(foundVault, account.id, keySetUuid);
   }
 }
 

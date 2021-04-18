@@ -3,182 +3,20 @@ import { Connection, Repository } from 'typeorm';
 import core from '@light-town/core';
 import { INestApplication } from '@nestjs/common';
 import { getConnectionToken, getRepositoryToken } from '@nestjs/typeorm';
-import KeySetsService from '~/modules/key-sets/key-sets.service';
-import VaultsService from '../vaults.service';
 import createE2EModuleHelper from './helpers/create-e2e-module.helper';
 import initDatabaseHelper from '~/../__tests__/helpers/init-database.helper';
 import APIHelper from './helpers/api.helper';
-import DevicesService from '~/modules/devices/devices.service';
-import AccountsService from '~/modules/accounts/accounts.service';
 import { OS } from '~/modules/devices/devices.dto';
-import AuthService from '~/modules/auth/auth.service';
 import VaultEntity from '~/db/entities/vault.entity';
 import KeySetEntity from '~/db/entities/key-sets.entity';
-
-const createVaultHelper = async (
-  vaultsService: VaultsService,
-  ownerAccountId: string,
-  primaryKeySet: KeySetEntity
-) => {
-  const vaultKey = core.common.generateCryptoRandomString(32);
-
-  const encVaultKey = await core.vaults.vaultKey.encryptByPublicKey(
-    vaultKey,
-    core.vaults.publicKeyFromString(primaryKeySet.publicKey)
-  );
-
-  const metadata = {
-    title: faker.random.word(),
-    desc: faker.random.word(),
-  };
-
-  const encMetadata = await core.vaults.vaultMetadata.encryptByVaultKey(
-    metadata,
-    vaultKey
-  );
-
-  return vaultsService.create(ownerAccountId, {
-    encKey: encVaultKey,
-    encMetadata,
-  });
-};
-
-const createAccountHelper = async (
-  accountsService: AccountsService,
-  devicesService: DevicesService,
-  authService: AuthService,
-  keySetsService: KeySetsService,
-  vaultsService: VaultsService,
-  password: string
-) => {
-  const device = await devicesService.create({
-    os: OS.ANDROID,
-    hostname: faker.internet.ip(),
-  });
-
-  const accountKey = core.common.generateAccountKey({
-    versionCode: 'A1',
-    secret: core.common.generateCryptoRandomString(32),
-  });
-
-  const verifier = core.srp.client.deriveVerifier(accountKey, password);
-
-  const masterUnlockKey = core.common.deriveMasterUnlockKey(
-    accountKey,
-    password
-  );
-
-  const { publicKey, privateKey } = await core.vaults.generateKeyPair();
-  const symmetricKey = core.common.generateCryptoRandomString(32);
-  const vaultKey = core.common.generateCryptoRandomString(32);
-
-  const encVaultKey = await core.vaults.vaultKey.encryptByPublicKey(
-    vaultKey,
-    publicKey
-  );
-  const encPrivateKey = await core.vaults.privateKey.encryptBySymmetricKey(
-    privateKey,
-    symmetricKey
-  );
-  const encSymmetricKey = await core.vaults.symmetricKey.encryptBySecretKey(
-    symmetricKey,
-    masterUnlockKey.key,
-    masterUnlockKey.salt
-  );
-  const encMetadata = await core.vaults.vaultMetadata.encryptByVaultKey(
-    {
-      title: faker.random.word(),
-      desc: faker.random.word(),
-    },
-    vaultKey
-  );
-
-  await authService.signUp({
-    deviceUuid: device.id,
-    srp: {
-      verifier: verifier.verifier,
-      salt: verifier.salt,
-    },
-    account: {
-      key: accountKey,
-      username: faker.internet.userName(),
-    },
-    primaryKeySet: {
-      publicKey: core.vaults.publicKeyToString(publicKey),
-      encPrivateKey,
-      encSymmetricKey,
-    },
-    primaryVault: {
-      encKey: encVaultKey,
-      encMetadata,
-    },
-  });
-
-  const account = await accountsService.getAccount({ key: accountKey });
-
-  const {
-    sessionUuid,
-    serverPublicEphemeral,
-    salt,
-  } = await authService.createSession({
-    accountKey,
-    deviceUuid: device.id,
-  });
-
-  const srpPrivateKey = core.srp.client.derivePrivateKey(
-    accountKey,
-    password,
-    salt
-  );
-
-  const clientEphemeralKeyPair = core.srp.client.generateEphemeralKeyPair();
-  const clientSession = core.srp.client.deriveSession(
-    clientEphemeralKeyPair.secret,
-    serverPublicEphemeral,
-    salt,
-    accountKey,
-    srpPrivateKey
-  );
-
-  const { token, serverSessionProof } = await authService.startSession(
-    sessionUuid,
-    {
-      clientPublicEphemeralKey: clientEphemeralKeyPair.public,
-      clientSessionProofKey: clientSession.proof,
-    }
-  );
-
-  core.srp.client.verifySession(
-    clientEphemeralKeyPair.public,
-    clientSession,
-    serverSessionProof
-  );
-
-  const primaryKeySet = await keySetsService.getKeySet({
-    ownerAccountId: account.id,
-    isPrimary: true,
-  });
-
-  return {
-    account,
-    accountKey,
-    device,
-    token,
-    primaryKeySet,
-    primatyVault: (await vaultsService.getVaults(primaryKeySet.id))[0],
-    masterUnlockKey,
-  };
-};
+import createAccountHelper from '~/../__tests__/helpers/create-account.helper';
+import createAndStartSessionHelper from '~/../__tests__/helpers/create-and-start-session.helper';
+import createVaultHelper from '~/../__tests__/helpers/create-vault.helper';
 
 describe('[Vaults Module] [Controller] ...', () => {
   let app: INestApplication;
   let api: APIHelper;
   let connection: Connection;
-  let accountsService: AccountsService;
-  let devicesService: DevicesService;
-  let keySetsService: KeySetsService;
-  let vaultsService: VaultsService;
-  let authService: AuthService;
   let vaultsRepository: Repository<VaultEntity>;
   let keySetsRepository: Repository<KeySetEntity>;
 
@@ -192,11 +30,6 @@ describe('[Vaults Module] [Controller] ...', () => {
 
     await initDatabaseHelper();
 
-    accountsService = app.get<AccountsService>(AccountsService);
-    devicesService = app.get<DevicesService>(DevicesService);
-    authService = app.get<AuthService>(AuthService);
-    keySetsService = app.get<KeySetsService>(KeySetsService);
-    vaultsService = app.get<VaultsService>(VaultsService);
     vaultsRepository = app.get<Repository<VaultEntity>>(
       getRepositoryToken(VaultEntity)
     );
@@ -206,9 +39,7 @@ describe('[Vaults Module] [Controller] ...', () => {
   });
 
   beforeEach(async () => {
-    await connection.query(
-      'TRUNCATE accounts, users, devices, vaults, key_sets, key_set_vaults CASCADE'
-    );
+    await connection.query('TRUNCATE vaults, key_sets, key_set_vaults CASCADE');
   });
 
   afterAll(async () => {
@@ -216,32 +47,34 @@ describe('[Vaults Module] [Controller] ...', () => {
     await connection.close();
   });
 
-  afterEach(() => {
-    jest.clearAllMocks();
-    jest.restoreAllMocks();
-  });
-
   describe('', () => {
-    let account;
-    let token;
-    let primaryKeySet;
-    let primatyVault;
+    let context;
 
     beforeEach(async () => {
-      const password = '123';
+      const {
+        account,
+        device,
+        password,
+        masterUnlockKey,
+        primaryKeySet,
+        primaryVault,
+      } = await createAccountHelper(app, { device: { os: OS.WINDOWS } });
 
-      const data = await createAccountHelper(
-        accountsService,
-        devicesService,
-        authService,
-        keySetsService,
-        vaultsService,
-        password
-      );
-      account = data.account;
-      token = data.token;
-      primaryKeySet = data.primaryKeySet;
-      primatyVault = data.primatyVault;
+      const { token } = await createAndStartSessionHelper(app, {
+        accountKey: account.key,
+        deviceUuid: device.id,
+        password,
+      });
+
+      context = {
+        token,
+        account,
+        device,
+        password,
+        masterUnlockKey,
+        primaryKeySet,
+        primaryVault,
+      };
     });
 
     describe('[Creating] ...', () => {
@@ -250,7 +83,7 @@ describe('[Vaults Module] [Controller] ...', () => {
 
         const encKey = await core.vaults.vaultKey.encryptByPublicKey(
           vaultKey,
-          core.vaults.publicKeyFromString(primaryKeySet.publicKey)
+          context.primaryKeySet.publicKey
         );
 
         const encMetadata = await core.vaults.vaultMetadata.encryptByVaultKey(
@@ -266,7 +99,7 @@ describe('[Vaults Module] [Controller] ...', () => {
             encKey,
             encMetadata,
           },
-          token
+          context.token
         );
 
         expect(response.status).toEqual(201);
@@ -275,8 +108,8 @@ describe('[Vaults Module] [Controller] ...', () => {
             uuid: response.body?.data?.uuid,
             encKey,
             encMetadata,
-            accountUuid: account.id,
-            keySetUuid: primaryKeySet.id,
+            accountUuid: context.account.id,
+            keySetUuid: context.primaryKeySet.id,
           },
           statusCode: 201,
         });
@@ -301,13 +134,16 @@ describe('[Vaults Module] [Controller] ...', () => {
 
     describe('[Getting] ...', () => {
       it('should get all vaults', async () => {
-        const vaults = [primatyVault];
+        const vaults = [context.primaryVault];
         for (let i = 0; i < 10; i++)
           vaults.push(
-            await createVaultHelper(vaultsService, account.id, primaryKeySet)
+            await createVaultHelper(app, {
+              accountId: context.account.id,
+              publicKey: context.primaryKeySet.publicKey,
+            })
           );
 
-        const response = await api.getVaults(token);
+        const response = await api.getVaults(context.token);
 
         expect(response.status).toEqual(200);
         expect(response.body).toStrictEqual({
@@ -315,21 +151,20 @@ describe('[Vaults Module] [Controller] ...', () => {
             uuid: v.id,
             encKey: v.encKey,
             encMetadata: v.encMetadata,
-            accountUuid: account.id,
-            keySetUuid: primaryKeySet.id,
+            accountUuid: context.account.id,
+            keySetUuid: context.primaryKeySet.id,
           })),
           statusCode: 200,
         });
       });
 
       it('should get one vault', async () => {
-        const vault = await createVaultHelper(
-          vaultsService,
-          account.id,
-          primaryKeySet
-        );
+        const vault = await createVaultHelper(app, {
+          accountId: context.account.id,
+          publicKey: context.primaryKeySet.publicKey,
+        });
 
-        const response = await api.getVault(vault.id, token);
+        const response = await api.getVault(vault.id, context.token);
 
         expect(response.status).toEqual(200);
         expect(response.body).toStrictEqual({
@@ -337,8 +172,61 @@ describe('[Vaults Module] [Controller] ...', () => {
             uuid: vault.id,
             encKey: vault.encKey,
             encMetadata: vault.encMetadata,
-            accountUuid: account.id,
-            keySetUuid: primaryKeySet.id,
+            accountUuid: context.account.id,
+            keySetUuid: context.primaryKeySet.id,
+          },
+          statusCode: 200,
+        });
+      });
+
+      it('should get the key set vaults', async () => {
+        const vaults = [context.primaryVault];
+        for (let i = 0; i < 10; i++)
+          vaults.push(
+            await createVaultHelper(app, {
+              accountId: context.account.id,
+              publicKey: context.primaryKeySet.publicKey,
+            })
+          );
+
+        const response = await api.getKeySetVaults(
+          context.primaryKeySet.id,
+          context.token
+        );
+
+        expect(response.status).toEqual(200);
+        expect(response.body).toStrictEqual({
+          data: vaults.map(v => ({
+            uuid: v.id,
+            encKey: v.encKey,
+            encMetadata: v.encMetadata,
+            accountUuid: context.account.id,
+            keySetUuid: context.primaryKeySet.id,
+          })),
+          statusCode: 200,
+        });
+      });
+
+      it('should get the key set vault', async () => {
+        const vault = await createVaultHelper(app, {
+          accountId: context.account.id,
+          publicKey: context.primaryKeySet.publicKey,
+        });
+
+        const response = await api.getKeySetVault(
+          context.primaryKeySet.id,
+          vault.id,
+          context.token
+        );
+
+        expect(response.status).toEqual(200);
+        expect(response.body).toStrictEqual({
+          data: {
+            uuid: vault.id,
+            encKey: vault.encKey,
+            encMetadata: vault.encMetadata,
+            accountUuid: context.account.id,
+            keySetUuid: context.primaryKeySet.id,
           },
           statusCode: 200,
         });
@@ -347,13 +235,12 @@ describe('[Vaults Module] [Controller] ...', () => {
 
     describe('[Deleting] ...', () => {
       it('should delete a vaults', async () => {
-        const vault = await createVaultHelper(
-          vaultsService,
-          account.id,
-          primaryKeySet
-        );
+        const vault = await createVaultHelper(app, {
+          accountId: context.account.id,
+          publicKey: context.primaryKeySet.publicKey,
+        });
 
-        const response = await api.deleteVault(vault.id, token);
+        const response = await api.deleteVault(vault.id, context.token);
 
         expect(response.status).toEqual(200);
         expect(response.body).toStrictEqual({

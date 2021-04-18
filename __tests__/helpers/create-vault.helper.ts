@@ -2,10 +2,11 @@ import { INestApplication } from '@nestjs/common';
 import core from '@light-town/core';
 import * as faker from 'faker';
 import VaultsController from '~/modules/vaults/vaults.controller';
+import VaultsService from '~/modules/vaults/vaults.service';
 
 export interface CreateVaultOptions {
   accountId: string;
-  publicKey: string;
+  publicKey: any;
   metadata?: Record<string, any>;
   vaultKey?: string;
 }
@@ -15,13 +16,14 @@ export const createVaultHelper = async (
   options: CreateVaultOptions
 ) => {
   const vaultsController = app.get<VaultsController>(VaultsController);
+  const vaultsService = app.get<VaultsService>(VaultsService);
 
   const vaultKey =
     options.vaultKey ?? core.common.generateCryptoRandomString(32);
 
   const encKey = await core.vaults.vaultKey.encryptByPublicKey(
     vaultKey,
-    core.vaults.publicKeyFromString(options.publicKey)
+    options.publicKey
   );
 
   const metadata = options.metadata ?? {
@@ -34,12 +36,14 @@ export const createVaultHelper = async (
     vaultKey
   );
 
-  return vaultsController.createVault(
+  const vault = await vaultsController.createVault(
     { id: options.accountId },
     {
       encKey,
       encMetadata,
     }
   );
+
+  return vaultsService.getVault({ id: vault.uuid });
 };
 export default createVaultHelper;

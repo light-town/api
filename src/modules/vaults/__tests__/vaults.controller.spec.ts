@@ -111,7 +111,7 @@ describe('[Vaults Module] [Controller] ...', () => {
         .mockResolvedValueOnce(<any>TEST_KEY_SETS);
 
       jest
-        .spyOn(vaultsService, 'getVaults')
+        .spyOn(vaultsService, 'getVaultsByKeySet')
         .mockResolvedValueOnce(<any>TEST_VAULTS)
         .mockResolvedValueOnce(<any>TEST_VAULTS)
         .mockResolvedValueOnce(<any>TEST_VAULTS);
@@ -132,19 +132,18 @@ describe('[Vaults Module] [Controller] ...', () => {
         )
       );
 
-      expect(jest.spyOn(vaultsService, 'getVaults')).toHaveBeenCalledTimes(3);
-      expect(jest.spyOn(vaultsService, 'getVaults')).toHaveBeenNthCalledWith(
-        1,
-        TEST_KEY_SETS[0].id
-      );
-      expect(jest.spyOn(vaultsService, 'getVaults')).toHaveBeenNthCalledWith(
-        2,
-        TEST_KEY_SETS[1].id
-      );
-      expect(jest.spyOn(vaultsService, 'getVaults')).toHaveBeenNthCalledWith(
-        3,
-        TEST_KEY_SETS[2].id
-      );
+      expect(
+        jest.spyOn(vaultsService, 'getVaultsByKeySet')
+      ).toHaveBeenCalledTimes(3);
+      expect(
+        jest.spyOn(vaultsService, 'getVaultsByKeySet')
+      ).toHaveBeenNthCalledWith(1, TEST_KEY_SETS[0].id);
+      expect(
+        jest.spyOn(vaultsService, 'getVaultsByKeySet')
+      ).toHaveBeenNthCalledWith(2, TEST_KEY_SETS[1].id);
+      expect(
+        jest.spyOn(vaultsService, 'getVaultsByKeySet')
+      ).toHaveBeenNthCalledWith(3, TEST_KEY_SETS[2].id);
     });
   });
 

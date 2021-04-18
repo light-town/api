@@ -86,6 +86,21 @@ export class KeySetVaultsService {
     )?.keySet;
   }
 
+  public async getKeySets(vaultId: string): Promise<KeySetEntity[]> {
+    return (
+      await this.keySetVaultRepository.find({
+        select: ['id'],
+        where: { vaultId, isDeleted: false },
+        join: {
+          alias: 'keySetVaults',
+          leftJoinAndSelect: {
+            keySet: 'keySetVaults.keySet',
+          },
+        },
+      })
+    ).map(e => e.keySet);
+  }
+
   public async getVault(keySetId: string): Promise<VaultEntity> {
     return (
       await this.keySetVaultRepository.findOne({
@@ -99,6 +114,21 @@ export class KeySetVaultsService {
         },
       })
     )?.vault;
+  }
+
+  public async getVaults(keySetId: string): Promise<VaultEntity[]> {
+    return (
+      await this.keySetVaultRepository.find({
+        select: ['id'],
+        where: { keySetId, isDeleted: false },
+        join: {
+          alias: 'keySetVaults',
+          leftJoinAndSelect: {
+            vault: 'keySetVaults.vault',
+          },
+        },
+      })
+    ).map(e => e.vault);
   }
 }
 

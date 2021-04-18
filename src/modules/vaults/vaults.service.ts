@@ -58,17 +58,6 @@ export class VaultsService {
     return vault !== undefined;
   }
 
-  public async getVaults(keySetId: string): Promise<VaultEntity[]> {
-    const vaultIds = await this.keySetVaultsService.getVaultIds(keySetId);
-    return this.find({
-      select: ['id', 'encKey', 'encMetadata'],
-      where: {
-        id: In(vaultIds),
-        isDeleted: false,
-      },
-    });
-  }
-
   public format(
     vault: VaultEntity,
     accountId: string,
@@ -121,6 +110,27 @@ export class VaultsService {
       select: ['id', 'encKey', 'encMetadata'],
       where: {
         ...options,
+        isDeleted: false,
+      },
+    });
+  }
+
+  public async getVaults(options: FindVaultOptions): Promise<VaultEntity[]> {
+    return await this.find({
+      select: ['id', 'encKey', 'encMetadata'],
+      where: {
+        ...options,
+        isDeleted: false,
+      },
+    });
+  }
+
+  public async getVaultsByKeySet(keySetId: string): Promise<VaultEntity[]> {
+    const vaultIds = await this.keySetVaultsService.getVaultIds(keySetId);
+    return this.find({
+      select: ['id', 'encKey', 'encMetadata'],
+      where: {
+        id: In(vaultIds),
         isDeleted: false,
       },
     });
