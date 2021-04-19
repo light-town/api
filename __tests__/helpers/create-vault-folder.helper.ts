@@ -3,12 +3,13 @@ import core from '@light-town/core';
 import * as faker from 'faker';
 import VaultFoldersController from '~/modules/vault-folders/vault-folders.controller';
 import VaultFoldersService from '~/modules/vault-folders/vault-folders.service';
+import { VaultFolderOverview } from '@light-town/core/dist/helpers/vault-folders/definitions';
 
 export interface CreateVaultFolderOptions {
   accountId: string;
   vaultId: string;
   vaultKey: string;
-  overview?: Record<string, any>;
+  overview?: VaultFolderOverview;
   parentFolderId?: string;
 }
 
@@ -21,12 +22,12 @@ export const createVaultFolderHelper = async (
   );
   const vaultFoldersService = app.get<VaultFoldersService>(VaultFoldersService);
 
-  const overview = options.overview ?? {
+  const overview: VaultFolderOverview = options.overview ?? {
     name: faker.random.word(),
     desc: faker.random.words(),
   };
 
-  const encOverview = await core.vaults.vaultItem.encryptOverviewByVaultKey(
+  const encVaultFolder = await core.helpers.vaultFolders.createVaultFolderHelper(
     overview,
     options.vaultKey
   );
@@ -35,12 +36,18 @@ export const createVaultFolderHelper = async (
     { id: options.accountId },
     options.vaultId,
     {
-      encOverview,
+      ...encVaultFolder,
       parentFolderUuid: options.parentFolderId,
     }
   );
 
-  return vaultFoldersService.getVaultFolder({ id: vaultFolder.uuid });
+  return {
+    ...(await vaultFoldersService.getVaultFolder({ id: vaultFolder.uuid })),
+    ...(await core.helpers.vaultFolders.decryptVaultFolderHelper(
+      encVaultFolder,
+      options.vaultKey
+    )),
+  };
 };
 
 export default createVaultFolderHelper;

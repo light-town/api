@@ -42,7 +42,7 @@ describe('[Vault Folders Module] [Service] ...', () => {
       const TEST_ACCOUNT = { id: faker.datatype.uuid() };
       const TEST_VAULT = {
         id: faker.datatype.uuid(),
-        key: core.common.generateCryptoRandomString(32),
+        key: core.encryption.common.generateCryptoRandomString(32),
       };
       const TEST_VAULT_FOLDER = {
         id: faker.datatype.uuid(),

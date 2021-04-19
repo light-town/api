@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { ApiNotFoundException } from '~/common/exceptions';
 import AuthGuard from '../auth/auth.guard';
 import CurrentAccount from '../auth/current-account';
@@ -8,6 +9,7 @@ import {
 } from './vault-item-categories.dto';
 import VaultItemCategoriesService from './vault-item-categories.service';
 
+@ApiTags('/vaults/categories')
 @AuthGuard()
 @Controller()
 export class VaultItemCategoriesController {

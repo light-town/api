@@ -89,7 +89,7 @@ describe('[Vault Items Module] [Service] ...', () => {
       });
 
       const overview = {
-        title: faker.random.word(),
+        name: faker.random.word(),
         decs: faker.random.words(),
         urls: [
           faker.internet.url(),
@@ -101,24 +101,18 @@ describe('[Vault Items Module] [Service] ...', () => {
         },
         tags: [{ uuid: faker.datatype.uuid() }],
       };
-
-      const encOverview = await core.vaults.vaultItem.encryptOverviewByVaultKey(
-        overview,
-        context.primaryVault.key
-      );
-
       const details = {
         fields: [
-          { name: 'username', type: 'TEXT', value: faker.internet.userName() },
+          { fieldName: 'username', value: faker.internet.userName() },
           {
-            name: 'password',
-            type: 'PASSWORD',
+            fieldName: 'password',
             value: faker.internet.password(),
           },
         ],
       };
 
-      const encDetails = await core.vaults.vaultItem.encryptOverviewByVaultKey(
+      const encVaultItem = await core.helpers.vaultItems.createVaultItemHelper(
+        overview,
         details,
         context.primaryVault.key
       );
@@ -127,8 +121,7 @@ describe('[Vault Items Module] [Service] ...', () => {
         context.primaryVault.id,
         folder.id,
         {
-          encOverview,
-          encDetails,
+          ...encVaultItem,
           categoryUuid: category.id,
         },
         context.token
@@ -138,8 +131,7 @@ describe('[Vault Items Module] [Service] ...', () => {
       expect(response.body).toStrictEqual({
         data: {
           uuid: response.body?.data?.uuid,
-          encOverview,
-          encDetails,
+          ...encVaultItem,
           vaultUuid: context.primaryVault.id,
           folderUuid: folder.id,
           categoryUuid: category.id,

@@ -72,20 +72,26 @@ describe('[Vault Item Categories Module] [Service] ...', () => {
 
   describe('[Creating] ...', () => {
     it('create vault item category', async () => {
-      const overview = {
+      const overview: any = {
         name: faker.random.word(),
         decs: faker.random.words(),
       };
 
-      const encOverview = await core.vaults.vaultItem.encryptOverviewByVaultKey(
+      const details: any = {
+        name: faker.random.word(),
+        decs: faker.random.words(),
+      };
+
+      const encVaultItem = await core.helpers.vaultItems.createVaultItemHelper(
         overview,
+        details,
         context.primaryVault.key
       );
 
       const response = await api.createVaultItemCategory(
         context.primaryVault.id,
         {
-          encOverview,
+          ...encVaultItem,
         },
         context.token
       );
@@ -94,7 +100,7 @@ describe('[Vault Item Categories Module] [Service] ...', () => {
       expect(response.body).toStrictEqual({
         data: {
           uuid: response.body?.data?.uuid,
-          encOverview,
+          ...encVaultItem,
           vaultUuid: context.primaryVault.id,
           creatorAccountUuid: context.account.id,
           lastUpdatedAt: response.body?.data?.lastUpdatedAt,

@@ -49,10 +49,10 @@ describe('[Auth Module] [Controller]...', () => {
     let TEST_DEVICE: DeviceEntity;
     const TEST_USER_NAME = faker.internet.userName();
     const TEST_USER_PASSWORD = faker.random.word();
-    const TEST_ACCOUNT_KEY = core.common.generateAccountKey({
-      versionCode: 'A3',
-      secret: core.common.generateCryptoRandomString(32),
-    });
+    const TEST_ACCOUNT_KEY = core.encryption.common.generateAccountKey(
+      'A3',
+      core.encryption.common.generateCryptoRandomString(32)
+    );
     const TEST_SRP_VERIFIER = core.srp.client.deriveVerifier(
       TEST_ACCOUNT_KEY,
       TEST_USER_PASSWORD
@@ -87,7 +87,7 @@ describe('[Auth Module] [Controller]...', () => {
           encKey: <any>{
             key: faker.datatype.uuid(),
           },
-          encMetadata: {},
+          encOverview: {},
           encCategories: [],
         },
       };

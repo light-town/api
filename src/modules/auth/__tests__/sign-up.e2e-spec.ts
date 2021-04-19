@@ -51,10 +51,10 @@ describe('[Auth Module] [Service] ...', () => {
       });
       const TEST_USER_NAME = faker.internet.userName();
       const TEST_USER_PASSWORD = faker.random.word();
-      const TEST_ACCOUNT_KEY = core.common.generateAccountKey({
-        versionCode: 'A3',
-        secret: core.common.generateCryptoRandomString(32),
-      });
+      const TEST_ACCOUNT_KEY = core.encryption.common.generateAccountKey(
+        'A3',
+        core.encryption.common.generateCryptoRandomString(32)
+      );
       const TEST_SRP_VERIFIER = core.srp.client.deriveVerifier(
         TEST_ACCOUNT_KEY,
         TEST_USER_PASSWORD
@@ -83,7 +83,7 @@ describe('[Auth Module] [Service] ...', () => {
           encKey: <any>{
             key: faker.datatype.uuid(),
           },
-          encMetadata: {},
+          encOverview: {},
           encCategories: [],
         },
       };
@@ -161,10 +161,10 @@ describe('[Auth Module] [Service] ...', () => {
 
       const TEST_USER_NAME = faker.internet.userName();
       const TEST_USER_PASSWORD = faker.random.word();
-      const TEST_ACCOUNT_KEY = core.common.generateAccountKey({
-        versionCode: 'A3',
-        secret: core.common.generateCryptoRandomString(32),
-      });
+      const TEST_ACCOUNT_KEY = core.encryption.common.generateAccountKey(
+        'A3',
+        core.encryption.common.generateCryptoRandomString(32)
+      );
 
       const TEST_SRP_VERIFIER = core.srp.client.deriveVerifier(
         TEST_ACCOUNT_KEY,
@@ -194,7 +194,7 @@ describe('[Auth Module] [Service] ...', () => {
           encKey: <any>{
             key: faker.datatype.uuid(),
           },
-          encMetadata: {},
+          encOverview: {},
           encCategories: [],
         },
       };

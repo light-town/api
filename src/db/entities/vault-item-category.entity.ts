@@ -8,6 +8,9 @@ export class VaultItemCategoryEntity extends IEntity {
   @Column({ type: 'jsonb', name: 'enc_overview' })
   encOverview: Record<string, any>;
 
+  @Column({ type: 'jsonb', name: 'enc_details' })
+  encDetails: Record<string, any>;
+
   @Column({ type: 'uuid', name: 'vault_id' })
   public vaultId: string;
 

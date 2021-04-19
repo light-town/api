@@ -29,42 +29,36 @@ export const createAccountHelper = async (
     model: options.device.model,
   });
 
-  const accountKey = core.common.generateAccountKey({
-    versionCode: 'A1',
-    secret: core.common.generateCryptoRandomString(32),
-  });
+  const accountKey = core.encryption.common.generateAccountKey(
+    'A1',
+    core.encryption.common.generateCryptoRandomString(32)
+  );
 
-  const password = core.common.generateCryptoRandomString(8);
+  const password = core.encryption.common.generateCryptoRandomString(8);
   const verifier = core.srp.client.deriveVerifier(accountKey, password);
 
-  const masterUnlockKey = core.common.deriveMasterUnlockKey(
+  const masterUnlockKey = core.helpers.masterUnlockKey.deriveMasterUnlockKeyHelper(
     accountKey,
     password
   );
 
-  const { publicKey, privateKey } = await core.vaults.generateKeyPair();
-  const symmetricKey = core.common.generateCryptoRandomString(32);
-  const vaultKey = core.common.generateCryptoRandomString(32);
-
-  const encVaultKey = await core.vaults.vaultKey.encryptByPublicKey(
-    vaultKey,
-    publicKey
+  const encPrimaryKeySet = await core.helpers.keySets.createPrimaryKeySetHelper(
+    masterUnlockKey
   );
-  const encPrivateKey = await core.vaults.privateKey.encryptBySymmetricKey(
-    privateKey,
-    symmetricKey
+  const decryptedPrimaryKeySet = await core.helpers.keySets.decryptPrimaryKeySetHelper(
+    encPrimaryKeySet,
+    masterUnlockKey
   );
-  const encSymmetricKey = await core.vaults.symmetricKey.encryptBySecretKey(
-    symmetricKey,
-    masterUnlockKey.key,
-    masterUnlockKey.salt
-  );
-  const encMetadata = await core.vaults.vaultMetadata.encryptByVaultKey(
+  const encVault = await core.helpers.vaults.createVaultHelper(
     {
-      title: faker.random.word(),
+      name: faker.random.word(),
       desc: faker.random.word(),
     },
-    vaultKey
+    decryptedPrimaryKeySet.publicKey
+  );
+  const decryptedVault = await core.helpers.vaults.decryptVaultByPrivateKeyHelper(
+    encVault,
+    decryptedPrimaryKeySet.privateKey
   );
 
   await authController.signUp({
@@ -77,16 +71,8 @@ export const createAccountHelper = async (
       key: accountKey,
       username: faker.internet.userName(),
     },
-    primaryKeySet: {
-      publicKey: core.vaults.publicKeyToString(publicKey),
-      encPrivateKey,
-      encSymmetricKey,
-    },
-    primaryVault: {
-      encKey: encVaultKey,
-      encMetadata,
-      encCategories: [],
-    },
+    primaryKeySet: encPrimaryKeySet,
+    primaryVault: { ...encVault, encCategories: [] },
   });
 
   const account = await accountsService.getAccount({ key: accountKey });
@@ -103,13 +89,11 @@ export const createAccountHelper = async (
     masterUnlockKey,
     primaryKeySet: {
       ...primaryKeySet,
-      publicKey,
-      privateKey,
-      symmetricKey,
+      ...decryptedPrimaryKeySet,
     },
     primaryVault: {
       ...primaryVault,
-      key: vaultKey,
+      ...decryptedVault,
     },
   };
 };

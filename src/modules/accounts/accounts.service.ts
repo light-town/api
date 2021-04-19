@@ -1,13 +1,13 @@
+import { FindManyOptions, FindOneOptions, Repository } from 'typeorm';
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindManyOptions, FindOneOptions, Repository } from 'typeorm';
 import { ApiNotFoundException } from '~/common/exceptions';
 import AccountEntity from '~/db/entities/account.entity';
 import MFATypeEntity from '~/db/entities/mfa-type.entity';
 import UserEntity from '~/db/entities/user.entity';
+import { CreateAccountDTO, Account } from './accounts.dto';
 import { MFATypesEnum } from '../auth/auth.dto';
 import UsersService from '../users/users.service';
-import { CreateAccountDTO, Account } from './accounts.dto';
 import DevicesService from '../devices/devices.service';
 
 export class FindAccountOptions {

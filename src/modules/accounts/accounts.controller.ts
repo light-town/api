@@ -1,9 +1,9 @@
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
-import { ApiForbiddenException } from '~/common/exceptions';
-import AccountsService, { FindAccountOptions } from './accounts.service';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
-import { Account, SetMultiFactorAuthPayload } from './accounts.dto';
+import { ApiForbiddenException } from '~/common/exceptions';
 import AuthGuard from '~/modules/auth/auth.guard';
+import AccountsService, { FindAccountOptions } from './accounts.service';
+import { Account, SetMultiFactorAuthPayload } from './accounts.dto';
 import CurrentAccount from '../auth/current-account';
 
 @Controller()

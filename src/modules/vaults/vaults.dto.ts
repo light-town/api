@@ -46,11 +46,11 @@ export class Vault {
   encKey: EncVaultKey;
 
   @ApiProperty({
-    description: 'The encrypted metadata of vault',
+    description: 'The encrypted overview of vault',
     required: true,
   })
   @ValidateNested()
-  encMetadata: any;
+  encOverview: any;
 
   @ApiProperty({
     description: 'The unique uuid of key set',
@@ -78,11 +78,11 @@ export class CreateVaultPayload {
   encKey: EncVaultKey;
 
   @ApiProperty({
-    description: 'The encrypted metadata of the vault',
+    description: 'The encrypted overview of the vault',
     required: true,
   })
   @ValidateNested()
-  encMetadata: any;
+  encOverview: any;
 
   @ApiProperty({
     description: 'The encrypted categories of the vault',

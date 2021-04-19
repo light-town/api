@@ -37,12 +37,12 @@ describe('[Auth Module] [Service]...', () => {
   it('should create session', async () => {
     const TEST_ACCOUNT = {
       id: faker.datatype.uuid(),
-      key: core.common.generateAccountKey({
-        versionCode: 'A3',
-        secret: core.common.generateCryptoRandomString(32),
-      }),
-      salt: core.common.generateRandomSalt(32),
-      verifier: core.common.generateRandomSalt(32),
+      key: core.encryption.common.generateAccountKey(
+        'A3',
+        core.encryption.common.generateCryptoRandomString(32)
+      ),
+      salt: core.encryption.common.generateRandomSalt(32),
+      verifier: core.encryption.common.generateRandomSalt(32),
       mfaType: {
         id: faker.datatype.uuid(),
         name: MFATypesEnum.NONE,
@@ -132,12 +132,12 @@ describe('[Auth Module] [Service]...', () => {
   it('should throw error when account is not found', async () => {
     const TEST_ACCOUNT = {
       id: faker.datatype.uuid(),
-      key: core.common.generateAccountKey({
-        versionCode: 'A3',
-        secret: core.common.generateCryptoRandomString(32),
-      }),
-      salt: core.common.generateRandomSalt(32),
-      verifier: core.common.generateRandomSalt(32),
+      key: core.encryption.common.generateAccountKey(
+        'A3',
+        core.encryption.common.generateCryptoRandomString(32)
+      ),
+      salt: core.encryption.common.generateRandomSalt(32),
+      verifier: core.encryption.common.generateRandomSalt(32),
     };
     const TEST_DEVICE_UUID = faker.datatype.uuid();
 
@@ -174,12 +174,12 @@ describe('[Auth Module] [Service]...', () => {
   it('should throw error when device is not found', async () => {
     const TEST_ACCOUNT = {
       id: faker.datatype.uuid(),
-      key: core.common.generateAccountKey({
-        versionCode: 'A3',
-        secret: core.common.generateCryptoRandomString(32),
-      }),
-      salt: core.common.generateRandomSalt(32),
-      verifier: core.common.generateRandomSalt(32),
+      key: core.encryption.common.generateAccountKey(
+        'A3',
+        core.encryption.common.generateCryptoRandomString(32)
+      ),
+      salt: core.encryption.common.generateRandomSalt(32),
+      verifier: core.encryption.common.generateRandomSalt(32),
     };
     const TEST_DEVICE_UUID = faker.datatype.uuid();
 

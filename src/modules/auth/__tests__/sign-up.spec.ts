@@ -43,10 +43,10 @@ describe('[Auth Module] [Service] ...', () => {
     const TEST_USER_UUID = faker.datatype.uuid();
     const TEST_USER_NAME = faker.internet.userName();
     const TEST_ACCOUNT_UUID = faker.datatype.uuid();
-    const TEST_ACCOUNT_KEY = core.common.generateAccountKey({
-      versionCode: 'A3',
-      secret: core.common.generateCryptoRandomString(32),
-    });
+    const TEST_ACCOUNT_KEY = core.encryption.common.generateAccountKey(
+      'A3',
+      core.encryption.common.generateCryptoRandomString(32)
+    );
     const TEST_DEVICE_UUID = faker.datatype.uuid();
     const TEST_SRP_VERIFIER = core.srp.client.deriveVerifier(
       TEST_ACCOUNT_KEY,
@@ -79,7 +79,7 @@ describe('[Auth Module] [Service] ...', () => {
         encKey: <any>{
           key: faker.datatype.uuid(),
         },
-        encMetadata: {},
+        encOverview: {},
         encCategories: [],
       },
     };
@@ -134,10 +134,10 @@ describe('[Auth Module] [Service] ...', () => {
   });
 
   it('should throw an error whene device was not found', async () => {
-    const TEST_ACCOUNT_KEY = core.common.generateAccountKey({
-      versionCode: 'A3',
-      secret: core.common.generateCryptoRandomString(32),
-    });
+    const TEST_ACCOUNT_KEY = core.encryption.common.generateAccountKey(
+      'A3',
+      core.encryption.common.generateCryptoRandomString(32)
+    );
     const TEST_SRP_VERIFIER = core.srp.client.deriveVerifier(
       TEST_ACCOUNT_KEY,
       faker.random.word()
@@ -167,7 +167,7 @@ describe('[Auth Module] [Service] ...', () => {
         encKey: <any>{
           key: faker.datatype.uuid(),
         },
-        encMetadata: {},
+        encOverview: {},
         encCategories: [],
       },
     };

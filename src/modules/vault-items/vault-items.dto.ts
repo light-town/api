@@ -14,7 +14,7 @@ export class CreateVaultItemPayload {
     required: true,
   })
   @IsObject()
-  encDetails: Record<string, any>;
+  encDetails?: Record<string, any>;
 
   @ApiProperty({
     description: 'The vault item category uuid',

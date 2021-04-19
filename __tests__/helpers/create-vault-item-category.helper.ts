@@ -3,12 +3,17 @@ import core from '@light-town/core';
 import * as faker from 'faker';
 import VaultItemCategoriesController from '~/modules/vault-item-categories/vault-item-categories.controller';
 import VaultItemCategoriesService from '~/modules/vault-item-categories/vault-item-categories.service';
+import {
+  VaultCategoryOverview,
+  VaultCategoryDetails,
+} from '@light-town/core/dist/helpers/vault-item-categories/definitions';
 
 export interface CreateVaultItemOptions {
   accountId: string;
   vaultId: string;
   vaultKey: string;
-  overview?: Record<string, any>;
+  overview?: VaultCategoryOverview;
+  details?: VaultCategoryDetails;
 }
 
 export const createVaultItemCategoryHelper = async (
@@ -26,23 +31,33 @@ export const createVaultItemCategoryHelper = async (
     name: faker.random.word(),
     desc: faker.random.words(),
   };
+  const details = options.details ?? {
+    schema: {
+      fields: [],
+    },
+  };
 
-  const encOverview = await core.vaults.vaultItem.encryptOverviewByVaultKey(
+  const encVaultItemCategory = await core.helpers.vaultItemCategories.createVaultItemCategoryHelper(
     overview,
+    details,
     options.vaultKey
   );
 
   const vaultItem = await vaultItemCategoriesController.createVaultItemCategories(
     { id: options.accountId },
     options.vaultId,
-    {
-      encOverview,
-    }
+    encVaultItemCategory
   );
 
-  return vaultItemCategoriesService.getVaultItemCategory({
-    id: vaultItem.uuid,
-  });
+  return {
+    ...(await vaultItemCategoriesService.getVaultItemCategory({
+      id: vaultItem.uuid,
+    })),
+    ...(await core.helpers.vaultItemCategories.decryptVaultItemCategoryHelper(
+      encVaultItemCategory,
+      options.vaultKey
+    )),
+  };
 };
 
 export default createVaultItemCategoryHelper;

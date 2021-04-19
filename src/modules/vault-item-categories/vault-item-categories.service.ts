@@ -44,6 +44,7 @@ export class VaultItemCategoriesService {
         creatorAccountId: account.id,
         vaultId: vault.id,
         encOverview: options.encOverview,
+        encDetails: options.encDetails,
       })
     );
   }
@@ -60,6 +61,7 @@ export class VaultItemCategoriesService {
     return {
       uuid: entity.id,
       encOverview: entity.encOverview,
+      encDetails: entity.encDetails,
       vaultUuid: entity.vaultId,
       creatorAccountUuid: entity.creatorAccountId,
       lastUpdatedAt: entity.updatedAt.toISOString(),
@@ -84,6 +86,7 @@ export class VaultItemCategoriesService {
       select: [
         'id',
         'encOverview',
+        'encDetails',
         'vaultId',
         'creatorAccountId',
         'updatedAt',

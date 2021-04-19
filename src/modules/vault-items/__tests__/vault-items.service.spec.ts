@@ -50,7 +50,7 @@ describe('[Vault Items Module] [Service] ...', () => {
       const TEST_ACCOUNT = { id: faker.datatype.uuid() };
       const TEST_VAULT = {
         id: faker.datatype.uuid(),
-        key: core.common.generateCryptoRandomString(32),
+        key: core.encryption.common.generateCryptoRandomString(32),
       };
       const TEST_VAULT_ITEM = {
         id: faker.datatype.uuid(),
@@ -61,9 +61,9 @@ describe('[Vault Items Module] [Service] ...', () => {
       const TEST_VAULT_ITEM_CATEGORY = {
         id: faker.datatype.uuid(),
       };
-      const TEST_PAYLOAD = await core.vaults.vaultItem.encryptVaultItem(
+      const TEST_PAYLOAD = await core.helpers.vaultItems.createVaultItemHelper(
         {
-          title: 'Google Drive',
+          name: 'Google Drive',
           urls: [
             faker.internet.url(),
             faker.internet.url(),
@@ -73,13 +73,11 @@ describe('[Vault Items Module] [Service] ...', () => {
         {
           fields: [
             {
-              name: 'username',
-              type: 'TEXT',
+              fieldName: 'username',
               value: faker.internet.userName(),
             },
             {
-              name: 'password',
-              type: 'PASSWORD',
+              fieldName: 'password',
               value: faker.internet.password(),
             },
           ],

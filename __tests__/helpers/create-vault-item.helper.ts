@@ -4,14 +4,18 @@ import * as faker from 'faker';
 import VaultItemsController from '~/modules/vault-items/vault-items.controller';
 import VaultItemsService from '~/modules/vault-items/vault-items.service';
 import createVaultItemCategoryHelper from './create-vault-item-category.helper';
+import {
+  VaultItemOverview,
+  VaultItemDetails,
+} from '@light-town/core/dist/helpers/vault-items/definitions';
 
 export interface CreateVaultItemOptions {
   accountId: string;
   vaultId: string;
   vaultKey: string;
   folderId: string;
-  overview?: Record<string, any>;
-  details?: Record<string, any>;
+  overview?: VaultItemOverview;
+  details?: VaultItemDetails;
   categoryId?: string;
 }
 
@@ -24,33 +28,24 @@ export const createVaultItemHelper = async (
   );
   const vaultItemsService = app.get<VaultItemsService>(VaultItemsService);
 
-  const overview = options.overview ?? {
-    title: faker.random.word(),
+  const overview: VaultItemOverview = options.overview ?? {
+    name: faker.random.word(),
     decs: faker.random.words(),
     urls: [faker.internet.url(), faker.internet.url(), faker.internet.url()],
-    category: {
-      uuid: faker.datatype.uuid(),
-    },
-    tags: [{ uuid: faker.datatype.uuid() }],
   };
 
-  const encOverview = await core.vaults.vaultItem.encryptOverviewByVaultKey(
-    overview,
-    options.vaultKey
-  );
-
-  const details = {
+  const details: VaultItemDetails = options.details ?? {
     fields: [
-      { name: 'username', type: 'TEXT', value: faker.internet.userName() },
+      { fieldName: 'username', value: faker.internet.userName() },
       {
-        name: 'password',
-        type: 'PASSWORD',
+        fieldName: 'password',
         value: faker.internet.password(),
       },
     ],
   };
 
-  const encDetails = await core.vaults.vaultItem.encryptOverviewByVaultKey(
+  const encVaultItem = await core.helpers.vaultItems.createVaultItemHelper(
+    overview,
     details,
     options.vaultKey
   );
@@ -60,8 +55,7 @@ export const createVaultItemHelper = async (
     options.vaultId,
     options.folderId,
     {
-      encOverview,
-      encDetails,
+      ...encVaultItem,
       categoryUuid:
         options.categoryId ??
         (

@@ -8,6 +8,13 @@ export class CreateVaultItemCategoryOptions {
   })
   @IsObject()
   encOverview: Record<string, any>;
+
+  @ApiProperty({
+    description: 'The encrypted details of vault item category',
+    required: true,
+  })
+  @IsObject()
+  encDetails?: Record<string, any>;
 }
 
 export class VaultItemCategory {
@@ -25,6 +32,13 @@ export class VaultItemCategory {
   })
   @IsObject()
   encOverview: Record<string, any>;
+
+  @ApiProperty({
+    description: 'The encrypred overview of vault item category',
+    required: false,
+  })
+  @IsObject()
+  encDetails?: Record<string, any>;
 
   @ApiProperty({
     description: 'The vault uuid',

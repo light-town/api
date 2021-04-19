@@ -36,10 +36,10 @@ describe('[Unit] [Auth Module] ...', () => {
   });
 
   it('should start session', async () => {
-    const TEST_ACCOUNT_KEY = core.common.generateAccountKey({
-      versionCode: 'A3',
-      secret: core.common.generateCryptoRandomString(32),
-    });
+    const TEST_ACCOUNT_KEY = core.encryption.common.generateAccountKey(
+      'A3',
+      core.encryption.common.generateCryptoRandomString(32)
+    );
     const TEST_USER_PASSWORD = faker.random.word();
     const TEST_CLIENT_VERIFIER = core.srp.client.deriveVerifier(
       TEST_ACCOUNT_KEY,
@@ -176,10 +176,10 @@ describe('[Unit] [Auth Module] ...', () => {
   });
 
   it('should throw error when the session was not verified', async () => {
-    const TEST_ACCOUNT_KEY = core.common.generateAccountKey({
-      versionCode: 'A3',
-      secret: core.common.generateCryptoRandomString(32),
-    });
+    const TEST_ACCOUNT_KEY = core.encryption.common.generateAccountKey(
+      'A3',
+      core.encryption.common.generateCryptoRandomString(32)
+    );
     const TEST_USER_PASSWORD = faker.random.word();
     const TEST_CLIENT_VERIFIER = core.srp.client.deriveVerifier(
       TEST_ACCOUNT_KEY,
@@ -231,10 +231,10 @@ describe('[Unit] [Auth Module] ...', () => {
   });
 
   it('should correct start session when the account has MFA, but the session is not required to verify', async () => {
-    const TEST_ACCOUNT_KEY = core.common.generateAccountKey({
-      versionCode: 'A3',
-      secret: core.common.generateCryptoRandomString(32),
-    });
+    const TEST_ACCOUNT_KEY = core.encryption.common.generateAccountKey(
+      'A3',
+      core.encryption.common.generateCryptoRandomString(32)
+    );
     const TEST_USER_PASSWORD = faker.random.word();
     const TEST_CLIENT_VERIFIER = core.srp.client.deriveVerifier(
       TEST_ACCOUNT_KEY,

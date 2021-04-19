@@ -75,7 +75,7 @@ describe('[Vault Folders Module] [Service] ...', () => {
         decs: faker.random.words(),
       };
 
-      const encOverview = await core.vaults.vaultItem.encryptOverviewByVaultKey(
+      const encVaultFolder = await core.helpers.vaultFolders.createVaultFolderHelper(
         overview,
         context.primaryVault.key
       );
@@ -83,7 +83,7 @@ describe('[Vault Folders Module] [Service] ...', () => {
       const response = await api.createVaultFolder(
         context.primaryVault.id,
         {
-          encOverview,
+          ...encVaultFolder,
         },
         context.token
       );
@@ -92,7 +92,7 @@ describe('[Vault Folders Module] [Service] ...', () => {
       expect(response.body).toStrictEqual({
         data: {
           uuid: response.body?.data?.uuid,
-          encOverview,
+          ...encVaultFolder,
           parentFolderUuid: null,
           vaultUuid: context.primaryVault.id,
           creatorAccountUuid: context.account.id,

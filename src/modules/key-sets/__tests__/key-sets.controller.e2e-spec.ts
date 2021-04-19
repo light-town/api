@@ -57,10 +57,10 @@ describe('[Key Set Module] [Controller] ...', () => {
     beforeAll(async () => {
       user = await usersService.create({ name: faker.internet.userName() });
 
-      const accountKey = core.common.generateAccountKey({
-        versionCode: 'A1',
-        secret: core.common.generateCryptoRandomString(32),
-      });
+      const accountKey = core.encryption.common.generateAccountKey(
+        'A1',
+        core.encryption.common.generateCryptoRandomString(32)
+      );
       const verifier = core.srp.client.deriveVerifier(accountKey, '123');
 
       account = await accountsService.create({

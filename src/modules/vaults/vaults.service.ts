@@ -42,7 +42,7 @@ export class VaultsService {
     const newVault = await this.vaultsRepository.save(
       this.vaultsRepository.create({
         encKey: payload.encKey,
-        encMetadata: payload.encMetadata,
+        encOverview: payload.encOverview,
       })
     );
 
@@ -52,7 +52,7 @@ export class VaultsService {
         this.vaultItemCategoriesService.createVaultItemCategory(
           accountId,
           newVault.id,
-          { encOverview: c.encOverview }
+          { encOverview: c.encOverview, encDetails: c.encDetails }
         )
       )
     );
@@ -96,7 +96,7 @@ export class VaultsService {
     return {
       uuid: vault.id,
       encKey: <EncVaultKey>vault.encKey,
-      encMetadata: vault.encMetadata,
+      encOverview: vault.encOverview,
       accountUuid: accountId,
       keySetUuid: keySetId,
     };
@@ -121,7 +121,7 @@ export class VaultsService {
 
   public async getVault(options: FindVaultOptions): Promise<VaultEntity> {
     return await this.findOne({
-      select: ['id', 'encKey', 'encMetadata'],
+      select: ['id', 'encKey', 'encOverview'],
       where: {
         ...options,
         isDeleted: false,
@@ -131,7 +131,7 @@ export class VaultsService {
 
   public async getVaults(options: FindVaultOptions): Promise<VaultEntity[]> {
     return await this.find({
-      select: ['id', 'encKey', 'encMetadata'],
+      select: ['id', 'encKey', 'encOverview'],
       where: {
         ...options,
         isDeleted: false,
@@ -142,7 +142,7 @@ export class VaultsService {
   public async getVaultsByKeySet(keySetId: string): Promise<VaultEntity[]> {
     const vaultIds = await this.keySetVaultsService.getVaultIds(keySetId);
     return this.find({
-      select: ['id', 'encKey', 'encMetadata'],
+      select: ['id', 'encKey', 'encOverview'],
       where: {
         id: In(vaultIds),
         isDeleted: false,

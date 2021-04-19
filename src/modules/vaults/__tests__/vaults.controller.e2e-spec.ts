@@ -79,25 +79,21 @@ describe('[Vaults Module] [Controller] ...', () => {
 
     describe('[Creating] ...', () => {
       it('should create a vault', async () => {
-        const vaultKey = core.common.generateCryptoRandomString(32);
+        const {
+          publicKey,
+        } = await core.encryption.common.rsa.generateKeyPair();
 
-        const encKey = await core.vaults.vaultKey.encryptByPublicKey(
-          vaultKey,
-          context.primaryKeySet.publicKey
-        );
-
-        const encMetadata = await core.vaults.vaultMetadata.encryptByVaultKey(
+        const encVault = await core.helpers.vaults.createVaultHelper(
           {
-            title: faker.random.word(),
+            name: faker.random.word(),
             desc: faker.random.word(),
           },
-          vaultKey
+          publicKey
         );
 
         const response = await api.createVault(
           {
-            encKey,
-            encMetadata,
+            ...encVault,
             encCategories: [],
           },
           context.token
@@ -107,8 +103,7 @@ describe('[Vaults Module] [Controller] ...', () => {
         expect(response.body).toStrictEqual({
           data: {
             uuid: response.body?.data?.uuid,
-            encKey,
-            encMetadata,
+            ...encVault,
             accountUuid: context.account.id,
             keySetUuid: context.primaryKeySet.id,
           },
@@ -123,8 +118,7 @@ describe('[Vaults Module] [Controller] ...', () => {
         expect(vault).toStrictEqual(
           vaultsRepository.create({
             id: vault.id,
-            encKey,
-            encMetadata,
+            ...encVault,
             createdAt: vault.createdAt,
             updatedAt: vault.updatedAt,
             isDeleted: false,
@@ -141,6 +135,7 @@ describe('[Vaults Module] [Controller] ...', () => {
             await createVaultHelper(app, {
               accountId: context.account.id,
               publicKey: context.primaryKeySet.publicKey,
+              privateKey: context.primaryKeySet.privateKey,
             })
           );
 
@@ -151,7 +146,7 @@ describe('[Vaults Module] [Controller] ...', () => {
           data: vaults.map(v => ({
             uuid: v.id,
             encKey: v.encKey,
-            encMetadata: v.encMetadata,
+            encOverview: v.encOverview,
             accountUuid: context.account.id,
             keySetUuid: context.primaryKeySet.id,
           })),
@@ -163,6 +158,7 @@ describe('[Vaults Module] [Controller] ...', () => {
         const vault = await createVaultHelper(app, {
           accountId: context.account.id,
           publicKey: context.primaryKeySet.publicKey,
+          privateKey: context.primaryKeySet.privateKey,
         });
 
         const response = await api.getVault(vault.id, context.token);
@@ -172,7 +168,7 @@ describe('[Vaults Module] [Controller] ...', () => {
           data: {
             uuid: vault.id,
             encKey: vault.encKey,
-            encMetadata: vault.encMetadata,
+            encOverview: vault.encOverview,
             accountUuid: context.account.id,
             keySetUuid: context.primaryKeySet.id,
           },
@@ -187,6 +183,7 @@ describe('[Vaults Module] [Controller] ...', () => {
             await createVaultHelper(app, {
               accountId: context.account.id,
               publicKey: context.primaryKeySet.publicKey,
+              privateKey: context.primaryKeySet.privateKey,
             })
           );
 
@@ -200,7 +197,7 @@ describe('[Vaults Module] [Controller] ...', () => {
           data: vaults.map(v => ({
             uuid: v.id,
             encKey: v.encKey,
-            encMetadata: v.encMetadata,
+            encOverview: v.encOverview,
             accountUuid: context.account.id,
             keySetUuid: context.primaryKeySet.id,
           })),
@@ -212,6 +209,7 @@ describe('[Vaults Module] [Controller] ...', () => {
         const vault = await createVaultHelper(app, {
           accountId: context.account.id,
           publicKey: context.primaryKeySet.publicKey,
+          privateKey: context.primaryKeySet.privateKey,
         });
 
         const response = await api.getKeySetVault(
@@ -225,7 +223,7 @@ describe('[Vaults Module] [Controller] ...', () => {
           data: {
             uuid: vault.id,
             encKey: vault.encKey,
-            encMetadata: vault.encMetadata,
+            encOverview: vault.encOverview,
             accountUuid: context.account.id,
             keySetUuid: context.primaryKeySet.id,
           },
@@ -239,6 +237,7 @@ describe('[Vaults Module] [Controller] ...', () => {
         const vault = await createVaultHelper(app, {
           accountId: context.account.id,
           publicKey: context.primaryKeySet.publicKey,
+          privateKey: context.primaryKeySet.privateKey,
         });
 
         const response = await api.deleteVault(vault.id, context.token);

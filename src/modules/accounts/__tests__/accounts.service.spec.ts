@@ -1,17 +1,17 @@
-import { getRepositoryToken } from '@nestjs/typeorm';
 import * as faker from 'faker';
-import { UserEntity } from '~/db/entities/user.entity';
-import { AccountsService } from '../accounts.service';
 import { Repository } from 'typeorm';
-import { AccountEntity } from '~/db/entities/account.entity';
-import { createModuleHelper } from './helpers/create-module.helper';
-import { UsersService } from '~/modules/users/users.service';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { TestingModule } from '@nestjs/testing';
 import core from '@light-town/core';
+import { UserEntity } from '~/db/entities/user.entity';
+import { AccountEntity } from '~/db/entities/account.entity';
+import { UsersService } from '~/modules/users/users.service';
 import MFATypeEntity from '~/db/entities/mfa-type.entity';
 import { ApiNotFoundException } from '~/common/exceptions';
 import { MFATypesEnum } from '~/modules/auth/auth.dto';
 import DevicesService from '~/modules/devices/devices.service';
-import { TestingModule } from '@nestjs/testing';
+import { createModuleHelper } from './helpers/create-module.helper';
+import { AccountsService } from '../accounts.service';
 
 describe('[Account Module] [Service]...', () => {
   let app: TestingModule;
@@ -45,10 +45,10 @@ describe('[Account Module] [Service]...', () => {
   });
 
   it('should create user account', async () => {
-    const TEST_ACCOUNT_KEY = core.common.generateAccountKey({
-      versionCode: 'A1',
-      secret: core.common.generateCryptoRandomString(32),
-    });
+    const TEST_ACCOUNT_KEY = core.encryption.common.generateAccountKey(
+      'A1',
+      core.encryption.common.generateCryptoRandomString(32)
+    );
 
     const TEST_USER: UserEntity = {
       id: faker.datatype.uuid(),
@@ -116,10 +116,10 @@ describe('[Account Module] [Service]...', () => {
 
   it('should throw error when user was not found', async () => {
     const TEST_USER_ID = faker.datatype.uuid();
-    const TEST_ACCOUNT_KEY = core.common.generateAccountKey({
-      versionCode: 'A1',
-      secret: core.common.generateCryptoRandomString(32),
-    });
+    const TEST_ACCOUNT_KEY = core.encryption.common.generateAccountKey(
+      'A1',
+      core.encryption.common.generateCryptoRandomString(32)
+    );
 
     jest.spyOn(usersService, 'findOne').mockResolvedValueOnce(undefined);
 
@@ -144,10 +144,10 @@ describe('[Account Module] [Service]...', () => {
   });
 
   it('should throw error when MFA type was not found', async () => {
-    const TEST_ACCOUNT_KEY = core.common.generateAccountKey({
-      versionCode: 'A1',
-      secret: core.common.generateCryptoRandomString(32),
-    });
+    const TEST_ACCOUNT_KEY = core.encryption.common.generateAccountKey(
+      'A1',
+      core.encryption.common.generateCryptoRandomString(32)
+    );
 
     const TEST_USER: UserEntity = {
       id: faker.datatype.uuid(),

@@ -3,12 +3,13 @@ import core from '@light-town/core';
 import * as faker from 'faker';
 import VaultsController from '~/modules/vaults/vaults.controller';
 import VaultsService from '~/modules/vaults/vaults.service';
+import { VaultOverview } from '@light-town/core/dist/helpers/vaults/definitions';
 
 export interface CreateVaultOptions {
   accountId: string;
   publicKey: any;
-  metadata?: Record<string, any>;
-  vaultKey?: string;
+  privateKey: any;
+  overview?: VaultOverview;
 }
 
 export const createVaultHelper = async (
@@ -18,30 +19,28 @@ export const createVaultHelper = async (
   const vaultsController = app.get<VaultsController>(VaultsController);
   const vaultsService = app.get<VaultsService>(VaultsService);
 
-  const vaultKey =
-    options.vaultKey ?? core.common.generateCryptoRandomString(32);
-
-  const encKey = await core.vaults.vaultKey.encryptByPublicKey(
-    vaultKey,
-    options.publicKey
-  );
-
-  const metadata = options.metadata ?? {
-    title: faker.random.word(),
+  const overview: VaultOverview = options.overview ?? {
+    name: faker.random.word(),
     desc: faker.random.word(),
   };
 
-  const encMetadata = await core.vaults.vaultMetadata.encryptByVaultKey(
-    metadata,
-    vaultKey
+  const encVault = await core.helpers.vaults.createVaultHelper(
+    overview,
+    options.publicKey
+  );
+  const decryptedVault = await core.helpers.vaults.decryptVaultByPrivateKeyHelper(
+    encVault,
+    options.privateKey
+  );
+  const encCategories = await core.helpers.vaultItemCategories.createDefaultVaultItemCategories(
+    decryptedVault.key
   );
 
   const vault = await vaultsController.createVault(
     { id: options.accountId },
     {
-      encKey,
-      encMetadata,
-      encCategories: [],
+      ...encVault,
+      encCategories,
     }
   );
 

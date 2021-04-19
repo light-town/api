@@ -11,7 +11,7 @@ import { VaultItem } from './vault-items.dto';
 
 export class CreateVaultItemPayload {
   encOverview: Record<string, any>;
-  encDetails: Record<string, any>;
+  encDetails?: Record<string, any>;
   categoryId: string;
 }
 

@@ -41,13 +41,13 @@ describe('[Vaults Module] [Service] ...', () => {
           alg: faker.random.word(),
           key: faker.random.word(),
         },
-        encMetadata: {},
+        encOverview: {},
         encCategories: [],
       };
       const TEST_VAULT: DeepPartial<VaultEntity> = {
         id: faker.datatype.uuid(),
         encKey: TEST_CREATE_VAULT_PAYLOAD.encKey,
-        encMetadata: TEST_CREATE_VAULT_PAYLOAD.encMetadata,
+        encOverview: TEST_CREATE_VAULT_PAYLOAD.encOverview,
       };
       const TEST_PRIMARY_KEY_SET = { id: faker.datatype.uuid() };
 
@@ -72,7 +72,7 @@ describe('[Vaults Module] [Service] ...', () => {
       expect(jest.spyOn(vaultsRepository, 'create')).toHaveBeenCalledTimes(1);
       expect(jest.spyOn(vaultsRepository, 'create')).toHaveBeenCalledWith({
         encKey: TEST_CREATE_VAULT_PAYLOAD.encKey,
-        encMetadata: TEST_CREATE_VAULT_PAYLOAD.encMetadata,
+        encOverview: TEST_CREATE_VAULT_PAYLOAD.encOverview,
       });
 
       expect(jest.spyOn(vaultsRepository, 'save')).toHaveBeenCalledTimes(1);
@@ -89,17 +89,17 @@ describe('[Vaults Module] [Service] ...', () => {
         {
           id: faker.datatype.uuid(),
           encKey: faker.random.word(),
-          encMetadata: faker.random.word(),
+          encOverview: faker.random.word(),
         },
         {
           id: faker.datatype.uuid(),
           encKey: faker.random.word(),
-          encMetadata: faker.random.word(),
+          encOverview: faker.random.word(),
         },
         {
           id: faker.datatype.uuid(),
           encKey: faker.random.word(),
-          encMetadata: faker.random.word(),
+          encOverview: faker.random.word(),
         },
       ];
 
@@ -120,7 +120,7 @@ describe('[Vaults Module] [Service] ...', () => {
 
       expect(vaultsService.find).toHaveBeenCalledTimes(1);
       expect(vaultsService.find).toHaveBeenCalledWith({
-        select: ['id', 'encKey', 'encMetadata'],
+        select: ['id', 'encKey', 'encOverview'],
         where: {
           id: In(TEST_VAULTS.map(v => v.id)),
           isDeleted: false,

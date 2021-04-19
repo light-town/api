@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Delete } from '@nestjs/common';
 import CurrentAccount from '../auth/current-account';
 import FoldersService from './vault-folders.service';
 import { CreateVaultFolderOptions, VaultFolder } from './vault-folders.dto';
@@ -54,6 +54,21 @@ export class VaultFoldersController {
     if (!folder) throw new ApiNotFoundException('The folder was not found');
 
     return this.foldersService.format(folder);
+  }
+
+  @Delete('/vaults/:vaultUuid/folders/:folderUuid')
+  public async deleteVaultFolder(
+    @Param('vaultUuid') vaultUuid: string,
+    @Param('folderUuid') folderUuid: string
+  ): Promise<void> {
+    const folder = await this.foldersService.getVaultFolder({
+      id: folderUuid,
+      vaultId: vaultUuid,
+    });
+
+    if (!folder) throw new ApiNotFoundException('The folder was not found');
+
+    await this.foldersService.deleteVaultFolder(folder.id);
   }
 }
 

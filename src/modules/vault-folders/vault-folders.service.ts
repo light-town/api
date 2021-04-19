@@ -105,6 +105,10 @@ export class VaultFoldersService {
       },
     });
   }
+
+  public async deleteVaultFolder(id: string): Promise<void> {
+    await this.foldersRepository.update({ id }, { isDeleted: true });
+  }
 }
 
 export default VaultFoldersService;

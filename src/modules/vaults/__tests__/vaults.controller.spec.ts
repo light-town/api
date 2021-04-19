@@ -1,7 +1,6 @@
 import * as faker from 'faker';
 import { DeepPartial } from 'typeorm';
 import VaultEntity from '~/db/entities/vault.entity';
-import KeySetVaultsService from '~/modules/key-set-vaults/key-set-vaults.service';
 import KeySetsService from '~/modules/key-sets/key-sets.service';
 import VaultsController from '../vaults.controller';
 import VaultsService from '../vaults.service';
@@ -9,7 +8,6 @@ import createModuleHelper from './helpers/create-module.helper';
 
 describe('[Vaults Module] [Controller] ...', () => {
   let keySetsService: KeySetsService;
-  let keySetVaultsService: KeySetVaultsService;
   let vaultsService: VaultsService;
   let vaultsController: VaultsController;
 
@@ -17,7 +15,6 @@ describe('[Vaults Module] [Controller] ...', () => {
     const app = await createModuleHelper();
 
     keySetsService = app.get<KeySetsService>(KeySetsService);
-    keySetVaultsService = app.get<KeySetVaultsService>(KeySetVaultsService);
     vaultsService = app.get<VaultsService>(VaultsService);
     vaultsController = app.get<VaultsController>(VaultsController);
   });
@@ -36,12 +33,12 @@ describe('[Vaults Module] [Controller] ...', () => {
           alg: faker.random.word(),
           key: faker.random.word(),
         },
-        encMetadata: {},
+        encOverview: {},
       };
       const TEST_VAULT: DeepPartial<VaultEntity> = {
         id: faker.datatype.uuid(),
         encKey: TEST_CREATE_VAULT_PAYLOAD.encKey,
-        encMetadata: TEST_CREATE_VAULT_PAYLOAD.encMetadata,
+        encOverview: TEST_CREATE_VAULT_PAYLOAD.encOverview,
       };
       const TEST_KEY_SET = { id: faker.datatype.uuid() };
 
@@ -61,7 +58,7 @@ describe('[Vaults Module] [Controller] ...', () => {
       ).toStrictEqual({
         uuid: TEST_VAULT.id,
         encKey: TEST_VAULT.encKey,
-        encMetadata: TEST_VAULT.encMetadata,
+        encOverview: TEST_VAULT.encOverview,
         accountUuid: TEST_ACCOUNT.id,
         keySetUuid: TEST_KEY_SET.id,
       });
@@ -87,17 +84,17 @@ describe('[Vaults Module] [Controller] ...', () => {
         {
           id: faker.datatype.uuid(),
           encKey: faker.random.word(),
-          encMetadata: faker.random.word(),
+          encOverview: faker.random.word(),
         },
         {
           id: faker.datatype.uuid(),
           encKey: faker.random.word(),
-          encMetadata: faker.random.word(),
+          encOverview: faker.random.word(),
         },
         {
           id: faker.datatype.uuid(),
           encKey: faker.random.word(),
-          encMetadata: faker.random.word(),
+          encOverview: faker.random.word(),
         },
       ];
       const TEST_KEY_SETS = [
@@ -123,7 +120,7 @@ describe('[Vaults Module] [Controller] ...', () => {
             ...TEST_VAULTS.map(v => ({
               uuid: v.id,
               encKey: v.encKey,
-              encMetadata: v.encMetadata,
+              encOverview: v.encOverview,
               accountUuid: TEST_ACCOUNT.id,
               keySetUuid: val.id,
             })),
