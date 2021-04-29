@@ -1,8 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, SelectQueryBuilder } from 'typeorm';
 import { ApiNotFoundException } from '~/common/exceptions';
 import TeamEntity from '~/db/entities/team.entity';
 import AccountsService from '../accounts/accounts.service';
+import TeamMembersService from '../team-members/team-members.service';
 import { CreateTeamOptions, Team } from './teams.dto';
 
 export class FindTeamsOptions {
@@ -13,8 +15,11 @@ export class FindTeamsOptions {
 @Injectable()
 export class TeamsService {
   public constructor(
+    @InjectRepository(TeamEntity)
     public readonly teamsRepository: Repository<TeamEntity>,
-    private readonly accountsService: AccountsService
+    private readonly accountsService: AccountsService,
+    @Inject(forwardRef(() => TeamMembersService))
+    private readonly teamMembersService: TeamMembersService
   ) {}
 
   public async createTeam(
@@ -93,6 +98,15 @@ export class TeamsService {
   public getTeam(options: FindTeamsOptions = {}): Promise<TeamEntity> {
     const [_, query] = this.prepareQuery(options);
     return query.getRawOne();
+  }
+
+  public async exists(options: FindTeamsOptions = {}): Promise<boolean> {
+    const team = await this.teamsRepository.findOne({
+      ...options,
+      isDeleted: false,
+    });
+
+    return team !== undefined;
   }
 }
 
