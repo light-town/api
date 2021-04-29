@@ -88,5 +88,6 @@ export class CreateVaultPayload {
     description: 'The encrypted categories of the vault',
     required: true,
   })
+  @ValidateNested()
   encCategories: CreateVaultItemCategoryOptions[];
 }

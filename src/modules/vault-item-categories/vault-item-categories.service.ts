@@ -69,29 +69,42 @@ export class VaultItemCategoriesService {
     };
   }
 
-  public getVaultItemCategories(options: FindVaultItemCategoriesOptions) {
-    return this.vaultItemCategoriesRepository.find(this.prepareQuery(options));
+  public getVaultItemCategories(
+    options: FindVaultItemCategoriesOptions,
+    ops = { onlyOverview: false }
+  ) {
+    return this.vaultItemCategoriesRepository.find(
+      this.prepareQuery(options, ops)
+    );
   }
 
-  public getVaultItemCategory(options: FindVaultItemCategoriesOptions) {
+  public getVaultItemCategory(
+    options: FindVaultItemCategoriesOptions,
+    ops = { onlyOverview: false }
+  ) {
     return this.vaultItemCategoriesRepository.findOne(
-      this.prepareQuery(options)
+      this.prepareQuery(options, ops)
     );
   }
 
   public prepareQuery(
-    options: FindVaultItemCategoriesOptions
+    options: FindVaultItemCategoriesOptions,
+    { onlyOverview } = { onlyOverview: false }
   ): FindManyOptions<VaultItemCategoryEntity> {
+    const select: (keyof VaultItemCategoryEntity)[] = [
+      'id',
+      'encOverview',
+      'encDetails',
+      'vaultId',
+      'creatorAccountId',
+      'updatedAt',
+      'createdAt',
+    ];
+
+    if (onlyOverview) select.splice(select.indexOf('encDetails'), 1);
+
     return {
-      select: [
-        'id',
-        'encOverview',
-        'encDetails',
-        'vaultId',
-        'creatorAccountId',
-        'updatedAt',
-        'createdAt',
-      ],
+      select,
       where: {
         ...options,
         isDeleted: false,

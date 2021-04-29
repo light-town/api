@@ -10,10 +10,10 @@ export class AccountsFactory implements Factory<AccountEntity> {
     mfaTypeId,
     password,
   }: Partial<AccountEntity> & any = {}) {
-    const accountKey = core.common.generateAccountKey({
-      versionCode: 'A1',
-      secret: faker.random.word(),
-    });
+    const accountKey = core.encryption.common.generateAccountKey(
+      'A1',
+      faker.random.word()
+    );
 
     const verifier = core.srp.client.deriveVerifier(accountKey, password);
 

@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Post, Delete } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Delete,
+  Query,
+} from '@nestjs/common';
 import CurrentAccount from '../auth/current-account';
 import FoldersService from './vault-folders.service';
 import { CreateVaultFolderOptions, VaultFolder } from './vault-folders.dto';
@@ -6,7 +14,7 @@ import { ApiNotFoundException } from '~/common/exceptions';
 import AuthGuard from '../auth/auth.guard';
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 
-@ApiTags('/vaults/folders')
+@ApiTags('/folders')
 @AuthGuard()
 @Controller()
 export class VaultFoldersController {
@@ -31,11 +39,15 @@ export class VaultFoldersController {
   @ApiOkResponse({ type: [VaultFolder] })
   @Get('/vaults/:vaultUuid/folders')
   public async getVaultFolders(
-    @Param('vaultUuid') vaultUuid: string
+    @Param('vaultUuid') vaultUuid: string,
+    @Query('root') root: boolean,
+    @Query('parentFolderUuid') parentFolderUuid: string
   ): Promise<VaultFolder[]> {
     return this.foldersService.formatAll(
       await this.foldersService.getVaultFolders({
         vaultId: vaultUuid,
+        parentFolderId: parentFolderUuid,
+        root,
       })
     );
   }
@@ -49,6 +61,34 @@ export class VaultFoldersController {
     const folder = await this.foldersService.getVaultFolder({
       id: folderUuid,
       vaultId: vaultUuid,
+    });
+
+    if (!folder) throw new ApiNotFoundException('The folder was not found');
+
+    return this.foldersService.format(folder);
+  }
+
+  @ApiOkResponse({ type: [VaultFolder] })
+  @Get('/folders')
+  public async getFolders(
+    @Query('root') root: boolean,
+    @Query('parentFolderUuid') parentFolderUuid: string
+  ): Promise<VaultFolder[]> {
+    return this.foldersService.formatAll(
+      await this.foldersService.getVaultFolders({
+        parentFolderId: parentFolderUuid,
+        root,
+      })
+    );
+  }
+
+  @ApiOkResponse({ type: VaultFolder })
+  @Get('/folders/:folderUuid')
+  public async getFolder(
+    @Param('folderUuid') folderUuid: string
+  ): Promise<VaultFolder> {
+    const folder = await this.foldersService.getVaultFolder({
+      id: folderUuid,
     });
 
     if (!folder) throw new ApiNotFoundException('The folder was not found');

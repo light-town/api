@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { ApiNotFoundException } from '~/common/exceptions';
 import AuthGuard from '../auth/auth.guard';
@@ -34,25 +34,31 @@ export class VaultItemCategoriesController {
 
   @Get('/vaults/:vaultUuid/categories')
   public async getVaultItemCategories(
-    @Param('vaultUuid') vaultUuid: string
+    @Param('vaultUuid') vaultUuid: string,
+    @Query('only-overview') onlyOverview?: string
   ): Promise<VaultItemCategory[]> {
     return this.vaultItemCategoriesService.formatAll(
-      await this.vaultItemCategoriesService.getVaultItemCategories({
-        vaultId: vaultUuid,
-      })
+      await this.vaultItemCategoriesService.getVaultItemCategories(
+        {
+          vaultId: vaultUuid,
+        },
+        { onlyOverview: onlyOverview === 'true' }
+      )
     );
   }
 
   @Get('/vaults/:vaultUuid/categories/:categoryUuid')
   public async getVaultItemCategory(
     @Param('categoryUuid') categoryUuid: string,
-    @Param('vaultUuid') vaultUuid: string
+    @Param('vaultUuid') vaultUuid: string,
+    @Query('only-overview') onlyOverview?: string
   ): Promise<VaultItemCategory> {
     const vaultItemCategory = await this.vaultItemCategoriesService.getVaultItemCategory(
       {
         id: categoryUuid,
         vaultId: vaultUuid,
-      }
+      },
+      { onlyOverview: onlyOverview === 'true' }
     );
 
     if (!vaultItemCategory)

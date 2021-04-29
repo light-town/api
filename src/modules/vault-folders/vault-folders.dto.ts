@@ -1,8 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsDate,
+  IsNumber,
   IsObject,
   IsOptional,
+  IsPositive,
   IsString,
   IsUUID,
 } from 'class-validator';
@@ -78,4 +80,12 @@ export class VaultFolder {
   })
   @IsDate()
   createdAt: string;
+
+  @ApiProperty({
+    description: 'The datetime of creating vault folder',
+    required: true,
+  })
+  @IsNumber()
+  @IsPositive()
+  containedFoldersCount: number;
 }

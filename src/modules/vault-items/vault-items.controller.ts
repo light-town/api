@@ -6,7 +6,7 @@ import CurrentAccount from '../auth/current-account';
 import { CreateVaultItemPayload, VaultItem } from './vault-items.dto';
 import VaultItemsService from './vault-items.service';
 
-@ApiTags('/vaults/items')
+@ApiTags('/items')
 @AuthGuard()
 @Controller()
 export class VaultItemsController {
@@ -34,7 +34,7 @@ export class VaultItemsController {
   public async getVaultItemsFromFolder(
     @Param('vaultUuid') vaultUuid: string,
     @Param('folderUuid') folderUuid: string,
-    @Query('only-overview') onlyOverview?: boolean
+    @Query('only-overview') onlyOverview?: string
   ): Promise<VaultItem[]> {
     return this.vaultItemsService.formatAll(
       await this.vaultItemsService.getVaultItems(
@@ -42,7 +42,7 @@ export class VaultItemsController {
           vaultId: vaultUuid,
           folderId: folderUuid,
         },
-        onlyOverview
+        onlyOverview === 'true'
       )
     );
   }
@@ -53,7 +53,7 @@ export class VaultItemsController {
     @Param('vaultUuid') vaultUuid: string,
     @Param('folderUuid') folderUuid: string,
     @Param('vaultItemUuid') vaultItemUuid: string,
-    @Query('only-overview') onlyOverview: boolean
+    @Query('only-overview') onlyOverview: string
   ): Promise<VaultItem> {
     const vaultItem = await this.vaultItemsService.getVaultItem(
       {
@@ -61,7 +61,7 @@ export class VaultItemsController {
         vaultId: vaultUuid,
         folderId: folderUuid,
       },
-      onlyOverview
+      onlyOverview === 'true'
     );
 
     if (!vaultItem)
@@ -74,14 +74,16 @@ export class VaultItemsController {
   @Get('/vaults/:vaultUuid/items')
   public async getVaultItems(
     @Param('vaultUuid') vaultUuid: string,
-    @Query('only-overview') onlyOverview?: boolean
+    @Query('folder-uuid') folderUuid?: string,
+    @Query('only-overview') onlyOverview?: string
   ): Promise<VaultItem[]> {
     return this.vaultItemsService.formatAll(
       await this.vaultItemsService.getVaultItems(
         {
           vaultId: vaultUuid,
+          folderId: folderUuid === 'null' ? null : folderUuid,
         },
-        onlyOverview
+        onlyOverview === 'true'
       )
     );
   }
@@ -91,14 +93,52 @@ export class VaultItemsController {
   public async getVaultItem(
     @Param('vaultUuid') vaultUuid: string,
     @Param('vaultItemUuid') vaultItemUuid: string,
-    @Query('only-overview') onlyOverview: boolean
+    @Query('only-overview') onlyOverview: string
   ): Promise<VaultItem> {
     const vaultItem = await this.vaultItemsService.getVaultItem(
       {
         id: vaultItemUuid,
         vaultId: vaultUuid,
       },
-      onlyOverview
+      onlyOverview === 'true'
+    );
+
+    if (!vaultItem)
+      throw new ApiNotFoundException('The vault item was not found');
+
+    return this.vaultItemsService.format(vaultItem);
+  }
+
+  @ApiOkResponse({ type: [VaultItem] })
+  @Get('/items')
+  public async getItems(
+    @Query('folder-uuid') folderUuid?: string,
+    @Query('only-overview') onlyOverview?: string
+  ): Promise<VaultItem[]> {
+    const options: { folderId? } = {};
+
+    if (folderUuid)
+      options.folderId = folderUuid === 'null' ? null : folderUuid;
+
+    return this.vaultItemsService.formatAll(
+      await this.vaultItemsService.getVaultItems(
+        options,
+        onlyOverview === 'true'
+      )
+    );
+  }
+
+  @ApiOkResponse({ type: VaultItem })
+  @Get('/items/:vaultItemUuid')
+  public async getItem(
+    @Param('vaultItemUuid') vaultItemUuid: string,
+    @Query('only-overview') onlyOverview: string
+  ): Promise<VaultItem> {
+    const vaultItem = await this.vaultItemsService.getVaultItem(
+      {
+        id: vaultItemUuid,
+      },
+      onlyOverview === 'true'
     );
 
     if (!vaultItem)

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindManyOptions, FindOneOptions, Repository } from 'typeorm';
+import { FindManyOptions, FindOneOptions, IsNull, Repository } from 'typeorm';
 import { ApiNotFoundException } from '~/common/exceptions';
 import VaultItemEntity from '~/db/entities/vault-item.entity';
 import AccountsService from '../accounts/accounts.service';
@@ -120,6 +120,7 @@ export class VaultItemsService {
     ];
 
     if (onlyOverview) select.splice(select.indexOf('encDetails'), 1);
+    if (options.folderId === null) options.folderId = <any>IsNull();
 
     return this.find({
       select,
