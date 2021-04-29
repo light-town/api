@@ -12,7 +12,7 @@ import KeySetVaultsModule from './modules/key-set-vaults/key-set-vaults.module';
 import VaultItemsModule from './modules/vault-items/vault-items.module';
 import VaultFoldersModule from './modules/vault-folders/vault-folders.module';
 import VaultItemCategoriesModule from './modules/vault-item-categories/vault-item-categories.module';
-
+import TeamsModule from './modules/teams/teams.module';
 @Module({
   imports: [
     TypeOrmModule.forRoot(),
@@ -28,6 +28,7 @@ import VaultItemCategoriesModule from './modules/vault-item-categories/vault-ite
     VaultItemsModule,
     VaultFoldersModule,
     VaultItemCategoriesModule,
+    TeamsModule,
   ],
 })
 export class AppModule {}
