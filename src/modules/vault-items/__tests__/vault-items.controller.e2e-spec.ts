@@ -1,5 +1,5 @@
 import { getConnectionToken } from '@nestjs/typeorm';
-import * as faker from 'faker';
+import faker from 'faker';
 import { Connection } from 'typeorm';
 import VaultItemsService from '../vault-items.service';
 import core from '@light-town/core';
@@ -103,9 +103,16 @@ describe('[Vault Items Module] [Service] ...', () => {
       };
       const details = {
         fields: [
-          { fieldName: 'username', value: faker.internet.userName() },
           {
+            position: 1,
+            fieldName: 'username',
+            name: 'username',
+            value: faker.internet.userName(),
+          },
+          {
+            position: 2,
             fieldName: 'password',
+            name: 'password',
             value: faker.internet.password(),
           },
         ],
@@ -145,7 +152,7 @@ describe('[Vault Items Module] [Service] ...', () => {
   });
 
   describe('[Getting] ...', () => {
-    it('return all items of the vault', async () => {
+    it('return all items of the vault folder', async () => {
       const folder = await createVaultFolderHelper(app, {
         accountId: context.account.id,
         vaultId: context.primaryVault.id,
@@ -171,8 +178,9 @@ describe('[Vault Items Module] [Service] ...', () => {
         );
       }
 
-      const response = await api.getVaultItems(
+      const response = await api.getVaultItemsFromFolder(
         context.primaryVault.id,
+        folder.id,
         context.token
       );
 

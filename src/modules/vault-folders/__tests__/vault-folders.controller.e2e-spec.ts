@@ -1,5 +1,5 @@
 import { getConnectionToken } from '@nestjs/typeorm';
-import * as faker from 'faker';
+import faker from 'faker';
 import { Connection } from 'typeorm';
 import core from '@light-town/core';
 import { INestApplication } from '@nestjs/common';
@@ -98,6 +98,7 @@ describe('[Vault Folders Module] [Service] ...', () => {
           creatorAccountUuid: context.account.id,
           lastUpdatedAt: response.body?.data?.lastUpdatedAt,
           createdAt: response.body?.data?.createdAt,
+          containedFoldersCount: 0,
         },
         statusCode: 201,
       });

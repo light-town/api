@@ -1,7 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import * as dotenv from 'dotenv';
-import * as csurf from 'csurf';
-import * as cookieParser from 'cookie-parser';
+import csurf from 'csurf';
+import cookieParser from 'cookie-parser';
 import ResponseFormatInterceptor from '~/common/response-format.interceptor';
 import WsAdapter from '~/common/ws-adapter';
 import ValidationPipe from '~/common/validation/pipe';

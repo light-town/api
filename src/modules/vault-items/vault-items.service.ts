@@ -51,8 +51,8 @@ export class VaultItemsService {
 
     if (!vault) throw new ApiNotFoundException('The vault was not found');
 
-    if (!folder)
-      throw new ApiNotFoundException('The vault folder was not found');
+    /*  if (!folder)
+      throw new ApiNotFoundException('The vault folder was not found'); */
 
     if (!category)
       throw new ApiNotFoundException('The vault item category was not found');
@@ -62,7 +62,7 @@ export class VaultItemsService {
         encOverview: payload.encOverview,
         encDetails: payload.encDetails,
         vaultId: vault.id,
-        folderId: folder.id,
+        folderId: folder?.id,
         categoryId: category.id,
         creatorAccountId: account.id,
       })

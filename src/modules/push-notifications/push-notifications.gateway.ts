@@ -6,7 +6,7 @@ import {
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { In } from 'typeorm';
-import * as WebSocket from 'ws';
+import WebSocket from 'ws';
 import SubscribeEvent from '~/common/subscribe-event';
 import GatewayNamespacesEnum from '~/common/gateway-namespaces';
 import { PushNotificationStageEnum } from './push-notifications.dto';
@@ -184,7 +184,7 @@ export class PushNotificationsGateway
   }
 
   hasConnectedDevice(deviceId: string) {
-    return this.findClientByDeviceId(deviceId) instanceof WebSocket;
+    return this.findClientByDeviceId(deviceId) !== undefined;
   }
 
   findClientByDeviceId(deviceId: string): WebSocket | undefined {

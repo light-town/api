@@ -13,8 +13,24 @@ export class VaultItemsController {
   public constructor(private readonly vaultItemsService: VaultItemsService) {}
 
   @ApiCreatedResponse({ type: VaultItem })
-  @Post('/vaults/:vaultUuid/folders/:folderUuid/items')
+  @Post('/vaults/:vaultUuid/items')
   public async createVaultItem(
+    @CurrentAccount() account,
+    @Param('vaultUuid') vaultUuid: string,
+    @Body() payload: CreateVaultItemPayload
+  ): Promise<VaultItem> {
+    return this.vaultItemsService.format(
+      await this.vaultItemsService.create(account.id, vaultUuid, null, {
+        encOverview: payload?.encOverview,
+        encDetails: payload?.encDetails,
+        categoryId: payload?.categoryUuid,
+      })
+    );
+  }
+
+  @ApiCreatedResponse({ type: VaultItem })
+  @Post('/vaults/:vaultUuid/folders/:folderUuid/items')
+  public async createVaultItemInFolder(
     @CurrentAccount() account,
     @Param('vaultUuid') vaultUuid: string,
     @Param('folderUuid') folderUuid: string,

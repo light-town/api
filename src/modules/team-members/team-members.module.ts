@@ -3,7 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import TeamMemberEntity from '~/db/entities/team-member.entity';
 import AccountsModule from '../accounts/accounts.module';
 import TeamsModule from '../teams/teams.module';
-import TeamMemberController from './team-members.controller';
+import TeamMembersController from './team-members.controller';
 import TeamMembersService from './team-members.service';
 
 @Module({
@@ -12,7 +12,7 @@ import TeamMembersService from './team-members.service';
     AccountsModule,
     forwardRef(() => TeamsModule),
   ],
-  controllers: [TeamMemberController],
+  controllers: [TeamMembersController],
   providers: [TeamMembersService],
   exports: [TeamMembersService],
 })

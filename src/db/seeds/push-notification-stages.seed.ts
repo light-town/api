@@ -1,4 +1,4 @@
-import * as faker from 'faker';
+import faker from 'faker';
 import { PushNotificationStageEnum } from '~/modules/push-notifications/push-notifications.dto';
 import PushNotificationStageEntity from '../entities/push-notification-stage.entity';
 import Factory from './factory';

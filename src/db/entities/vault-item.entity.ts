@@ -33,7 +33,7 @@ export class VaultItemEntity extends IEntity {
   })
   public creatorAccount?: AccountEntity;
 
-  @Column({ type: 'uuid', name: 'folder_id' })
+  @Column({ type: 'uuid', name: 'folder_id', nullable: true })
   public folderId: string;
 
   @ManyToOne(() => VaultFolderEntity)

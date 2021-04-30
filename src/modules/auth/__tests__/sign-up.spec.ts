@@ -2,7 +2,7 @@ import { AuthService } from '../auth.service';
 import { createModuleHelper } from './helpers/create-module.helper';
 import core from '@light-town/core';
 import { SignUpPayload } from '../auth.dto';
-import * as faker from 'faker';
+import faker from 'faker';
 import * as dotenv from 'dotenv';
 import { TestingModule } from '@nestjs/testing';
 import UsersService from '~/modules/users/users.service';

@@ -1,7 +1,11 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, SelectQueryBuilder } from 'typeorm';
-import { ApiNotFoundException } from '~/common/exceptions';
+import {
+  ApiBadRequestException,
+  ApiForbiddenException,
+  ApiNotFoundException,
+} from '~/common/exceptions';
 import TeamMemberEntity from '~/db/entities/team-member.entity';
 import AccountsService from '../accounts/accounts.service';
 import TeamsService from '../teams/teams.service';
@@ -11,6 +15,11 @@ export class FindTeamMembersOptions {
   id?: string;
   teamId?: string;
   accountId?: string;
+}
+
+export class CreateTeamMemberOptions {
+  teamId: string;
+  accountId: string;
 }
 
 @Injectable()
@@ -24,12 +33,15 @@ export class TeamMembersService {
   ) {}
 
   public async createMember(
-    teamId: string,
-    accountId: string
+    creatorAccountId: string,
+    options: CreateTeamMemberOptions
   ): Promise<TeamMemberEntity> {
+    /* if (!(await this.isMember(creatorAccountId, options.teamId)))
+      throw new ApiForbiddenException('The user is not a member of the team'); */
+
     const [isTeamExists, isAccountExists] = await Promise.all([
-      this.teamsService.exists({ id: teamId }),
-      this.accountsService.exists({ id: accountId }),
+      this.teamsService.exists({ id: options.teamId }),
+      this.accountsService.exists({ id: options.accountId }),
     ]);
 
     if (!isAccountExists)
@@ -37,10 +49,15 @@ export class TeamMembersService {
 
     if (!isTeamExists) throw new ApiNotFoundException('The team was not found');
 
+    if (await this.isMember(options.accountId, options.teamId))
+      throw new ApiBadRequestException(
+        'The account already has membership with the team'
+      );
+
     const newMember = await this.teamMembersRepository.save(
       this.teamMembersRepository.create({
-        accountId,
-        teamId,
+        accountId: options.accountId,
+        teamId: options.teamId,
       })
     );
 
@@ -84,9 +101,9 @@ export class TeamMembersService {
       .addSelect(`${alias}.createdAt`, 'createdAt')
       .where(`${alias}.is_deleted = :isDeleted`, { isDeleted: false });
 
-    if (options.id) query.andWhere(`${alias}.id = :id`, options);
-    if (options.teamId) query.andWhere(`${alias}.team_id = :teamId`, options);
-    if (options.accountId)
+    if (options?.id) query.andWhere(`${alias}.id = :id`, options);
+    if (options?.teamId) query.andWhere(`${alias}.team_id = :teamId`, options);
+    if (options?.accountId)
       query.andWhere(`${alias}.account_id = :accountId`, options);
 
     return [alias, query];
@@ -113,6 +130,10 @@ export class TeamMembersService {
     });
 
     return teamMember !== undefined;
+  }
+
+  public isMember(accountId: string, teamId: string): Promise<boolean> {
+    return this.exists({ accountId, teamId });
   }
 }
 

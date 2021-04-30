@@ -1,4 +1,4 @@
-import * as request from 'supertest';
+import request from 'supertest';
 import { INestApplication } from '@nestjs/common';
 import { CreateVaultPayload } from '~/modules/vaults/vaults.dto';
 

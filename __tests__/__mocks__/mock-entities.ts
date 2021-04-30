@@ -16,6 +16,8 @@ import { KeySetVaultEntity } from '~/db/entities/key-set-vaults.entity';
 import VaultItemEntity from '~/db/entities/vault-item.entity';
 import VaultFolderEntity from '~/db/entities/vault-folder.entity';
 import VaultItemCategoryEntity from '~/db/entities/vault-item-category.entity';
+import TeamEntity from '~/db/entities/team.entity';
+import TeamMemberEntity from '~/db/entities/team-member.entity';
 
 export default (app: TestingModuleBuilder) => {
   const entities = [
@@ -34,6 +36,8 @@ export default (app: TestingModuleBuilder) => {
     VaultItemEntity,
     VaultFolderEntity,
     VaultItemCategoryEntity,
+    TeamEntity,
+    TeamMemberEntity,
   ];
 
   entities.forEach(e =>

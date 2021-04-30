@@ -1,4 +1,4 @@
-import * as faker from 'faker';
+import faker from 'faker';
 import { Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { TestingModule } from '@nestjs/testing';

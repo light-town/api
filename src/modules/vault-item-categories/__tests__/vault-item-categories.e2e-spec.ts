@@ -1,5 +1,5 @@
 import { getConnectionToken } from '@nestjs/typeorm';
-import * as faker from 'faker';
+import faker from 'faker';
 import { Connection } from 'typeorm';
 import core from '@light-town/core';
 import { INestApplication } from '@nestjs/common';

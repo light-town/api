@@ -1,6 +1,6 @@
 import { AuthService } from '../auth.service';
 import createModuleHelper from './helpers/create-module.helper';
-import * as faker from 'faker';
+import faker from 'faker';
 import * as dotenv from 'dotenv';
 import { TestingModule } from '@nestjs/testing';
 import SessionsService from '~/modules/sessions/sessions.service';

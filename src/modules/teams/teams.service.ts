@@ -10,6 +10,8 @@ import { CreateTeamOptions, Team } from './teams.dto';
 export class FindTeamsOptions {
   id?: string;
   creatorAccountId?: string;
+  memberId?: string;
+  memberIds?: string[];
 }
 
 @Injectable()
@@ -37,7 +39,13 @@ export class TeamsService {
       this.teamsRepository.create({
         encKey: options.encKey,
         encOverview: options.encOverview,
+        creatorAccountId: accountId,
       })
+    );
+
+    const creatorTeamMember = await this.teamMembersService.createMember(
+      accountId,
+      { accountId, teamId: newTeam.id }
     );
 
     return newTeam;
@@ -80,12 +88,23 @@ export class TeamsService {
       .addSelect(`${alias}.creatorAccountId`, 'creatorAccountId')
       .addSelect(`${alias}.updatedAt`, 'updatedAt')
       .addSelect(`${alias}.createdAt`, 'createdAt')
-      .where(`${alias}.is_deleted = :isDeleted`, { isDeleted: false });
+      .where(`${alias}.is_deleted = :isDeleted`, { isDeleted: false })
+      .orderBy(`${alias}.id`);
 
     if (options.id) query.andWhere(`${alias}.id = :id`, options);
 
     if (options.creatorAccountId)
       query.andWhere(`${alias}.creator_accountId = :creatorAccountId`, options);
+
+    if (options.memberId)
+      query
+        .innerJoin(`${alias}.members`, 'members')
+        .andWhere(`members.id = :memberId`, options);
+
+    if (options.memberIds)
+      query
+        .innerJoin(`${alias}.members`, 'members')
+        .andWhere(`members.id IN (:...memberIds)`, options);
 
     return [alias, query];
   }

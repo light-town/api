@@ -41,7 +41,7 @@ export class TeamMember {
   createdAt: string;
 }
 
-export class CreateTeamPayload {
+export class CreateTeamMemberPayload {
   @ApiProperty({
     description: 'The account uuid',
     required: true,

@@ -1,5 +1,5 @@
 import { getRepositoryToken } from '@nestjs/typeorm';
-import * as faker from 'faker';
+import faker from 'faker';
 import { DeepPartial, In, Repository } from 'typeorm';
 import VaultEntity from '~/db/entities/vault.entity';
 import KeySetVaultsService from '~/modules/key-set-vaults/key-set-vaults.service';

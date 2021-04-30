@@ -2,7 +2,7 @@ import { INestApplication } from '@nestjs/common';
 import DevicesController from '~/modules/devices/devices.controller';
 import { OS } from '~/modules/devices/devices.dto';
 import DevicesService from '~/modules/devices/devices.service';
-import * as faker from 'faker';
+import faker from 'faker';
 
 export class CreateDeviceOptions {
   os: OS;

@@ -1,5 +1,5 @@
 import { TestingModule } from '@nestjs/testing';
-import * as faker from 'faker';
+import faker from 'faker';
 import KeySetsController from '../key-sets.controller';
 import KeySetsService from '../key-sets.service';
 import createModuleHelper from './helpers/create-module.helper';

@@ -1,6 +1,7 @@
-import { Column, Entity, ManyToOne, JoinColumn } from 'typeorm';
+import { Column, Entity, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import AccountEntity from './account.entity';
 import { IEntity } from './entity.interface';
+import TeamMemberEntity from './team-member.entity';
 
 @Entity('teams')
 export class TeamEntity extends IEntity {
@@ -19,6 +20,9 @@ export class TeamEntity extends IEntity {
     referencedColumnName: 'id',
   })
   public creatorAccount?: AccountEntity;
+
+  @OneToMany(() => TeamMemberEntity, teamMember => teamMember.team)
+  public members?: TeamMemberEntity[];
 }
 
 export default TeamEntity;

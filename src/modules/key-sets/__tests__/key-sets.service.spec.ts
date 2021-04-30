@@ -1,6 +1,6 @@
 import { TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import * as faker from 'faker';
+import faker from 'faker';
 import { Repository } from 'typeorm';
 import {
   ApiConflictException,

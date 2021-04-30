@@ -1,5 +1,5 @@
 import { TestingModule } from '@nestjs/testing';
-import * as faker from 'faker';
+import faker from 'faker';
 import {
   ApiConflictException,
   ApiNotFoundException,

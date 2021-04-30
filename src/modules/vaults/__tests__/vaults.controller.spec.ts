@@ -1,4 +1,4 @@
-import * as faker from 'faker';
+import faker from 'faker';
 import { DeepPartial } from 'typeorm';
 import VaultEntity from '~/db/entities/vault.entity';
 import KeySetsService from '~/modules/key-sets/key-sets.service';

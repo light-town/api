@@ -1,6 +1,6 @@
 import { INestApplication } from '@nestjs/common';
 import core from '@light-town/core';
-import * as faker from 'faker';
+import faker from 'faker';
 import VaultFoldersController from '~/modules/vault-folders/vault-folders.controller';
 import VaultFoldersService from '~/modules/vault-folders/vault-folders.service';
 import { VaultFolderOverview } from '@light-town/core/dist/helpers/vault-folders/definitions';
