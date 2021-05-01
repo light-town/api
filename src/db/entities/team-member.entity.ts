@@ -1,6 +1,7 @@
 import { Column, Entity, ManyToOne, JoinColumn } from 'typeorm';
-import AccountEntity from './account.entity';
 import { IEntity } from './entity.interface';
+import AccountEntity from './account.entity';
+import RoleEntity from './role.entity';
 import TeamEntity from './team.entity';
 
 @Entity('team_members')
@@ -24,6 +25,16 @@ export class TeamMemberEntity extends IEntity {
     referencedColumnName: 'id',
   })
   public team?: TeamEntity;
+
+  @Column({ type: 'uuid', name: 'role_id' })
+  public roleId: string;
+
+  @ManyToOne(() => RoleEntity)
+  @JoinColumn({
+    name: 'role_id',
+    referencedColumnName: 'id',
+  })
+  public role?: RoleEntity;
 }
 
 export default TeamMemberEntity;

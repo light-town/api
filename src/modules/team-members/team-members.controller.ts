@@ -22,6 +22,7 @@ export class TeamMembersController {
       this.teamMembersService.createMember(account.id, {
         teamId: teamUuid,
         accountId: payload.accountUuid,
+        roleId: payload.roleUuid,
       })
     );
   }

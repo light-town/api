@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Not, Repository, SelectQueryBuilder } from 'typeorm';
+import { Repository, SelectQueryBuilder } from 'typeorm';
 import { ApiNotFoundException } from '~/common/exceptions';
 import VaultFolderEntity from '~/db/entities/vault-folder.entity';
 import AccountsService from '../accounts/accounts.service';
@@ -75,6 +75,7 @@ export class VaultFoldersService {
   public async getVaultFolders(
     options: FindVaultFoldersOptions
   ): Promise<VaultFolderEntity[]> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [_, query] = this.prepareQuery(options);
     return query.getRawMany();
   }
@@ -82,6 +83,7 @@ export class VaultFoldersService {
   public getVaultFolder(
     options: FindVaultFoldersOptions
   ): Promise<VaultFolderEntity> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [_, query] = this.prepareQuery(options);
     return query.getRawOne();
   }

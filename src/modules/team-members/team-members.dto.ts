@@ -49,4 +49,12 @@ export class CreateTeamMemberPayload {
   @IsString()
   @IsUUID()
   accountUuid: string;
+
+  @ApiProperty({
+    description: 'The role uuid',
+    required: true,
+  })
+  @IsString()
+  @IsUUID()
+  roleUuid: string;
 }

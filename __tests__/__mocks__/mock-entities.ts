@@ -18,6 +18,10 @@ import VaultFolderEntity from '~/db/entities/vault-folder.entity';
 import VaultItemCategoryEntity from '~/db/entities/vault-item-category.entity';
 import TeamEntity from '~/db/entities/team.entity';
 import TeamMemberEntity from '~/db/entities/team-member.entity';
+import RoleEntity from '~/db/entities/role.entity';
+import PermissionEntity from '~/db/entities/permission.entity';
+import PermissionObjectTypeEntity from '~/db/entities/permission-object-type.entity';
+import PermissionTypeEntity from '~/db/entities/permission-type.entity';
 
 export default (app: TestingModuleBuilder) => {
   const entities = [
@@ -38,6 +42,10 @@ export default (app: TestingModuleBuilder) => {
     VaultItemCategoryEntity,
     TeamEntity,
     TeamMemberEntity,
+    RoleEntity,
+    PermissionEntity,
+    PermissionTypeEntity,
+    PermissionObjectTypeEntity,
   ];
 
   entities.forEach(e =>

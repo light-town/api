@@ -2,6 +2,7 @@ import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import TeamMemberEntity from '~/db/entities/team-member.entity';
 import AccountsModule from '../accounts/accounts.module';
+import RolesModule from '../roles/roles.module';
 import TeamsModule from '../teams/teams.module';
 import TeamMembersController from './team-members.controller';
 import TeamMembersService from './team-members.service';
@@ -11,6 +12,7 @@ import TeamMembersService from './team-members.service';
     TypeOrmModule.forFeature([TeamMemberEntity]),
     AccountsModule,
     forwardRef(() => TeamsModule),
+    forwardRef(() => RolesModule),
   ],
   controllers: [TeamMembersController],
   providers: [TeamMembersService],

@@ -7,12 +7,14 @@ import AccountsService from '~/modules/accounts/accounts.service';
 import TeamMembersService from '~/modules/team-members/team-members.service';
 import TeamsService from '~/modules/teams/teams.service';
 import TeamMemberEntity from '~/db/entities/team-member.entity';
+import RolesService from '~/modules/roles/roles.service';
 
 describe('[Team Members Module] [Service] ...', () => {
   let moduleFixture: TestingModule;
 
   let teamsService: TeamsService;
   let accountsService: AccountsService;
+  let rolesService: RolesService;
 
   let teamMembersService: TeamMembersService;
   let teamMembersRepository: Repository<TeamMemberEntity>;
@@ -22,6 +24,7 @@ describe('[Team Members Module] [Service] ...', () => {
 
     teamsService = moduleFixture.get<TeamsService>(TeamsService);
     accountsService = moduleFixture.get<AccountsService>(AccountsService);
+    rolesService = moduleFixture.get<RolesService>(RolesService);
 
     teamMembersService = moduleFixture.get<TeamMembersService>(
       TeamMembersService
@@ -50,10 +53,15 @@ describe('[Team Members Module] [Service] ...', () => {
       const TEST_TEAM = {
         id: faker.datatype.uuid(),
       };
+      const TEST_ROLE = {
+        id: faker.datatype.uuid(),
+      };
 
       jest.spyOn(accountsService, 'exists').mockResolvedValueOnce(true);
 
       jest.spyOn(teamsService, 'exists').mockResolvedValueOnce(true);
+
+      jest.spyOn(rolesService, 'exists').mockResolvedValueOnce(true);
 
       jest
         .spyOn(teamMembersRepository, 'create')
@@ -67,6 +75,7 @@ describe('[Team Members Module] [Service] ...', () => {
         await teamMembersService.createMember(TEST_ACCOUNT.id, {
           accountId: TEST_OTHER_ACCOUNT.id,
           teamId: TEST_TEAM.id,
+          roleId: TEST_ROLE.id,
         })
       ).toStrictEqual(TEST_TEAM_MEMBER);
 
@@ -79,6 +88,7 @@ describe('[Team Members Module] [Service] ...', () => {
       expect(teamMembersRepository.create).toHaveBeenCalledWith({
         teamId: TEST_TEAM.id,
         accountId: TEST_OTHER_ACCOUNT.id,
+        roleId: TEST_ROLE.id,
       });
 
       expect(teamMembersRepository.save).toHaveBeenCalledTimes(1);

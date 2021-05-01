@@ -4,6 +4,7 @@ import { Repository, SelectQueryBuilder } from 'typeorm';
 import { ApiNotFoundException } from '~/common/exceptions';
 import TeamEntity from '~/db/entities/team.entity';
 import AccountsService from '../accounts/accounts.service';
+import RolesService from '../roles/roles.service';
 import TeamMembersService from '../team-members/team-members.service';
 import { CreateTeamOptions, Team } from './teams.dto';
 
@@ -14,6 +15,12 @@ export class FindTeamsOptions {
   memberIds?: string[];
 }
 
+export enum TeamRolesEnum {
+  TEAM_CREATOR = 'TEAM_CREATOR',
+  TEAM_MEMBER = 'TEAM_MEMBER',
+  TEAM_GUEST = 'TEAM_GUEST',
+}
+
 @Injectable()
 export class TeamsService {
   public constructor(
@@ -21,7 +28,9 @@ export class TeamsService {
     public readonly teamsRepository: Repository<TeamEntity>,
     private readonly accountsService: AccountsService,
     @Inject(forwardRef(() => TeamMembersService))
-    private readonly teamMembersService: TeamMembersService
+    private readonly teamMembersService: TeamMembersService,
+    @Inject(forwardRef(() => RolesService))
+    private readonly rolesService: RolesService
   ) {}
 
   public async createTeam(
@@ -43,17 +52,32 @@ export class TeamsService {
       })
     );
 
-    const creatorTeamMember = await this.teamMembersService.createMember(
+    const [creatorTeamRole] = await Promise.all([
+      this.rolesService.createRole(accountId, {
+        name: TeamRolesEnum.TEAM_CREATOR,
+        teamId: newTeam.id,
+      }),
+      this.rolesService.createRole(accountId, {
+        name: TeamRolesEnum.TEAM_MEMBER,
+        teamId: newTeam.id,
+      }),
+      this.rolesService.createRole(accountId, {
+        name: TeamRolesEnum.TEAM_GUEST,
+        teamId: newTeam.id,
+      }),
+    ]);
+
+    await this.teamMembersService.createMember(accountId, {
       accountId,
-      { accountId, teamId: newTeam.id }
-    );
+      teamId: newTeam.id,
+      roleId: creatorTeamRole.id,
+    });
 
     return newTeam;
   }
 
   public async format(e: TeamEntity | Promise<TeamEntity>): Promise<Team> {
     const entity = e instanceof Promise ? await e : e;
-
     return this.normalize(entity);
   }
 
@@ -61,7 +85,6 @@ export class TeamsService {
     e: TeamEntity[] | Promise<TeamEntity[]>
   ): Promise<Team[]> {
     const entities = e instanceof Promise ? await e : e;
-
     return entities.map(e => this.normalize(e));
   }
 
@@ -110,11 +133,13 @@ export class TeamsService {
   }
 
   public async getTeams(options: FindTeamsOptions = {}): Promise<TeamEntity[]> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [_, query] = this.prepareQuery(options);
     return query.getRawMany();
   }
 
   public getTeam(options: FindTeamsOptions = {}): Promise<TeamEntity> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [_, query] = this.prepareQuery(options);
     return query.getRawOne();
   }

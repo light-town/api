@@ -3,11 +3,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, SelectQueryBuilder } from 'typeorm';
 import {
   ApiBadRequestException,
-  ApiForbiddenException,
   ApiNotFoundException,
 } from '~/common/exceptions';
 import TeamMemberEntity from '~/db/entities/team-member.entity';
 import AccountsService from '../accounts/accounts.service';
+import RolesService from '../roles/roles.service';
 import TeamsService from '../teams/teams.service';
 import { TeamMember } from './team-members.dto';
 
@@ -20,6 +20,7 @@ export class FindTeamMembersOptions {
 export class CreateTeamMemberOptions {
   teamId: string;
   accountId: string;
+  roleId: string;
 }
 
 @Injectable()
@@ -27,27 +28,38 @@ export class TeamMembersService {
   public constructor(
     @InjectRepository(TeamMemberEntity)
     private readonly teamMembersRepository: Repository<TeamMemberEntity>,
+    private readonly accountsService: AccountsService,
     @Inject(forwardRef(() => TeamsService))
     private readonly teamsService: TeamsService,
-    private readonly accountsService: AccountsService
+    @Inject(forwardRef(() => RolesService))
+    private readonly rolesService: RolesService
   ) {}
 
   public async createMember(
     creatorAccountId: string,
     options: CreateTeamMemberOptions
   ): Promise<TeamMemberEntity> {
-    /* if (!(await this.isMember(creatorAccountId, options.teamId)))
-      throw new ApiForbiddenException('The user is not a member of the team'); */
-
-    const [isTeamExists, isAccountExists] = await Promise.all([
+    const [
+      isTeamExists,
+      isAccountExists,
+      isRoleExists,
+      isMemberAlreadyExists,
+    ] = await Promise.all([
       this.teamsService.exists({ id: options.teamId }),
       this.accountsService.exists({ id: options.accountId }),
+      this.rolesService.exists({ id: options.roleId, teamId: options.teamId }),
+      this.exists({ accountId: options.accountId, teamId: options.teamId }),
     ]);
+
+    if (isMemberAlreadyExists)
+      throw new ApiBadRequestException(`The team member already exists`);
 
     if (!isAccountExists)
       throw new ApiNotFoundException(`The account was not found`);
 
-    if (!isTeamExists) throw new ApiNotFoundException('The team was not found');
+    if (!isTeamExists) throw new ApiNotFoundException(`The team was not found`);
+
+    if (!isRoleExists) throw new ApiNotFoundException(`The role was not found`);
 
     if (await this.isMember(options.accountId, options.teamId))
       throw new ApiBadRequestException(
@@ -58,6 +70,7 @@ export class TeamMembersService {
       this.teamMembersRepository.create({
         accountId: options.accountId,
         teamId: options.teamId,
+        roleId: options.roleId,
       })
     );
 
@@ -112,6 +125,7 @@ export class TeamMembersService {
   public async getTeamMembers(
     options: FindTeamMembersOptions = {}
   ): Promise<TeamMemberEntity[]> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [_, query] = this.prepareQuery(options);
     return query.getRawMany();
   }
@@ -119,6 +133,7 @@ export class TeamMembersService {
   public getTeamMember(
     options: FindTeamMembersOptions = {}
   ): Promise<TeamMemberEntity> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [_, query] = this.prepareQuery(options);
     return query.getRawOne();
   }

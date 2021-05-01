@@ -6,6 +6,7 @@ export interface CreateTeamMemberOptions {
   creaorAccountId: string;
   accountId: string;
   teamId: string;
+  roleId: string;
 }
 
 export const createTeamMemberHelper = async (
@@ -22,6 +23,7 @@ export const createTeamMemberHelper = async (
     options.teamId,
     {
       accountUuid: options.accountId,
+      roleUuid: options.roleId,
     }
   );
 

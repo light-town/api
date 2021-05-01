@@ -6,13 +6,15 @@ import createModuleHelper from './helpers/create-module.helper';
 import AccountsService from '~/modules/accounts/accounts.service';
 import TeamMembersService from '~/modules/team-members/team-members.service';
 import TeamEntity from '~/db/entities/team.entity';
-import TeamsService from '../teams.service';
+import TeamsService, { TeamRolesEnum } from '../teams.service';
+import RolesService from '~/modules/roles/roles.service';
 
 describe('[Teams Module] [Service] ...', () => {
   let moduleFixture: TestingModule;
 
   let teamMembersService: TeamMembersService;
   let accountsService: AccountsService;
+  let rolesService: RolesService;
 
   let teamsService: TeamsService;
   let teamsRepository: Repository<TeamEntity>;
@@ -24,6 +26,7 @@ describe('[Teams Module] [Service] ...', () => {
       TeamMembersService
     );
     accountsService = moduleFixture.get<AccountsService>(AccountsService);
+    rolesService = moduleFixture.get<RolesService>(RolesService);
 
     teamsService = moduleFixture.get<TeamsService>(TeamsService);
     teamsRepository = moduleFixture.get<Repository<TeamEntity>>(
@@ -38,13 +41,16 @@ describe('[Teams Module] [Service] ...', () => {
 
   describe('[Creating] ...', () => {
     it('create a team', async () => {
-      const TEST_ACCOUNT = {
+      const ACCOUNT = {
         id: faker.datatype.uuid(),
       };
-      const TEST_TEAM_MEMBER = {
+      const TEAM_MEMBER = {
         id: faker.datatype.uuid(),
       };
-      const TEST_TEAM = {
+      const MEMBER_ROLE = {
+        id: faker.datatype.uuid(),
+      };
+      const TEAM = {
         id: faker.datatype.uuid(),
         encKey: JSON.parse(faker.datatype.json()),
         encOverview: JSON.parse(faker.datatype.json()),
@@ -52,44 +58,62 @@ describe('[Teams Module] [Service] ...', () => {
 
       jest.spyOn(accountsService, 'exists').mockResolvedValueOnce(true);
 
-      jest.spyOn(teamsRepository, 'create').mockReturnValueOnce(<any>TEST_TEAM);
+      jest.spyOn(teamsRepository, 'create').mockReturnValueOnce(<any>TEAM);
 
-      jest.spyOn(teamsRepository, 'save').mockReturnValueOnce(<any>TEST_TEAM);
+      jest.spyOn(teamsRepository, 'save').mockReturnValueOnce(<any>TEAM);
+
+      jest
+        .spyOn(rolesService, 'createRole')
+        .mockImplementationOnce((): any => MEMBER_ROLE)
+        .mockImplementationOnce((): any => MEMBER_ROLE)
+        .mockImplementationOnce((): any => MEMBER_ROLE);
 
       jest
         .spyOn(teamMembersService, 'createMember')
-        .mockResolvedValueOnce(<any>TEST_TEAM_MEMBER);
+        .mockResolvedValueOnce(<any>TEAM_MEMBER);
 
       expect(
-        await teamsService.createTeam(TEST_ACCOUNT.id, {
-          encKey: TEST_TEAM.encKey,
-          encOverview: TEST_TEAM.encOverview,
+        await teamsService.createTeam(ACCOUNT.id, {
+          encKey: TEAM.encKey,
+          encOverview: TEAM.encOverview,
         })
-      ).toStrictEqual(TEST_TEAM);
+      ).toStrictEqual(TEAM);
 
       expect(accountsService.exists).toHaveBeenCalledTimes(1);
       expect(accountsService.exists).toHaveBeenCalledWith({
-        id: TEST_ACCOUNT.id,
+        id: ACCOUNT.id,
       });
 
       expect(teamsRepository.create).toHaveBeenCalledTimes(1);
       expect(teamsRepository.create).toHaveBeenCalledWith({
-        encKey: TEST_TEAM.encKey,
-        encOverview: TEST_TEAM.encOverview,
-        creatorAccountId: TEST_ACCOUNT.id,
+        encKey: TEAM.encKey,
+        encOverview: TEAM.encOverview,
+        creatorAccountId: ACCOUNT.id,
       });
 
       expect(teamsRepository.save).toHaveBeenCalledTimes(1);
-      expect(teamsRepository.save).toHaveBeenCalledWith(TEST_TEAM);
+      expect(teamsRepository.save).toHaveBeenCalledWith(TEAM);
 
       expect(teamMembersService.createMember).toHaveBeenCalledTimes(1);
-      expect(teamMembersService.createMember).toHaveBeenCalledWith(
-        TEST_ACCOUNT.id,
-        {
-          accountId: TEST_ACCOUNT.id,
-          teamId: TEST_TEAM.id,
-        }
-      );
+      expect(teamMembersService.createMember).toHaveBeenCalledWith(ACCOUNT.id, {
+        accountId: ACCOUNT.id,
+        teamId: TEAM.id,
+        roleId: MEMBER_ROLE.id,
+      });
+
+      expect(rolesService.createRole).toHaveBeenCalledTimes(3);
+      expect(rolesService.createRole).toHaveBeenNthCalledWith(1, ACCOUNT.id, {
+        name: TeamRolesEnum.TEAM_CREATOR,
+        teamId: TEAM.id,
+      });
+      expect(rolesService.createRole).toHaveBeenNthCalledWith(2, ACCOUNT.id, {
+        name: TeamRolesEnum.TEAM_MEMBER,
+        teamId: TEAM.id,
+      });
+      expect(rolesService.createRole).toHaveBeenNthCalledWith(3, ACCOUNT.id, {
+        name: TeamRolesEnum.TEAM_GUEST,
+        teamId: TEAM.id,
+      });
     });
   });
 });

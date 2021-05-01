@@ -13,6 +13,9 @@ import VaultItemsModule from './modules/vault-items/vault-items.module';
 import VaultFoldersModule from './modules/vault-folders/vault-folders.module';
 import VaultItemCategoriesModule from './modules/vault-item-categories/vault-item-categories.module';
 import TeamsModule from './modules/teams/teams.module';
+import PermissionsModule from './modules/permissions/permissions.module';
+import RolesModule from './modules/roles/roles.module';
+
 @Module({
   imports: [
     TypeOrmModule.forRoot(),
@@ -29,6 +32,8 @@ import TeamsModule from './modules/teams/teams.module';
     VaultFoldersModule,
     VaultItemCategoriesModule,
     TeamsModule,
+    PermissionsModule,
+    RolesModule,
   ],
 })
 export class AppModule {}

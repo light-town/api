@@ -13,12 +13,15 @@ import createTeamHelper from '~/../__tests__/helpers/create-team.helper';
 import TeamMemberEntity from '~/db/entities/team-member.entity';
 import createTeamMemberHelper from '~/../__tests__/helpers/create-team-member.helper';
 import TeamMembersService from '../team-members.service';
+import RolesService from '~/modules/roles/roles.service';
+import { TeamRolesEnum } from '~/modules/teams/teams.service';
 
 describe('[Team Members Module] [Controller] ...', () => {
   let app: INestApplication;
   let api: Api;
   let connection: Connection;
 
+  let rolesService: RolesService;
   let teamMembersService: TeamMembersService;
   let teamMembersRepository: Repository<TeamMemberEntity>;
 
@@ -34,6 +37,7 @@ describe('[Team Members Module] [Controller] ...', () => {
 
     await initDatabaseHelper();
 
+    rolesService = app.get<RolesService>(RolesService);
     teamMembersService = app.get<TeamMembersService>(TeamMembersService);
     teamMembersRepository = app.get<Repository<TeamMemberEntity>>(
       getRepositoryToken(TeamMemberEntity)
@@ -74,11 +78,16 @@ describe('[Team Members Module] [Controller] ...', () => {
         accountId: userAccount.account.id,
         publicKey: userAccount.primaryKeySet.publicKey,
       });
+      const teamRoleCreator = await rolesService.getRole({
+        teamId: team.id,
+        name: TeamRolesEnum.TEAM_CREATOR,
+      });
 
       const response = await api.createTeamMember(
         team.id,
         {
           accountUuid: memberAccount.account.id,
+          roleUuid: teamRoleCreator.id,
         },
         userAccount.token
       );
@@ -147,10 +156,16 @@ describe('[Team Members Module] [Controller] ...', () => {
         teamId: team.id,
       });
 
+      const teamRoleCreator = await rolesService.getRole({
+        teamId: team.id,
+        name: TeamRolesEnum.TEAM_MEMBER,
+      });
+
       const teamMember = await createTeamMemberHelper(app, {
         creaorAccountId: userAccount.account.id,
         accountId: memberAccount.account.id,
         teamId: team.id,
+        roleId: teamRoleCreator.id,
       });
 
       const response = await api.getTeamMembers(team.id, userAccount.token);
@@ -170,10 +185,16 @@ describe('[Team Members Module] [Controller] ...', () => {
         publicKey: userAccount.primaryKeySet.publicKey,
       });
 
+      const teamRoleCreator = await rolesService.getRole({
+        teamId: team.id,
+        name: TeamRolesEnum.TEAM_MEMBER,
+      });
+
       const teamMember = await createTeamMemberHelper(app, {
         creaorAccountId: userAccount.account.id,
         accountId: memberAccount.account.id,
         teamId: team.id,
+        roleId: teamRoleCreator.id,
       });
 
       const response = await api.getTeamMember(
