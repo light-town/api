@@ -4,6 +4,9 @@ import { Repository, SelectQueryBuilder } from 'typeorm';
 import { ApiNotFoundException } from '~/common/exceptions';
 import TeamEntity from '~/db/entities/team.entity';
 import AccountsService from '../accounts/accounts.service';
+import { PermissionTypesEnum } from '../permissions/permissions.dto';
+import PermissionsService from '../permissions/permissions.service';
+import { ObjectTypesEnum } from '../roles/roles.dto';
 import RolesService from '../roles/roles.service';
 import TeamMembersService from '../team-members/team-members.service';
 import { CreateTeamOptions, Team } from './teams.dto';
@@ -30,7 +33,8 @@ export class TeamsService {
     @Inject(forwardRef(() => TeamMembersService))
     private readonly teamMembersService: TeamMembersService,
     @Inject(forwardRef(() => RolesService))
-    private readonly rolesService: RolesService
+    private readonly rolesService: RolesService,
+    private readonly permissionsService: PermissionsService
   ) {}
 
   public async createTeam(
@@ -52,22 +56,43 @@ export class TeamsService {
       })
     );
 
-    const [creatorTeamRole] = await Promise.all([
-      this.rolesService.createRole(accountId, {
+    const [creatorTeamRole, memberTeamRole, guestTeamRole] = await Promise.all([
+      this.rolesService.createRole({
         name: TeamRolesEnum.TEAM_CREATOR,
         teamId: newTeam.id,
       }),
-      this.rolesService.createRole(accountId, {
+      this.rolesService.createRole({
         name: TeamRolesEnum.TEAM_MEMBER,
         teamId: newTeam.id,
       }),
-      this.rolesService.createRole(accountId, {
+      this.rolesService.createRole({
         name: TeamRolesEnum.TEAM_GUEST,
         teamId: newTeam.id,
       }),
     ]);
 
-    await this.teamMembersService.createMember(accountId, {
+    await Promise.all([
+      this.permissionsService.createPermission({
+        roleId: creatorTeamRole.id,
+        objectId: newTeam.id,
+        objectTypeName: ObjectTypesEnum.TEAM,
+        typeName: PermissionTypesEnum.CREATOR,
+      }),
+      this.permissionsService.createPermission({
+        roleId: memberTeamRole.id,
+        objectId: newTeam.id,
+        objectTypeName: ObjectTypesEnum.TEAM,
+        typeName: PermissionTypesEnum.READ_AND_WRITE,
+      }),
+      this.permissionsService.createPermission({
+        roleId: guestTeamRole.id,
+        objectId: newTeam.id,
+        objectTypeName: ObjectTypesEnum.TEAM,
+        typeName: PermissionTypesEnum.READ_ONLY,
+      }),
+    ]);
+
+    await this.teamMembersService.createMember({
       accountId,
       teamId: newTeam.id,
       roleId: creatorTeamRole.id,
@@ -105,12 +130,6 @@ export class TeamsService {
     const alias = 'teams';
     const query = this.teamsRepository
       .createQueryBuilder(alias)
-      .select(`${alias}.id`, 'id')
-      .addSelect(`${alias}.encKey`, 'encKey')
-      .addSelect(`${alias}.encOverview`, 'encOverview')
-      .addSelect(`${alias}.creatorAccountId`, 'creatorAccountId')
-      .addSelect(`${alias}.updatedAt`, 'updatedAt')
-      .addSelect(`${alias}.createdAt`, 'createdAt')
       .where(`${alias}.is_deleted = :isDeleted`, { isDeleted: false })
       .orderBy(`${alias}.id`);
 
@@ -135,21 +154,17 @@ export class TeamsService {
   public async getTeams(options: FindTeamsOptions = {}): Promise<TeamEntity[]> {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [_, query] = this.prepareQuery(options);
-    return query.getRawMany();
+    return query.getMany();
   }
 
   public getTeam(options: FindTeamsOptions = {}): Promise<TeamEntity> {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [_, query] = this.prepareQuery(options);
-    return query.getRawOne();
+    return query.getOne();
   }
 
   public async exists(options: FindTeamsOptions = {}): Promise<boolean> {
-    const team = await this.teamsRepository.findOne({
-      ...options,
-      isDeleted: false,
-    });
-
+    const team = await this.getTeam(options);
     return team !== undefined;
   }
 }

@@ -36,7 +36,6 @@ export class TeamMembersService {
   ) {}
 
   public async createMember(
-    creatorAccountId: string,
     options: CreateTeamMemberOptions
   ): Promise<TeamMemberEntity> {
     const [
@@ -107,11 +106,6 @@ export class TeamMembersService {
     const alias = 'team_members';
     const query = this.teamMembersRepository
       .createQueryBuilder(alias)
-      .select(`${alias}.id`, 'id')
-      .addSelect(`${alias}.accountId`, 'accountId')
-      .addSelect(`${alias}.teamId`, 'teamId')
-      .addSelect(`${alias}.updatedAt`, 'updatedAt')
-      .addSelect(`${alias}.createdAt`, 'createdAt')
       .where(`${alias}.is_deleted = :isDeleted`, { isDeleted: false });
 
     if (options?.id) query.andWhere(`${alias}.id = :id`, options);
@@ -127,7 +121,7 @@ export class TeamMembersService {
   ): Promise<TeamMemberEntity[]> {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [_, query] = this.prepareQuery(options);
-    return query.getRawMany();
+    return query.getMany();
   }
 
   public getTeamMember(
@@ -135,7 +129,7 @@ export class TeamMembersService {
   ): Promise<TeamMemberEntity> {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [_, query] = this.prepareQuery(options);
-    return query.getRawOne();
+    return query.getOne();
   }
 
   public async exists(options: FindTeamMembersOptions = {}): Promise<boolean> {

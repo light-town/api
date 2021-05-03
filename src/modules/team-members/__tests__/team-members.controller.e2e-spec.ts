@@ -43,7 +43,7 @@ describe('[Team Members Module] [Controller] ...', () => {
       getRepositoryToken(TeamMemberEntity)
     );
 
-    for (let i = 0; i < 2; ++i) {
+    for (let i = 0; i < 3; ++i) {
       const createdUserAccount = await createAccountHelper(app, {
         device: { os: OS.WINDOWS },
       });
@@ -113,18 +113,23 @@ describe('[Team Members Module] [Controller] ...', () => {
       expect(teamMember.isDeleted).toBeFalsy();
     });
 
-    /* it('should throw an error when a not member user trying to create a team member', async () => {
+    it('should throw an error when a not member user trying to create a team member', async () => {
       const userAccount = userAccounts[0];
       const otherUserAccount = userAccounts[1];
       const team = await createTeamHelper(app, {
         accountId: userAccount.account.id,
         publicKey: userAccount.primaryKeySet.publicKey,
       });
+      const teamRoleCreator = await rolesService.getRole({
+        teamId: team.id,
+        name: TeamRolesEnum.TEAM_CREATOR,
+      });
 
       const response = await api.createTeamMember(
         team.id,
         {
           accountUuid: otherUserAccount.account.id,
+          roleUuid: teamRoleCreator.id,
         },
         otherUserAccount.token
       );
@@ -138,8 +143,51 @@ describe('[Team Members Module] [Controller] ...', () => {
         statusCode: 403,
       });
 
-      expect(await teamMembersRepository.count()).toEqual(0);
-    }); */
+      expect(await teamMembersRepository.count()).toEqual(1);
+    });
+
+    it('should throw an error when a low level role user trying to create a team member', async () => {
+      const userAccount = userAccounts[0];
+      const memberUserAccount = userAccounts[1];
+      const otherUserAccount = userAccounts[2];
+      const team = await createTeamHelper(app, {
+        accountId: userAccount.account.id,
+        publicKey: userAccount.primaryKeySet.publicKey,
+      });
+      const teamRoleMember = await rolesService.getRole({
+        teamId: team.id,
+        name: TeamRolesEnum.TEAM_MEMBER,
+      });
+
+      await api.createTeamMember(
+        team.id,
+        {
+          accountUuid: memberUserAccount.account.id,
+          roleUuid: teamRoleMember.id,
+        },
+        userAccount.token
+      );
+
+      const response = await api.createTeamMember(
+        team.id,
+        {
+          accountUuid: otherUserAccount.account.id,
+          roleUuid: teamRoleMember.id,
+        },
+        memberUserAccount.token
+      );
+
+      expect(response.status).toEqual(403);
+      expect(response.body).toStrictEqual({
+        error: {
+          type: 'Forbidden',
+          message: `Access denied. The user doesn't have enough permissions`,
+        },
+        statusCode: 403,
+      });
+
+      expect(await teamMembersRepository.count()).toEqual(2);
+    });
   });
 
   describe('[Getting] ...', () => {

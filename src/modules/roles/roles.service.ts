@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, SelectQueryBuilder } from 'typeorm';
 import {
   ApiConflictException,
+  ApiForbiddenException,
   ApiNotFoundException,
 } from '~/common/exceptions';
 import PermissionEntity from '~/db/entities/permission.entity';
@@ -15,6 +16,7 @@ import TeamsService from '../teams/teams.service';
 import { ObjectTypesEnum, Role } from './roles.dto';
 import RouterService from './router.service';
 import { PermissionTypesEnum } from '../permissions/permissions.dto';
+import PermissionTypesService from '../permissions/permission-types.service';
 
 export class FindRolesOptions {
   id?: string;
@@ -41,13 +43,11 @@ export class RolesService {
     @Inject(forwardRef(() => PermissionsService))
     private readonly permissionsService: PermissionsService,
     private readonly permissionObjectTypesService: PermissionObjectTypesService,
+    private readonly permissionTypesService: PermissionTypesService,
     private readonly routerService: RouterService
   ) {}
 
-  public async createRole(
-    accountId: string,
-    options: CreateRoleOptions
-  ): Promise<RoleEntity> {
+  public async createRole(options: CreateRoleOptions): Promise<RoleEntity> {
     const isTeamExists = this.teamsService.exists({
       id: options.teamId,
     });
@@ -89,15 +89,9 @@ export class RolesService {
   public prepareQuery(
     options: FindRolesOptions
   ): [string, SelectQueryBuilder<RoleEntity>] {
-    const alias = 'permission_object_types';
+    const alias = 'roles';
     const query = this.rolesRepository
       .createQueryBuilder(alias)
-      .select(`${alias}.id`, 'id')
-      .addSelect(`${alias}.name`, 'name')
-      .addSelect(`${alias}.teamId`, 'teamId')
-      .addSelect(`${alias}.parentRoleId`, 'parentRoleId')
-      .addSelect(`${alias}.updatedAt`, 'updatedAt')
-      .addSelect(`${alias}.createdAt`, 'createdAt')
       .where(`${alias}.is_deleted = :isDeleted`, { isDeleted: false });
 
     if (options?.id) query.andWhere(`${alias}.id = :id`, options);
@@ -112,13 +106,13 @@ export class RolesService {
   public getRole(options: FindRolesOptions = {}): Promise<RoleEntity> {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [_, query] = this.prepareQuery(options);
-    return query.getRawOne();
+    return query.getOne();
   }
 
   public getRoles(options: FindRolesOptions = {}): Promise<RoleEntity[]> {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [_, query] = this.prepareQuery(options);
-    return query.getRawMany();
+    return query.getMany();
   }
 
   public async exists(options: FindRolesOptions = {}): Promise<boolean> {
@@ -158,9 +152,39 @@ export class RolesService {
       })
     );
 
+    const permissionType = await this.permissionTypesService.getPermissionType({
+      name: permissionTypeName,
+    });
+
+    if (!permissionType)
+      throw new ApiNotFoundException(`The permission type  was not found`);
+
     return (
-      permissions.filter(p => p.type.name === permissionTypeName).length !== 0
+      permissions.filter(
+        p => p?.type?.name && p.type.level >= permissionType.level
+      ).length > 0
     );
+  }
+
+  public async validateOrFail(
+    teamMemberId: string,
+    objectId: string,
+    objectTypeName: ObjectTypesEnum,
+    permissionTypeName: PermissionTypesEnum
+  ): Promise<boolean | Error> {
+    const validated = await this.validate(
+      teamMemberId,
+      objectId,
+      objectTypeName,
+      permissionTypeName
+    );
+
+    if (!validated)
+      throw new ApiForbiddenException(
+        `Access denied. The user doesn't have enough permissions`
+      );
+
+    return validated;
   }
 
   private async computePermission(

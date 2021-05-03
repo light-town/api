@@ -4,6 +4,7 @@ import PermissionObjectTypeEntity from '~/db/entities/permission-object-type.ent
 import PermissionTypeEntity from '~/db/entities/permission-type.entity';
 import PermissionEntity from '~/db/entities/permission.entity';
 import RolesModule from '../roles/roles.module';
+import TeamMembersModule from '../team-members/team-members.module';
 import PermissionObjectTypesService from './permission-object-types.service';
 import PermissionTypesService from './permission-types.service';
 import PermissionsController from './permissions.controller';
@@ -17,6 +18,7 @@ import PermissionsService from './permissions.service';
       PermissionObjectTypeEntity,
     ]),
     forwardRef(() => RolesModule),
+    forwardRef(() => TeamMembersModule),
   ],
   controllers: [PermissionsController],
   providers: [

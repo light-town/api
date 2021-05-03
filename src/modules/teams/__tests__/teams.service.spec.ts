@@ -95,22 +95,22 @@ describe('[Teams Module] [Service] ...', () => {
       expect(teamsRepository.save).toHaveBeenCalledWith(TEAM);
 
       expect(teamMembersService.createMember).toHaveBeenCalledTimes(1);
-      expect(teamMembersService.createMember).toHaveBeenCalledWith(ACCOUNT.id, {
+      expect(teamMembersService.createMember).toHaveBeenCalledWith({
         accountId: ACCOUNT.id,
         teamId: TEAM.id,
         roleId: MEMBER_ROLE.id,
       });
 
       expect(rolesService.createRole).toHaveBeenCalledTimes(3);
-      expect(rolesService.createRole).toHaveBeenNthCalledWith(1, ACCOUNT.id, {
+      expect(rolesService.createRole).toHaveBeenNthCalledWith(1, {
         name: TeamRolesEnum.TEAM_CREATOR,
         teamId: TEAM.id,
       });
-      expect(rolesService.createRole).toHaveBeenNthCalledWith(2, ACCOUNT.id, {
+      expect(rolesService.createRole).toHaveBeenNthCalledWith(2, {
         name: TeamRolesEnum.TEAM_MEMBER,
         teamId: TEAM.id,
       });
-      expect(rolesService.createRole).toHaveBeenNthCalledWith(3, ACCOUNT.id, {
+      expect(rolesService.createRole).toHaveBeenNthCalledWith(3, {
         name: TeamRolesEnum.TEAM_GUEST,
         teamId: TEAM.id,
       });

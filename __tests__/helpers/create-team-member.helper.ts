@@ -18,8 +18,13 @@ export const createTeamMemberHelper = async (
   );
   const teamMembersService = app.get<TeamMembersService>(TeamMembersService);
 
+  const teamMemberCreator = await teamMembersService.getTeamMember({
+    accountId: options.creaorAccountId,
+    teamId: options.teamId,
+  });
+
   const teamMember = await teamMembersController.createTeamMember(
-    { id: options.creaorAccountId },
+    { id: teamMemberCreator.id },
     options.teamId,
     {
       accountUuid: options.accountId,

@@ -14,7 +14,7 @@ export enum PermissionTypesEnum {
   READ_AND_WRITE = 'READ_AND_WRITE',
   DETELE = 'DETELE',
   ADMINISTRATOR = 'ADMINISTRATOR',
-  CREATOR = 'ADMINISTRATOR',
+  CREATOR = 'CREATOR',
 }
 
 export class CreatePermissionOptions {

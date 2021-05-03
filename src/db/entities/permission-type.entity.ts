@@ -7,7 +7,7 @@ export class PermissionTypeEntity extends IEntity {
   @Column({ length: 256, unique: true })
   public name: PermissionTypesEnum;
 
-  @Column({ unique: true })
+  @Column({ type: 'real', unique: true })
   public level: number;
 }
 

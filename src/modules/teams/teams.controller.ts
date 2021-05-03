@@ -6,17 +6,19 @@ import {
   Post,
   Inject,
   forwardRef,
+  UseInterceptors,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
-import {
-  ApiForbiddenException,
-  ApiNotFoundException,
-} from '~/common/exceptions';
+import { ApiCreatedResponse, ApiTags } from '@nestjs/swagger';
 import AuthGuard from '../auth/auth.guard';
 import CurrentAccount from '../auth/current-account';
 import { CreateTeamOptions, Team } from './teams.dto';
 import TeamsService from './teams.service';
 import TeamMembersService from '../team-members/team-members.service';
+import CurrentTeamMember from '../team-members/current-team-member.decorator';
+import { CurrentTeamMemberInterceptor } from '../team-members/current-team-member.interceptor';
+import RolesService from '../roles/roles.service';
+import { ObjectTypesEnum } from '../roles/roles.dto';
+import { PermissionTypesEnum } from '../permissions/permissions.dto';
 
 @AuthGuard()
 @ApiTags('/teams')
@@ -25,9 +27,12 @@ export class TeamsController {
   public constructor(
     private readonly teamsService: TeamsService,
     @Inject(forwardRef(() => TeamMembersService))
-    private readonly teamMembersService: TeamMembersService
+    private readonly teamMembersService: TeamMembersService,
+    @Inject(forwardRef(() => RolesService))
+    private readonly rolesService: RolesService
   ) {}
 
+  @ApiCreatedResponse({ type: Team })
   @Post()
   public createTeam(
     @CurrentAccount() account,
@@ -38,6 +43,7 @@ export class TeamsController {
     );
   }
 
+  @ApiCreatedResponse({ type: [Team] })
   @Get()
   public async getTeams(@CurrentAccount() account): Promise<Team[]> {
     const currentTeamMembers = await this.teamMembersService.getTeamMembers({
@@ -51,24 +57,23 @@ export class TeamsController {
     );
   }
 
+  @ApiCreatedResponse({ type: Team })
+  @UseInterceptors(CurrentTeamMemberInterceptor)
   @Get('/:teamUuid')
   public async getTeam(
-    @CurrentAccount() account,
+    @CurrentTeamMember() teamMember,
     @Param('teamUuid') teamUuid: string
   ): Promise<Team> {
-    const team = await this.teamsService.getTeam({ id: teamUuid });
+    await this.rolesService.validateOrFail(
+      teamMember.id,
+      teamUuid,
+      ObjectTypesEnum.TEAM,
+      PermissionTypesEnum.READ_ONLY
+    );
 
-    if (!team) throw new ApiNotFoundException('The team was not found');
-
-    const currentTeamMember = await this.teamMembersService.getTeamMember({
-      accountId: account.id,
-      teamId: team.id,
-    });
-
-    if (!currentTeamMember)
-      throw new ApiForbiddenException('The user is not a member of the team');
-
-    return this.teamsService.format(team);
+    return this.teamsService.format(
+      this.teamsService.getTeam({ id: teamUuid })
+    );
   }
 }
 

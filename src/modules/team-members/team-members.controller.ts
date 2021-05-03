@@ -1,8 +1,18 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
-import { ApiForbiddenException } from '~/common/exceptions';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  UseInterceptors,
+} from '@nestjs/common';
+import { ApiCreatedResponse, ApiTags } from '@nestjs/swagger';
 import AuthGuard from '../auth/auth.guard';
-import CurrentAccount from '../auth/current-account';
+import { PermissionTypesEnum } from '../permissions/permissions.dto';
+import { ObjectTypesEnum } from '../roles/roles.dto';
+import RolesService from '../roles/roles.service';
+import CurrentTeamMember from './current-team-member.decorator';
+import { CurrentTeamMemberInterceptor } from './current-team-member.interceptor';
 import { CreateTeamMemberPayload, TeamMember } from './team-members.dto';
 import TeamMembersService from './team-members.service';
 
@@ -10,16 +20,28 @@ import TeamMembersService from './team-members.service';
 @ApiTags('/teams/members')
 @Controller()
 export class TeamMembersController {
-  public constructor(private readonly teamMembersService: TeamMembersService) {}
+  public constructor(
+    private readonly teamMembersService: TeamMembersService,
+    private readonly rolesService: RolesService
+  ) {}
 
+  @ApiCreatedResponse({ type: TeamMember })
+  @UseInterceptors(CurrentTeamMemberInterceptor)
   @Post('/teams/:teamUuid/members')
-  public createTeamMember(
-    @CurrentAccount() account,
+  public async createTeamMember(
+    @CurrentTeamMember() teamMember,
     @Param('teamUuid') teamUuid: string,
     @Body() payload: CreateTeamMemberPayload
   ): Promise<TeamMember> {
+    await this.rolesService.validateOrFail(
+      teamMember.id,
+      teamUuid,
+      ObjectTypesEnum.TEAM,
+      PermissionTypesEnum.ADMINISTRATOR
+    );
+
     return this.teamMembersService.format(
-      this.teamMembersService.createMember(account.id, {
+      this.teamMembersService.createMember({
         teamId: teamUuid,
         accountId: payload.accountUuid,
         roleId: payload.roleUuid,
@@ -27,13 +49,19 @@ export class TeamMembersController {
     );
   }
 
+  @ApiCreatedResponse({ type: [TeamMember] })
+  @UseInterceptors(CurrentTeamMemberInterceptor)
   @Get('/teams/:teamUuid/members')
   public async getTeamMembers(
-    @CurrentAccount() account,
+    @CurrentTeamMember() teamMember,
     @Param('teamUuid') teamUuid: string
   ): Promise<TeamMember[]> {
-    if (!(await this.teamMembersService.isMember(account.id, teamUuid)))
-      throw new ApiForbiddenException('The user is not a member of the team');
+    await this.rolesService.validateOrFail(
+      teamMember.id,
+      teamUuid,
+      ObjectTypesEnum.TEAM,
+      PermissionTypesEnum.READ_ONLY
+    );
 
     return this.teamMembersService.formatAll(
       this.teamMembersService.getTeamMembers({
@@ -42,12 +70,21 @@ export class TeamMembersController {
     );
   }
 
+  @ApiCreatedResponse({ type: TeamMember })
+  @UseInterceptors(CurrentTeamMemberInterceptor)
   @Get('/teams/:teamUuid/members/:memberUuid')
-  public getTeamMember(
-    @CurrentAccount() account,
+  public async getTeamMember(
+    @CurrentTeamMember() teamMember,
     @Param('teamUuid') teamUuid: string,
     @Param('memberUuid') memberUuid: string
   ): Promise<TeamMember> {
+    await this.rolesService.validateOrFail(
+      teamMember.id,
+      teamUuid,
+      ObjectTypesEnum.TEAM,
+      PermissionTypesEnum.READ_ONLY
+    );
+
     return this.teamMembersService.format(
       this.teamMembersService.getTeamMember({
         id: memberUuid,

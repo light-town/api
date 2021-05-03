@@ -41,9 +41,6 @@ describe('[Team Members Module] [Service] ...', () => {
 
   describe('[Creating] ...', () => {
     it('create a team member', async () => {
-      const TEST_ACCOUNT = {
-        id: faker.datatype.uuid(),
-      };
       const TEST_OTHER_ACCOUNT = {
         id: faker.datatype.uuid(),
       };
@@ -72,7 +69,7 @@ describe('[Team Members Module] [Service] ...', () => {
         .mockReturnValueOnce(<any>TEST_TEAM_MEMBER);
 
       expect(
-        await teamMembersService.createMember(TEST_ACCOUNT.id, {
+        await teamMembersService.createMember({
           accountId: TEST_OTHER_ACCOUNT.id,
           teamId: TEST_TEAM.id,
           roleId: TEST_ROLE.id,

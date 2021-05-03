@@ -59,13 +59,9 @@ export class PermissionTypesService {
   public prepareQuery(
     options: FindPermissionTypesOptions
   ): [string, SelectQueryBuilder<PermissionTypeEntity>] {
-    const alias = 'permission_object_types';
+    const alias = 'permission_types';
     const query = this.permissionTypesRepository
       .createQueryBuilder(alias)
-      .select(`${alias}.id`, 'id')
-      .addSelect(`${alias}.name`, 'name')
-      .addSelect(`${alias}.updatedAt`, 'updatedAt')
-      .addSelect(`${alias}.createdAt`, 'createdAt')
       .where(`${alias}.is_deleted = :isDeleted`, { isDeleted: false });
 
     if (options?.id) query.andWhere(`${alias}.id = :id`, options);
@@ -79,7 +75,7 @@ export class PermissionTypesService {
   ): Promise<PermissionTypeEntity> {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [_, query] = this.prepareQuery(options);
-    return query.getRawOne();
+    return query.getOne();
   }
 }
 

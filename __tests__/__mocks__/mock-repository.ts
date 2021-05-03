@@ -15,6 +15,8 @@ export const mockRepository = jest.fn(() => ({
       orderBy: jest.fn(() => builder),
       getRawOne: jest.fn(() => builder),
       getRawMany: jest.fn(() => builder),
+      getOne: jest.fn(() => builder),
+      getMany: jest.fn(() => builder),
     };
     return builder;
   }),

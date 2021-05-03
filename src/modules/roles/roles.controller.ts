@@ -1,9 +1,16 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  UseInterceptors,
+} from '@nestjs/common';
+import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import AuthGuard from '../auth/auth.guard';
-import CurrentAccount from '../auth/current-account';
 import { PermissionTypesEnum } from '../permissions/permissions.dto';
-import TeamMembersService from '../team-members/team-members.service';
+import CurrentTeamMember from '../team-members/current-team-member.decorator';
+import { CurrentTeamMemberInterceptor } from '../team-members/current-team-member.interceptor';
 import { CreateRolePayload, ObjectTypesEnum, Role } from './roles.dto';
 import RolesService from './roles.service';
 
@@ -11,23 +18,17 @@ import RolesService from './roles.service';
 @ApiTags('/teams/roles')
 @Controller()
 export class RolesController {
-  public constructor(
-    private readonly rolesService: RolesService,
-    private readonly teamMembersService: TeamMembersService
-  ) {}
+  public constructor(private readonly rolesService: RolesService) {}
 
+  @ApiCreatedResponse({ type: Role })
+  @UseInterceptors(CurrentTeamMemberInterceptor)
   @Post('/teams/:teamUuid/roles')
   public async createRole(
-    @CurrentAccount() account,
+    @CurrentTeamMember() teamMember,
     @Param('teamUuid') teamUuid: string,
     @Body() payload: CreateRolePayload
   ): Promise<Role> {
-    const teamMember = await this.teamMembersService.getTeamMember({
-      accountId: account,
-      teamId: teamUuid,
-    });
-
-    this.rolesService.validate(
+    await this.rolesService.validateOrFail(
       teamMember.id,
       teamUuid,
       ObjectTypesEnum.TEAM,
@@ -35,7 +36,7 @@ export class RolesController {
     );
 
     return this.rolesService.format(
-      this.rolesService.createRole(account.id, {
+      this.rolesService.createRole({
         name: payload.name,
         teamId: teamUuid,
         parentRoleId: payload.parentRoleUuid,
@@ -43,17 +44,14 @@ export class RolesController {
     );
   }
 
+  @ApiOkResponse({ type: [Role] })
+  @UseInterceptors(CurrentTeamMemberInterceptor)
   @Get('/teams/:teamUuid/roles')
   public async getRoles(
-    @CurrentAccount() account,
+    @CurrentTeamMember() teamMember,
     @Param('teamUuid') teamUuid: string
   ): Promise<Role[]> {
-    const teamMember = await this.teamMembersService.getTeamMember({
-      accountId: account,
-      teamId: teamUuid,
-    });
-
-    this.rolesService.validate(
+    await this.rolesService.validateOrFail(
       teamMember.id,
       teamUuid,
       ObjectTypesEnum.TEAM,
@@ -63,18 +61,15 @@ export class RolesController {
     return this.rolesService.formatAll(this.rolesService.getRoles({}));
   }
 
+  @ApiOkResponse({ type: Role })
+  @UseInterceptors(CurrentTeamMemberInterceptor)
   @Get('/teams/:teamUuid/roles/:roleUuid')
   public async getRole(
-    @CurrentAccount() account,
+    @CurrentTeamMember() teamMember,
     @Param('teamUuid') teamUuid: string,
     @Param('roleUuid') roleUuid: string
   ): Promise<Role> {
-    const teamMember = await this.teamMembersService.getTeamMember({
-      accountId: account,
-      teamId: teamUuid,
-    });
-
-    this.rolesService.validate(
+    await this.rolesService.validateOrFail(
       teamMember.id,
       teamUuid,
       ObjectTypesEnum.TEAM,
