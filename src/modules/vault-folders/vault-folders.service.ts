@@ -60,6 +60,8 @@ export class VaultFoldersService {
   }
 
   public normalize(entity: any): VaultFolder {
+    if (!entity) return;
+
     return {
       uuid: entity?.id,
       encOverview: entity?.encOverview,

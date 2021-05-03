@@ -19,6 +19,10 @@ import PermissionTypesSeeder, {
   PermissionTypesFactory,
 } from '~/db/seeds/permission-object-types.seed';
 import { PermissionTypesEnum } from '~/modules/permissions/permissions.dto';
+import InvitationVerificationStagesSeeder, {
+  InvitationVerificationStagesFactory,
+} from './invitation-verification-stages.seed';
+import { InvitationVerificationStagesEnum } from '~/modules/invitations/invitations.dto';
 
 dotenv.config();
 
@@ -85,26 +89,45 @@ createConnection().then(async (connection: Connection) => {
   const permissionTypesSeeder = new PermissionTypesSeeder(
     new PermissionTypesFactory()
   );
-  await Promise.all([
-    permissionTypesSeeder.run(1, {
-      name: PermissionTypesEnum.READ_ONLY,
-      level: 0.2,
-    }),
-    permissionTypesSeeder.run(1, {
-      name: PermissionTypesEnum.READ_AND_WRITE,
-      level: 0.4,
-    }),
-    permissionTypesSeeder.run(1, {
-      name: PermissionTypesEnum.DETELE,
-      level: 0.6,
-    }),
-    permissionTypesSeeder.run(1, {
-      name: PermissionTypesEnum.ADMINISTRATOR,
-      level: 0.8,
-    }),
-    permissionTypesSeeder.run(1, {
-      name: PermissionTypesEnum.CREATOR,
-      level: 1,
-    }),
-  ]);
+  console.log(
+    await Promise.all([
+      permissionTypesSeeder.run(1, {
+        name: PermissionTypesEnum.READ_ONLY,
+        level: 0.2,
+      }),
+      permissionTypesSeeder.run(1, {
+        name: PermissionTypesEnum.READ_AND_WRITE,
+        level: 0.4,
+      }),
+      permissionTypesSeeder.run(1, {
+        name: PermissionTypesEnum.DETELE,
+        level: 0.6,
+      }),
+      permissionTypesSeeder.run(1, {
+        name: PermissionTypesEnum.ADMINISTRATOR,
+        level: 0.8,
+      }),
+      permissionTypesSeeder.run(1, {
+        name: PermissionTypesEnum.CREATOR,
+        level: 1,
+      }),
+    ])
+  );
+
+  const invitationVerificationStagesSeeder = new InvitationVerificationStagesSeeder(
+    new InvitationVerificationStagesFactory()
+  );
+  console.log(
+    await Promise.all([
+      invitationVerificationStagesSeeder.run(1, {
+        name: InvitationVerificationStagesEnum.AWAITING_ANSWER,
+      }),
+      invitationVerificationStagesSeeder.run(1, {
+        name: InvitationVerificationStagesEnum.ACCEPTED,
+      }),
+      invitationVerificationStagesSeeder.run(1, {
+        name: InvitationVerificationStagesEnum.REJECTED,
+      }),
+    ])
+  );
 });

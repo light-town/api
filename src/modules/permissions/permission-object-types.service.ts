@@ -50,6 +50,8 @@ export class PermissionObjectTypesService {
   }
 
   public normalize(entity: PermissionObjectTypeEntity): PermissionObjectType {
+    if (!entity) return;
+
     return {
       uuid: entity?.id,
       name: entity?.name,

@@ -114,6 +114,8 @@ export class TeamsService {
   }
 
   public normalize(entity: TeamEntity): Team {
+    if (!entity) return;
+
     return {
       uuid: entity?.id,
       encKey: entity?.encKey,

@@ -83,6 +83,8 @@ export class PermissionsService {
   }
 
   public normalize(entity: PermissionEntity): Permission {
+    if (!entity) return;
+
     return {
       uuid: entity?.id,
       objectUuid: entity?.objectId,
@@ -106,8 +108,8 @@ export class PermissionsService {
     const alias = 'permissions';
     const query = this.permissionsRepository
       .createQueryBuilder(alias)
-      .innerJoinAndSelect(`${alias}.type`, 'type')
-      .innerJoinAndSelect(`${alias}.objectType`, 'objectType')
+      .leftJoinAndSelect(`${alias}.type`, 'type')
+      .leftJoinAndSelect(`${alias}.objectType`, 'objectType')
       .where(`${alias}.isDeleted = :isDeleted`, { isDeleted: false });
 
     if (options?.id) query.andWhere(`${alias}.id = :id`, options);

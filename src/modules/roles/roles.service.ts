@@ -76,6 +76,8 @@ export class RolesService {
   }
 
   public normalize(entity: RoleEntity): Role {
+    if (!entity) return;
+
     return {
       uuid: entity?.id,
       name: entity?.name,

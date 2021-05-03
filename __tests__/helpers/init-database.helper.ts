@@ -16,6 +16,10 @@ import PermissionTypesSeeder, {
   PermissionTypesFactory,
 } from '~/db/seeds/permission-object-types.seed';
 import { PermissionTypesEnum } from '~/modules/permissions/permissions.dto';
+import InvitationVerificationStagesSeeder, {
+  InvitationVerificationStagesFactory,
+} from '~/db/seeds/invitation-verification-stages.seed';
+import { InvitationVerificationStagesEnum } from '~/modules/invitations/invitations.dto';
 
 export const initDatabaseHelper = async () => {
   const mfaTypesSeeder = new MFATypesSeeder(new MFATypesFactory());
@@ -88,6 +92,21 @@ export const initDatabaseHelper = async () => {
     permissionTypesSeeder.run(1, {
       name: PermissionTypesEnum.CREATOR,
       level: 1,
+    }),
+  ]);
+
+  const invitationVerificationStagesSeeder = new InvitationVerificationStagesSeeder(
+    new InvitationVerificationStagesFactory()
+  );
+  await Promise.all([
+    invitationVerificationStagesSeeder.run(1, {
+      name: InvitationVerificationStagesEnum.AWAITING_ANSWER,
+    }),
+    invitationVerificationStagesSeeder.run(1, {
+      name: InvitationVerificationStagesEnum.ACCEPTED,
+    }),
+    invitationVerificationStagesSeeder.run(1, {
+      name: InvitationVerificationStagesEnum.REJECTED,
     }),
   ]);
 };

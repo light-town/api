@@ -48,6 +48,8 @@ export class PermissionTypesService {
   }
 
   public normalize(entity: PermissionTypeEntity): PermissionType {
+    if (!entity) return;
+
     return {
       uuid: entity?.id,
       name: entity?.name,

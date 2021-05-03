@@ -22,6 +22,8 @@ import RoleEntity from '~/db/entities/role.entity';
 import PermissionEntity from '~/db/entities/permission.entity';
 import PermissionObjectTypeEntity from '~/db/entities/permission-object-type.entity';
 import PermissionTypeEntity from '~/db/entities/permission-type.entity';
+import InvitationEntity from '~/db/entities/invitation.entity';
+import InvitationVerificationStageEntity from '~/db/entities/invitation-verification-stage.entity';
 
 export default (app: TestingModuleBuilder) => {
   const entities = [
@@ -46,6 +48,8 @@ export default (app: TestingModuleBuilder) => {
     PermissionEntity,
     PermissionTypeEntity,
     PermissionObjectTypeEntity,
+    InvitationEntity,
+    InvitationVerificationStageEntity,
   ];
 
   entities.forEach(e =>

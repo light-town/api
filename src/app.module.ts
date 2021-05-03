@@ -15,6 +15,7 @@ import VaultItemCategoriesModule from './modules/vault-item-categories/vault-ite
 import TeamsModule from './modules/teams/teams.module';
 import PermissionsModule from './modules/permissions/permissions.module';
 import RolesModule from './modules/roles/roles.module';
+import InvitationsModule from './modules/invitations/invitations.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import RolesModule from './modules/roles/roles.module';
     TeamsModule,
     PermissionsModule,
     RolesModule,
+    InvitationsModule,
   ],
 })
 export class AppModule {}

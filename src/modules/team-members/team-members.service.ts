@@ -91,6 +91,8 @@ export class TeamMembersService {
   }
 
   public normalize(entity: TeamMemberEntity): TeamMember {
+    if (!entity) return;
+
     return {
       uuid: entity?.id,
       accountUuid: entity?.accountId,
