@@ -15,6 +15,7 @@ import {
 } from '~/common/exceptions';
 import AuthGuard from '../auth/auth.guard';
 import CurrentAccount from '../auth/current-account';
+import KeySetsService from '../key-sets/key-sets.service';
 import { PermissionTypesEnum } from '../permissions/permissions.dto';
 import { ObjectTypesEnum } from '../roles/roles.dto';
 import RolesService from '../roles/roles.service';
@@ -22,6 +23,7 @@ import CurrentTeamMember from '../team-members/current-team-member.decorator';
 import { CurrentTeamMemberInterceptor } from '../team-members/current-team-member.interceptor';
 import TeamsService from '../teams/teams.service';
 import {
+  AcceptInvitationByTeamMemberPayload,
   CreateInvitationByAccountPayload,
   CreateInvitationByTeamMemberPayload,
   Invitation,
@@ -35,7 +37,8 @@ export class InvitationsController {
   public constructor(
     private readonly invitationsService: InvitationsService,
     private readonly teamsService: TeamsService,
-    private readonly rolesService: RolesService
+    private readonly rolesService: RolesService,
+    private readonly keySetsService: KeySetsService
   ) {}
 
   @ApiTags('/teams/invitations')
@@ -43,6 +46,7 @@ export class InvitationsController {
   @UseInterceptors(CurrentTeamMemberInterceptor)
   @Post('/teams/:teamUuid/invitations')
   public async createInvitationByTeamMember(
+    @CurrentAccount() account,
     @CurrentTeamMember() teamMember,
     @Param('teamUuid') teamUuid: string,
     @Body() payload: CreateInvitationByTeamMemberPayload
@@ -54,7 +58,7 @@ export class InvitationsController {
       PermissionTypesEnum.ADMINISTRATOR
     );
 
-    return this.invitationsService.format(
+    const newInvitation = await this.invitationsService.format(
       this.invitationsService.createInvitation({
         accountId: payload.accountUuid,
         teamId: teamUuid,
@@ -63,6 +67,17 @@ export class InvitationsController {
         teamVerificationStage: InvitationVerificationStagesEnum.ACCEPTED,
       })
     );
+
+    await this.keySetsService.create(
+      account.id,
+      payload.accountUuid,
+      payload.encKeySet,
+      {
+        isAccountOwner: true,
+      }
+    );
+
+    return newInvitation;
   }
 
   @ApiTags('/invitations')
@@ -94,9 +109,11 @@ export class InvitationsController {
   @UseInterceptors(CurrentTeamMemberInterceptor)
   @Patch('/teams/:teamUuid/invitations/:invitationUuid/accept')
   public async acceptInvitationByTeamMember(
+    @CurrentAccount() account,
     @CurrentTeamMember() teamMember,
     @Param('teamUuid') teamUuid: string,
-    @Param('invitationUuid') invitationUuid: string
+    @Param('invitationUuid') invitationUuid: string,
+    @Body() payload: AcceptInvitationByTeamMemberPayload
   ): Promise<void> {
     await this.rolesService.validateOrFail(
       teamMember.id,
@@ -105,12 +122,25 @@ export class InvitationsController {
       PermissionTypesEnum.ADMINISTRATOR
     );
 
+    const invitation = await this.invitationsService.getInvitation({
+      id: invitationUuid,
+    });
+
     await this.invitationsService.updateInvitation(
       {
         id: invitationUuid,
         teamId: teamUuid,
       },
       { teamVerificationStage: InvitationVerificationStagesEnum.ACCEPTED }
+    );
+
+    await this.keySetsService.create(
+      account.id,
+      invitation.accountId,
+      payload.encKeySet,
+      {
+        isAccountOwner: true,
+      }
     );
   }
 

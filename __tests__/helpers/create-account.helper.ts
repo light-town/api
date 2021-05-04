@@ -12,7 +12,7 @@ import DeviceEntity from '~/db/entities/device.entity';
 import { MasterUnlockKey } from '@light-town/core/dist/encryption/common';
 import { DecryptedPrimaryKeySet } from '@light-town/core/dist/helpers/key-sets/definitions';
 import { DecryptedVault } from '@light-town/core/dist/helpers/vaults/definitions';
-import KeySetEntity from '~/db/entities/key-sets.entity';
+import KeySetEntity from '~/db/entities/key-set.entity';
 import VaultEntity from '~/db/entities/vault.entity';
 
 export interface createAccountOptions {

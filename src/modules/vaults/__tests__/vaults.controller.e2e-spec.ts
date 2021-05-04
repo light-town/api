@@ -8,7 +8,7 @@ import initDatabaseHelper from '~/../__tests__/helpers/init-database.helper';
 import APIHelper from './helpers/api.helper';
 import { OS } from '~/modules/devices/devices.dto';
 import VaultEntity from '~/db/entities/vault.entity';
-import KeySetEntity from '~/db/entities/key-sets.entity';
+import KeySetEntity from '~/db/entities/key-set.entity';
 import createAccountHelper from '~/../__tests__/helpers/create-account.helper';
 import createAndStartSessionHelper from '~/../__tests__/helpers/create-and-start-session.helper';
 import createVaultHelper from '~/../__tests__/helpers/create-vault.helper';

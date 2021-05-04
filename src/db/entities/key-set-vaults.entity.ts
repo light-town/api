@@ -1,7 +1,7 @@
 import { Column, Entity, ManyToOne, JoinColumn } from 'typeorm';
 import { IEntity } from './entity.interface';
 import VaultEntity from './vault.entity';
-import KeySetEntity from './key-sets.entity';
+import KeySetEntity from './key-set.entity';
 
 @Entity('key_set_vaults')
 export class KeySetVaultEntity extends IEntity {

@@ -6,7 +6,7 @@ import {
   ApiForbiddenException,
   ApiNotFoundException,
 } from '~/common/exceptions';
-import KeySetEntity from '~/db/entities/key-sets.entity';
+import KeySetEntity from '~/db/entities/key-set.entity';
 import AccountsService from '../accounts/accounts.service';
 import VaultsService from '../vaults/vaults.service';
 import { CreateKeySetPayload } from './key-sets.dto';
@@ -65,16 +65,19 @@ export class KeySetsService {
           'The only account owner can create a primary key set'
         );
 
-      if (!(await this.accountsService.exists({ id: ownerId })))
+      const isAccountExists = await this.accountsService.exists({
+        id: ownerId,
+      });
+
+      if (!isAccountExists)
         throw new ApiNotFoundException('The account was not found');
 
-      if (
-        options.isPrimary &&
-        (await this.exists({
-          ownerAccountId: ownerId,
-          isPrimary: true,
-        }))
-      )
+      const isAlreadyPrimaryKeySetExists = await this.exists({
+        ownerAccountId: ownerId,
+        isPrimary: true,
+      });
+
+      if (options.isPrimary && isAlreadyPrimaryKeySetExists)
         throw new ApiConflictException(
           'The account owner already has a primary key set'
         );

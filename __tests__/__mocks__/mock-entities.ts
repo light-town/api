@@ -9,7 +9,7 @@ import SessionVerificationStageEntity from '~/db/entities/session-verification-s
 import PushNotificationStageEntity from '~/db/entities/push-notification-stage.entity';
 import PushNotificationEntity from '~/db/entities/push-notification.entity';
 import VerificationDeviceEntity from '~/db/entities/verification-devices.entity';
-import KeySetEntity from '~/db/entities/key-sets.entity';
+import KeySetEntity from '~/db/entities/key-set.entity';
 import VaultEntity from '~/db/entities/vault.entity';
 import { TestingModuleBuilder } from '@nestjs/testing';
 import { KeySetVaultEntity } from '~/db/entities/key-set-vaults.entity';

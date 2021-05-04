@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import InvitationVerificationStageEntity from '~/db/entities/invitation-verification-stage.entity';
 import InvitationEntity from '~/db/entities/invitation.entity';
 import AccountsModule from '../accounts/accounts.module';
+import KeySetsModule from '../key-sets/key-sets.module';
 import RolesModule from '../roles/roles.module';
 import TeamMembersModule from '../team-members/team-members.module';
 import TeamsModule from '../teams/teams.module';
@@ -20,6 +21,7 @@ import { InvitationsService } from './invitations.service';
     TeamsModule,
     TeamMembersModule,
     RolesModule,
+    KeySetsModule,
   ],
   controllers: [InvitationsController],
   providers: [InvitationsService, InvitationVerificcationStagesService],

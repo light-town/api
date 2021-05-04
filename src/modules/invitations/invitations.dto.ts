@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsDateString, IsEnum, IsUUID, ValidateNested } from 'class-validator';
 import { IsString } from '~/common/validation';
+import { CreateKeySetPayload } from '../key-sets/key-sets.dto';
 
 export enum InvitationVerificationStagesEnum {
   AWAITING_ANSWER = 'AWAITING_ANSWER',
@@ -20,6 +21,7 @@ export class InvitationVerificationStage {
   @ApiProperty({
     description: 'The name type of the verification stage',
     enum: InvitationVerificationStagesEnum,
+    required: true,
   })
   @IsString()
   @IsEnum(InvitationVerificationStagesEnum)
@@ -37,12 +39,14 @@ export class Invitation {
 
   @ApiProperty({
     description: 'The account uuid of invited user',
+    required: true,
   })
   @IsString()
   accountUuid: string;
 
   @ApiProperty({
     description: 'The account invitation verification stage',
+    required: true,
   })
   @IsString()
   @ValidateNested()
@@ -50,6 +54,7 @@ export class Invitation {
 
   @ApiProperty({
     description: 'The team uuid of where invited new user',
+    required: true,
   })
   @IsString()
   teamUuid: string;
@@ -86,15 +91,33 @@ export class Invitation {
 export class CreateInvitationByTeamMemberPayload {
   @ApiProperty({
     description: 'The account uuid of invited user',
+    required: true,
   })
   @IsString()
   accountUuid: string;
+
+  @ApiProperty({
+    description: 'The provided key sets for getting team key',
+    required: true,
+  })
+  @ValidateNested()
+  encKeySet: CreateKeySetPayload;
 }
 
 export class CreateInvitationByAccountPayload {
   @ApiProperty({
     description: 'The team uuid of where invited new user',
+    required: true,
   })
   @IsString()
   teamUuid: string;
+}
+
+export class AcceptInvitationByTeamMemberPayload {
+  @ApiProperty({
+    description: 'The provided key sets for getting team key',
+    required: true,
+  })
+  @ValidateNested()
+  encKeySet: CreateKeySetPayload;
 }

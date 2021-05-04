@@ -19,6 +19,8 @@ import { TeamRolesEnum } from '~/modules/teams/teams.service';
 import createInvitationByTeamMemberHelper from '~/../__tests__/helpers/create-invitation-by-team-member.helper';
 import TeamMembersService from '~/modules/team-members/team-members.service';
 import createInvitationByAccounHelper from '~/../__tests__/helpers/create-invitation-by-account.helper';
+import core from '@light-town/core';
+import faker from 'faker';
 
 describe('[Invitations Module] [Controller] ...', () => {
   let app: INestApplication;
@@ -86,10 +88,28 @@ describe('[Invitations Module] [Controller] ...', () => {
           publicKey: userAccount.primaryKeySet.publicKey,
         });
 
+        const {
+          publicKey,
+          privateKey,
+        } = await core.encryption.common.rsa.generateKeyPair();
+        const encTeam = await core.helpers.teams.createTeamHelper(
+          { name: faker.random.word(), desc: faker.random.words() },
+          publicKey
+        );
+        const decTeam = await core.helpers.teams.decryptTeamByPrivateKeyHelper(
+          encTeam,
+          privateKey
+        );
+        const encKeySet = await core.helpers.keySets.createKeySetHelper(
+          decTeam.key,
+          publicKey
+        );
+
         const response = await api.createInvitationByTeamMember(
           team.id,
           {
             accountUuid: otherAccount.account.id,
+            encKeySet,
           },
           userAccount.token
         );
@@ -145,10 +165,28 @@ describe('[Invitations Module] [Controller] ...', () => {
           roleId: teamMemberRole.id,
         });
 
+        const {
+          publicKey,
+          privateKey,
+        } = await core.encryption.common.rsa.generateKeyPair();
+        const encTeam = await core.helpers.teams.createTeamHelper(
+          { name: faker.random.word(), desc: faker.random.words() },
+          publicKey
+        );
+        const decTeam = await core.helpers.teams.decryptTeamByPrivateKeyHelper(
+          encTeam,
+          privateKey
+        );
+        const encKeySet = await core.helpers.keySets.createKeySetHelper(
+          decTeam.key,
+          publicKey
+        );
+
         const response = await api.createInvitationByTeamMember(
           team.id,
           {
             accountUuid: otherAccount.account.id,
+            encKeySet,
           },
           memberAccount.token
         );
@@ -183,10 +221,28 @@ describe('[Invitations Module] [Controller] ...', () => {
           roleId: teamMemberRole.id,
         });
 
+        const {
+          publicKey,
+          privateKey,
+        } = await core.encryption.common.rsa.generateKeyPair();
+        const encTeam = await core.helpers.teams.createTeamHelper(
+          { name: faker.random.word(), desc: faker.random.words() },
+          publicKey
+        );
+        const decTeam = await core.helpers.teams.decryptTeamByPrivateKeyHelper(
+          encTeam,
+          privateKey
+        );
+        const encKeySet = await core.helpers.keySets.createKeySetHelper(
+          decTeam.key,
+          publicKey
+        );
+
         const response = await api.createInvitationByTeamMember(
           team.id,
           {
             accountUuid: memberAccount.account.id,
+            encKeySet,
           },
           userAccount.token
         );
@@ -209,10 +265,28 @@ describe('[Invitations Module] [Controller] ...', () => {
           publicKey: userAccount.primaryKeySet.publicKey,
         });
 
+        const {
+          publicKey,
+          privateKey,
+        } = await core.encryption.common.rsa.generateKeyPair();
+        const encTeam = await core.helpers.teams.createTeamHelper(
+          { name: faker.random.word(), desc: faker.random.words() },
+          publicKey
+        );
+        const decTeam = await core.helpers.teams.decryptTeamByPrivateKeyHelper(
+          encTeam,
+          privateKey
+        );
+        const encKeySet = await core.helpers.keySets.createKeySetHelper(
+          decTeam.key,
+          publicKey
+        );
+
         await api.createInvitationByTeamMember(
           team.id,
           {
             accountUuid: otherAccount.account.id,
+            encKeySet,
           },
           userAccount.token
         );
@@ -221,6 +295,7 @@ describe('[Invitations Module] [Controller] ...', () => {
           team.id,
           {
             accountUuid: otherAccount.account.id,
+            encKeySet,
           },
           userAccount.token
         );
@@ -364,16 +439,36 @@ describe('[Invitations Module] [Controller] ...', () => {
       it('should return all invitation by the team', async () => {
         const invitations = [];
 
-        for (let i = 1; i < userAccounts.length; ++i)
+        for (let i = 1; i < userAccounts.length; ++i) {
+          const {
+            publicKey,
+            privateKey,
+          } = await core.encryption.common.rsa.generateKeyPair();
+          const encTeam = await core.helpers.teams.createTeamHelper(
+            { name: faker.random.word(), desc: faker.random.words() },
+            publicKey
+          );
+          const decTeam = await core.helpers.teams.decryptTeamByPrivateKeyHelper(
+            encTeam,
+            privateKey
+          );
+          const encKeySet = await core.helpers.keySets.createKeySetHelper(
+            decTeam.key,
+            publicKey
+          );
+
           invitations.push(
             await invitationsService.format(
               createInvitationByTeamMemberHelper(app, {
+                creatorAccountId: teamCreator.account.id,
                 accountId: userAccounts[i].account.id,
                 teamId: team.id,
                 teaMemberId: teamMemberCreator.id,
+                encKeySet,
               })
             )
           );
+        }
 
         const response = await api.getTeamInvitations(
           team.id,
@@ -390,16 +485,36 @@ describe('[Invitations Module] [Controller] ...', () => {
       it('should return all invitations that is not confirmed', async () => {
         const invitations = [];
 
-        for (let i = 1; i < userAccounts.length; ++i)
+        for (let i = 1; i < userAccounts.length; ++i) {
+          const {
+            publicKey,
+            privateKey,
+          } = await core.encryption.common.rsa.generateKeyPair();
+          const encTeam = await core.helpers.teams.createTeamHelper(
+            { name: faker.random.word(), desc: faker.random.words() },
+            publicKey
+          );
+          const decTeam = await core.helpers.teams.decryptTeamByPrivateKeyHelper(
+            encTeam,
+            privateKey
+          );
+          const encKeySet = await core.helpers.keySets.createKeySetHelper(
+            decTeam.key,
+            publicKey
+          );
+
           invitations.push(
             await invitationsService.format(
               createInvitationByTeamMemberHelper(app, {
+                creatorAccountId: teamCreator.account.id,
                 accountId: userAccounts[i].account.id,
                 teamId: team.id,
                 teaMemberId: teamMemberCreator.id,
+                encKeySet,
               })
             )
           );
+        }
 
         await api.acceptAccountInvitation(
           invitations[0].uuid,
@@ -426,16 +541,36 @@ describe('[Invitations Module] [Controller] ...', () => {
       it('should return specific invitation by the team', async () => {
         const invitations = [];
 
-        for (let i = 1; i < userAccounts.length; ++i)
+        for (let i = 1; i < userAccounts.length; ++i) {
+          const {
+            publicKey,
+            privateKey,
+          } = await core.encryption.common.rsa.generateKeyPair();
+          const encTeam = await core.helpers.teams.createTeamHelper(
+            { name: faker.random.word(), desc: faker.random.words() },
+            publicKey
+          );
+          const decTeam = await core.helpers.teams.decryptTeamByPrivateKeyHelper(
+            encTeam,
+            privateKey
+          );
+          const encKeySet = await core.helpers.keySets.createKeySetHelper(
+            decTeam.key,
+            publicKey
+          );
+
           invitations.push(
             await invitationsService.format(
               createInvitationByTeamMemberHelper(app, {
+                creatorAccountId: teamCreator.account.id,
                 accountId: userAccounts[i].account.id,
                 teamId: team.id,
                 teaMemberId: teamMemberCreator.id,
+                encKeySet,
               })
             )
           );
+        }
 
         const response = await api.getTeamInvitation(
           team.id,
@@ -453,16 +588,36 @@ describe('[Invitations Module] [Controller] ...', () => {
       it('should throw an error when required specific invitation is confirmed', async () => {
         const invitations = [];
 
-        for (let i = 1; i < userAccounts.length; ++i)
+        for (let i = 1; i < userAccounts.length; ++i) {
+          const {
+            publicKey,
+            privateKey,
+          } = await core.encryption.common.rsa.generateKeyPair();
+          const encTeam = await core.helpers.teams.createTeamHelper(
+            { name: faker.random.word(), desc: faker.random.words() },
+            publicKey
+          );
+          const decTeam = await core.helpers.teams.decryptTeamByPrivateKeyHelper(
+            encTeam,
+            privateKey
+          );
+          const encKeySet = await core.helpers.keySets.createKeySetHelper(
+            decTeam.key,
+            publicKey
+          );
+
           invitations.push(
             await invitationsService.format(
               createInvitationByTeamMemberHelper(app, {
+                creatorAccountId: teamCreator.account.id,
                 accountId: userAccounts[i].account.id,
                 teamId: team.id,
                 teaMemberId: teamMemberCreator.id,
+                encKeySet,
               })
             )
           );
+        }
 
         await api.acceptAccountInvitation(
           invitations[0].uuid,
@@ -538,15 +693,34 @@ describe('[Invitations Module] [Controller] ...', () => {
             )
           );
 
+        const {
+          publicKey,
+          privateKey,
+        } = await core.encryption.common.rsa.generateKeyPair();
+        const encTeam = await core.helpers.teams.createTeamHelper(
+          { name: faker.random.word(), desc: faker.random.words() },
+          publicKey
+        );
+        const decTeam = await core.helpers.teams.decryptTeamByPrivateKeyHelper(
+          encTeam,
+          privateKey
+        );
+        const encKeySet = await core.helpers.keySets.createKeySetHelper(
+          decTeam.key,
+          publicKey
+        );
+
         await api.acceptTeamInvitation(
           teams[0].id,
           invitations[0].uuid,
+          { encKeySet },
           teamCreator.token
         );
 
         await api.acceptTeamInvitation(
           teams[1].id,
           invitations[1].uuid,
+          { encKeySet },
           teamCreator.token
         );
 
@@ -602,9 +776,27 @@ describe('[Invitations Module] [Controller] ...', () => {
         const TEAM = teams[0];
         const INVITATION = invitations[0];
 
+        const {
+          publicKey,
+          privateKey,
+        } = await core.encryption.common.rsa.generateKeyPair();
+        const encTeam = await core.helpers.teams.createTeamHelper(
+          { name: faker.random.word(), desc: faker.random.words() },
+          publicKey
+        );
+        const decTeam = await core.helpers.teams.decryptTeamByPrivateKeyHelper(
+          encTeam,
+          privateKey
+        );
+        const encKeySet = await core.helpers.keySets.createKeySetHelper(
+          decTeam.key,
+          publicKey
+        );
+
         await api.acceptTeamInvitation(
           TEAM.id,
           INVITATION.uuid,
+          { encKeySet },
           teamCreator.token
         );
 

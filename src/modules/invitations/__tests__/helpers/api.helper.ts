@@ -1,6 +1,7 @@
 import request from 'supertest';
 import { INestApplication } from '@nestjs/common';
 import {
+  AcceptInvitationByTeamMemberPayload,
   CreateInvitationByAccountPayload,
   CreateInvitationByTeamMemberPayload,
 } from '../../invitations.dto';
@@ -57,10 +58,16 @@ export class Api {
       .set('Authorization', `Bearer ${token}`);
   }
 
-  acceptTeamInvitation(teamId: string, invitationId: string, token: string) {
+  acceptTeamInvitation(
+    teamId: string,
+    invitationId: string,
+    payload: AcceptInvitationByTeamMemberPayload,
+    token: string
+  ) {
     return this.handle
       .patch(`/teams/${teamId}/invitations/${invitationId}/accept`)
-      .set('Authorization', `Bearer ${token}`);
+      .set('Authorization', `Bearer ${token}`)
+      .send(payload);
   }
 
   rejectTeamInvitation(teamId: string, invitationId: string, token: string) {

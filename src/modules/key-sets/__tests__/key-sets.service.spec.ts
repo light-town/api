@@ -7,7 +7,7 @@ import {
   ApiForbiddenException,
   ApiNotFoundException,
 } from '~/common/exceptions';
-import KeySetEntity from '~/db/entities/key-sets.entity';
+import KeySetEntity from '~/db/entities/key-set.entity';
 import AccountsService from '~/modules/accounts/accounts.service';
 import KeySetsService from '../key-sets.service';
 import createModuleHelper from './helpers/create-module.helper';

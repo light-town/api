@@ -3,6 +3,7 @@ import { IsString, IsNotEmpty } from '~/common/validation';
 import {
   IsBoolean,
   IsNumber,
+  IsOptional,
   IsPositive,
   IsUUID,
   ValidateNested,
@@ -61,53 +62,53 @@ export class EncSymmetricKey {
 
   @ApiProperty({
     description: '',
-    required: true,
   })
+  @IsOptional()
   @IsString()
   @IsNotEmpty()
-  tag: string;
+  tag?: string;
 
   @ApiProperty({
     description: '',
-    required: true,
   })
+  @IsOptional()
   @IsNumber()
   @IsPositive()
   @IsNotEmpty()
-  tagLength: number;
+  tagLength?: number;
 
   @ApiProperty({
     description: 'The initial vector',
-    required: true,
   })
+  @IsOptional()
   @IsString()
   @IsNotEmpty()
-  iv: string;
+  iv?: string;
 
   @ApiProperty({
     description: 'The salt for deriving MUK',
-    required: true,
   })
+  @IsOptional()
   @IsString()
   @IsNotEmpty()
-  salt: string;
+  salt?: string;
 }
 
 export class CreateKeySetPayload {
   @ApiProperty({
     description: 'The RSA public key',
-    required: true,
   })
+  @IsOptional()
   @IsString()
   @IsNotEmpty()
-  publicKey: string;
+  publicKey?: string;
 
   @ApiProperty({
     description: 'The encrypted RSA private key',
-    required: true,
   })
+  @IsOptional()
   @ValidateNested()
-  encPrivateKey: EncPrivateKey;
+  encPrivateKey?: EncPrivateKey;
 
   @ApiProperty({
     description: 'The encrypted symmetric key',
