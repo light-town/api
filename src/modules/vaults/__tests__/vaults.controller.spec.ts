@@ -46,7 +46,7 @@ describe('[Vaults Module] [Controller] ...', () => {
       const TEST_KEY_SET = { id: faker.datatype.uuid() };
 
       jest
-        .spyOn(vaultsService, 'create')
+        .spyOn(vaultsService, 'createVault')
         .mockResolvedValueOnce(<any>TEST_VAULT);
 
       jest
@@ -62,13 +62,15 @@ describe('[Vaults Module] [Controller] ...', () => {
         uuid: TEST_VAULT.id,
         encKey: TEST_VAULT.encKey,
         encOverview: TEST_VAULT.encOverview,
-        accountUuid: TEST_ACCOUNT.id,
+        ownerAccountUuid: TEST_ACCOUNT.id,
+        ownerTeamUuid: undefined,
         keySetUuid: TEST_KEY_SET.id,
       });
 
-      expect(vaultsService.create).toHaveBeenCalledTimes(1);
-      expect(vaultsService.create).toHaveBeenCalledWith(
+      expect(vaultsService.createVault).toHaveBeenCalledTimes(1);
+      expect(vaultsService.createVault).toHaveBeenCalledWith(
         TEST_ACCOUNT.id,
+        TEST_KEY_SET.id,
         TEST_CREATE_VAULT_PAYLOAD
       );
 
@@ -108,9 +110,9 @@ describe('[Vaults Module] [Controller] ...', () => {
         },
       ];
       const TEST_KEY_SETS = [
-        { keySetId: TEST_VAULTS[0].keySetId },
-        { keySetId: TEST_VAULTS[1].keySetId },
-        { keySetId: TEST_VAULTS[2].keySetId },
+        { keySetId: TEST_VAULTS[0].keySetId, vaultId: TEST_VAULTS[0].id },
+        { keySetId: TEST_VAULTS[1].keySetId, vaultId: TEST_VAULTS[1].id },
+        { keySetId: TEST_VAULTS[2].keySetId, vaultId: TEST_VAULTS[2].id },
       ];
 
       jest
@@ -118,25 +120,22 @@ describe('[Vaults Module] [Controller] ...', () => {
         .mockResolvedValueOnce(<any>TEST_KEY_SETS);
 
       jest
-        .spyOn(vaultsService, 'getVault')
-        .mockResolvedValueOnce(<any>TEST_VAULTS[0])
-        .mockResolvedValueOnce(<any>TEST_VAULTS[1])
-        .mockResolvedValueOnce(<any>TEST_VAULTS[2]);
+        .spyOn(vaultsService, 'getVaults')
+        .mockResolvedValueOnce(<any>TEST_VAULTS);
 
       expect(await vaultsController.getVaults(TEST_ACCOUNT)).toStrictEqual(
         TEST_VAULTS.map(v =>
-          vaultsService.format(<any>v, v.accountId, v.keySetId)
+          vaultsService.format({
+            ...(<any>v),
+            ownerAccountId: v.accountId,
+            keySetId: v.keySetId,
+          })
         )
       );
 
-      expect(
-        jest.spyOn(keySetObjectsService, 'getKeySetObjects')
-      ).toHaveBeenCalledTimes(1);
-
-      expect(
-        jest.spyOn(keySetObjectsService, 'getKeySetObjects')
-      ).toHaveBeenCalledWith({
-        creatorAccountId: TEST_ACCOUNT.id,
+      expect(keySetObjectsService.getKeySetObjects).toHaveBeenCalledTimes(1);
+      expect(keySetObjectsService.getKeySetObjects).toHaveBeenCalledWith({
+        keySetOwnerAccountId: TEST_ACCOUNT.id,
         isVault: true,
       });
     });

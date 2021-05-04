@@ -5,6 +5,9 @@ import TeamMemberEntity from './team-member.entity';
 
 @Entity('teams')
 export class TeamEntity extends IEntity {
+  @Column({ name: 'salt' })
+  salt: string;
+
   @Column({ type: 'jsonb', name: 'enc_key' })
   encKey: Record<string, any>;
 
@@ -12,20 +15,20 @@ export class TeamEntity extends IEntity {
   encOverview: Record<string, any>;
 
   @Column({ type: 'uuid', name: 'creator_account_id' })
-  public creatorAccountId: string;
+  creatorAccountId: string;
 
   @ManyToOne(() => AccountEntity)
   @JoinColumn({
     name: 'creator_account_id',
     referencedColumnName: 'id',
   })
-  public creatorAccount?: AccountEntity;
+  creatorAccount?: AccountEntity;
 
   @OneToMany(() => TeamMemberEntity, teamMember => teamMember.team)
-  public members?: TeamMemberEntity[];
+  members?: TeamMemberEntity[];
 
   @Column({ length: 256, name: 'invitation_key' })
-  public invitationKey: string;
+  invitationKey: string;
 }
 
 export default TeamEntity;

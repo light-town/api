@@ -1,7 +1,29 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDateString, IsObject, IsString, IsUUID } from 'class-validator';
+import {
+  IsDateString,
+  IsNotEmpty,
+  IsObject,
+  IsString,
+  IsUUID,
+  ValidateNested,
+} from 'class-validator';
+import { CreateKeySetPayload, EncSymmetricKey } from '../key-sets/key-sets.dto';
+
+export class CreateTeamKeySetPayload {
+  @ApiProperty({
+    description: 'The encrypted symmetric key',
+    required: true,
+  })
+  @ValidateNested()
+  encSymmetricKey: EncSymmetricKey;
+}
 
 export class CreateTeamOptions {
+  @ApiProperty({
+    required: true,
+  })
+  salt: string;
+
   @ApiProperty({
     required: true,
   })
@@ -13,6 +35,20 @@ export class CreateTeamOptions {
   })
   @IsObject()
   encOverview: Record<string, any>;
+
+  @ApiProperty({
+    description: 'The primary key set configuration',
+    required: true,
+  })
+  @ValidateNested()
+  primaryKeySet: CreateKeySetPayload;
+
+  @ApiProperty({
+    description: 'The primary key set configuration',
+    required: true,
+  })
+  @ValidateNested()
+  accountKeySet: CreateTeamKeySetPayload;
 }
 
 export class Team {
@@ -59,4 +95,11 @@ export class Team {
   })
   @IsDateString()
   createdAt: string;
+
+  @ApiProperty({
+    required: true,
+  })
+  @IsNotEmpty()
+  @IsString()
+  salt: string;
 }

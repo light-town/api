@@ -23,9 +23,9 @@ export class FindKeySetObjectsOptions {
   keySetId?: string;
   vaultId?: string;
   teamId?: string;
-  ownerAccountId?: string;
-  ownerTeamId?: string;
-  creatorAccountId?: string;
+  keySetOwnerAccountId?: string;
+  keySetOwnerTeamId?: string;
+  keySetCreatorAccountId?: string;
   isVault?: boolean;
   isTeam?: boolean;
 }
@@ -234,14 +234,17 @@ export class KeySetObjectsService {
     if (options.keySetId)
       query.andWhere(`${alias}.keySetId = :keySetId`, options);
 
-    if (options.ownerAccountId)
-      query.andWhere(`keySet.ownerAccountId = :ownerAccountId`, options);
+    if (options.keySetOwnerAccountId)
+      query.andWhere(`keySet.ownerAccountId = :keySetOwnerAccountId`, options);
 
-    if (options.ownerTeamId)
-      query.andWhere(`keySet.ownerTeamId = :ownerTeamId`, options);
+    if (options.keySetOwnerTeamId)
+      query.andWhere(`keySet.ownerTeamId = :keySetOwnerTeamId`, options);
 
-    if (options.creatorAccountId)
-      query.andWhere(`keySet.creatorAccountId = :creatorAccountId`, options);
+    if (options.keySetCreatorAccountId)
+      query.andWhere(
+        `keySet.creatorAccountId = :keySetCreatorAccountId`,
+        options
+      );
 
     if (options.isVault) query.andWhere(`${alias}.vaultId IS NOT NULL`);
 

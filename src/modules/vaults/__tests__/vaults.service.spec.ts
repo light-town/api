@@ -1,6 +1,6 @@
 import { getRepositoryToken } from '@nestjs/typeorm';
 import faker from 'faker';
-import { DeepPartial, In, Repository } from 'typeorm';
+import { DeepPartial, Repository } from 'typeorm';
 import VaultEntity from '~/db/entities/vault.entity';
 import KeySetObjectsService from '~/modules/key-set-objects/key-set-objects.service';
 import KeySetsService from '~/modules/key-sets/key-sets.service';
@@ -68,7 +68,11 @@ describe('[Vaults Module] [Service] ...', () => {
         .mockResolvedValueOnce(<any>{});
 
       expect(
-        await vaultsService.create(TEST_ACCOUNT.id, TEST_CREATE_VAULT_PAYLOAD)
+        await vaultsService.createVault(
+          TEST_ACCOUNT.id,
+          TEST_PRIMARY_KEY_SET.id,
+          TEST_CREATE_VAULT_PAYLOAD
+        )
       ).toStrictEqual(TEST_VAULT);
 
       expect(jest.spyOn(vaultsRepository, 'create')).toHaveBeenCalledTimes(1);

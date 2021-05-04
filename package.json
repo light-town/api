@@ -1,6 +1,6 @@
 {
   "name": "@light-town/api",
-  "version": "0.5.2",
+  "version": "0.5.4",
   "description": "",
   "main": "dist/main.js",
   "scripts": {
@@ -33,7 +33,7 @@
   },
   "homepage": "https://github.com/light-town/api#readme",
   "dependencies": {
-    "@light-town/core": "^0.2.8",
+    "@light-town/core": "^0.2.9",
     "@nestjs/common": "^7.5.1",
     "@nestjs/core": "^7.5.1",
     "@nestjs/jwt": "^7.2.0",

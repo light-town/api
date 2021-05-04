@@ -55,6 +55,9 @@ describe('[Auth Module] [Service] ...', () => {
     const TEST_VAULT = {
       id: faker.datatype.uuid(),
     };
+    const KEY_SET = {
+      id: faker.datatype.uuid(),
+    };
 
     const payload: SignUpPayload = {
       deviceUuid: faker.datatype.uuid(),
@@ -97,10 +100,10 @@ describe('[Auth Module] [Service] ...', () => {
       .mockResolvedValueOnce(<any>{ id: TEST_ACCOUNT_UUID });
 
     const vaultCreateFn = jest
-      .spyOn(vaultsService, 'create')
+      .spyOn(vaultsService, 'createVault')
       .mockResolvedValueOnce(<any>TEST_VAULT);
 
-    jest.spyOn(keySetsService, 'create').mockResolvedValueOnce(<any>{});
+    jest.spyOn(keySetsService, 'create').mockResolvedValueOnce(<any>KEY_SET);
 
     await authService.signUp(payload);
 
@@ -121,6 +124,7 @@ describe('[Auth Module] [Service] ...', () => {
     expect(vaultCreateFn).toHaveBeenCalledTimes(1);
     expect(vaultCreateFn).toHaveBeenCalledWith(
       TEST_ACCOUNT_UUID,
+      KEY_SET.id,
       payload.primaryVault
     );
 

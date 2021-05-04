@@ -5,6 +5,7 @@ import { Repository, SelectQueryBuilder } from 'typeorm';
 import { ApiNotFoundException } from '~/common/exceptions';
 import TeamEntity from '~/db/entities/team.entity';
 import AccountsService from '../accounts/accounts.service';
+import KeySetsService from '../key-sets/key-sets.service';
 import { PermissionTypesEnum } from '../permissions/permissions.dto';
 import PermissionsService from '../permissions/permissions.service';
 import { ObjectTypesEnum } from '../roles/roles.dto';
@@ -39,7 +40,9 @@ export class TeamsService {
     private readonly teamMembersService: TeamMembersService,
     @Inject(forwardRef(() => RolesService))
     private readonly rolesService: RolesService,
-    private readonly permissionsService: PermissionsService
+    private readonly permissionsService: PermissionsService,
+    @Inject(forwardRef(() => KeySetsService))
+    private readonly keySetsService: KeySetsService
   ) {}
 
   public async createTeam(
@@ -61,7 +64,22 @@ export class TeamsService {
         invitationKey: core.encryption.common
           .generateCryptoRandomString(32)
           .toLowerCase(),
+        salt: options.salt,
       })
+    );
+
+    await this.keySetsService.create(
+      accountId,
+      newTeam.id,
+      options.primaryKeySet,
+      { isTeamOwner: true, isPrimary: true }
+    );
+
+    await this.keySetsService.create(
+      accountId,
+      accountId,
+      options.accountKeySet,
+      { isAccountOwner: true }
     );
 
     const [creatorTeamRole, memberTeamRole, guestTeamRole] = await Promise.all([
@@ -131,6 +149,7 @@ export class TeamsService {
       creatorAccountUuid: entity?.creatorAccountId,
       lastUpdatedAt: entity?.updatedAt.toISOString(),
       createdAt: entity?.createdAt.toISOString(),
+      salt: entity?.salt,
     };
   }
 

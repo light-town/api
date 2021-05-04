@@ -23,15 +23,40 @@ export const createTeamHelper = async (
     desc: faker.random.words(),
   };
 
+  const symmetricKey = core.encryption.common.generateCryptoRandomString(32);
+
   const encTeam = await core.helpers.teams.createTeamHelper(
     overview,
+    symmetricKey
+  );
+
+  const decTeam = await core.helpers.teams.decryptTeamBySecretKeyHelper(
+    encTeam,
+    symmetricKey
+  );
+
+  const muk = await core.helpers.masterUnlockKey.deriveMasterUnlockKeyHelper(
+    decTeam.key,
+    decTeam.key
+  );
+
+  const primaryKeySet = await core.helpers.keySets.createPrimaryKeySetHelper(
+    muk
+  );
+
+  const accountKeySet = await core.helpers.keySets.createKeySetHelper(
+    symmetricKey,
     options.publicKey
   );
+
   const team = await teamsController.createTeam(
     { id: options.accountId },
     {
+      salt: muk.salt,
       encKey: encTeam.encKey,
       encOverview: encTeam.encOverview,
+      primaryKeySet,
+      accountKeySet,
     }
   );
 

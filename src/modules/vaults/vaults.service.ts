@@ -1,12 +1,17 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindManyOptions, FindOneOptions, In, Repository } from 'typeorm';
-import { ApiNotFoundException } from '~/common/exceptions';
+import { FindManyOptions, FindOneOptions, Repository } from 'typeorm';
 import VaultEntity from '~/db/entities/vault.entity';
 import KeySetObjectsService from '../key-set-objects/key-set-objects.service';
 import KeySetsService from '../key-sets/key-sets.service';
 import VaultItemCategoriesService from '../vault-item-categories/vault-item-categories.service';
 import { EncVaultKey, CreateVaultPayload, Vault } from './vaults.dto';
+
+export class FormatAdditionalInfo {
+  ownerTeamId?: string;
+  ownerAccountId?: string;
+  keySetId?: string;
+}
 
 export class FindVaultOptions {
   id?: string;
@@ -26,20 +31,11 @@ export class VaultsService {
     private readonly vaultItemCategoriesService: VaultItemCategoriesService
   ) {}
 
-  public async create(
-    accountId: string,
+  public async createVault(
+    creatorAccountId: string,
+    keySetId: string,
     payload: CreateVaultPayload
   ): Promise<VaultEntity> {
-    const primaryKeySet = await this.keySetsService.getKeySet({
-      ownerAccountId: accountId,
-      isPrimary: true,
-    });
-
-    if (!primaryKeySet)
-      throw new ApiNotFoundException(
-        'The primary key set of account was not found'
-      );
-
     const newVault = await this.vaultsRepository.save(
       this.vaultsRepository.create({
         encKey: payload.encKey,
@@ -50,14 +46,14 @@ export class VaultsService {
     await Promise.all(
       payload.encCategories.map(c =>
         this.vaultItemCategoriesService.createVaultItemCategory(
-          accountId,
+          creatorAccountId,
           newVault.id,
           { encOverview: c.encOverview, encDetails: c.encDetails }
         )
       )
     );
 
-    await this.keySetObjectsService.createKeySetObject(primaryKeySet.id, {
+    await this.keySetObjectsService.createKeySetObject(keySetId, {
       vaultId: newVault.id,
     });
 
@@ -73,33 +69,22 @@ export class VaultsService {
     return vault !== undefined;
   }
 
-  public format(
-    vault: VaultEntity,
-    accountId: string,
-    keySetId: string
-  ): Vault {
-    return this.normalize(vault, accountId, keySetId);
+  public format(vault: VaultEntity & FormatAdditionalInfo): Vault {
+    return this.normalize(vault);
   }
 
-  public formatAll(
-    vaults: VaultEntity[],
-    accountId: string,
-    keySetId: string
-  ): Vault[] {
-    return vaults.map(vault => this.normalize(vault, accountId, keySetId));
+  public formatAll(vaults: (VaultEntity & FormatAdditionalInfo)[]): Vault[] {
+    return vaults.map(vault => this.normalize(vault));
   }
 
-  private normalize(
-    vault: VaultEntity,
-    accountId: string,
-    keySetId: string
-  ): Vault {
+  private normalize(vault: VaultEntity & FormatAdditionalInfo): Vault {
     return {
       uuid: vault.id,
       encKey: <EncVaultKey>vault.encKey,
       encOverview: vault.encOverview,
-      accountUuid: accountId,
-      keySetUuid: keySetId,
+      ownerAccountUuid: vault.ownerAccountId,
+      ownerTeamUuid: vault.ownerTeamId,
+      keySetUuid: vault.keySetId,
     };
   }
 

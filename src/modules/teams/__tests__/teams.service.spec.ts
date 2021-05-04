@@ -8,6 +8,7 @@ import TeamMembersService from '~/modules/team-members/team-members.service';
 import TeamEntity from '~/db/entities/team.entity';
 import TeamsService, { TeamRolesEnum } from '../teams.service';
 import RolesService from '~/modules/roles/roles.service';
+import KeySetsService from '~/modules/key-sets/key-sets.service';
 
 describe('[Teams Module] [Service] ...', () => {
   let moduleFixture: TestingModule;
@@ -15,6 +16,7 @@ describe('[Teams Module] [Service] ...', () => {
   let teamMembersService: TeamMembersService;
   let accountsService: AccountsService;
   let rolesService: RolesService;
+  let keySetsService: KeySetsService;
 
   let teamsService: TeamsService;
   let teamsRepository: Repository<TeamEntity>;
@@ -27,6 +29,7 @@ describe('[Teams Module] [Service] ...', () => {
     );
     accountsService = moduleFixture.get<AccountsService>(AccountsService);
     rolesService = moduleFixture.get<RolesService>(RolesService);
+    keySetsService = moduleFixture.get<KeySetsService>(KeySetsService);
 
     teamsService = moduleFixture.get<TeamsService>(TeamsService);
     teamsRepository = moduleFixture.get<Repository<TeamEntity>>(
@@ -52,6 +55,9 @@ describe('[Teams Module] [Service] ...', () => {
       };
       const TEAM = {
         id: faker.datatype.uuid(),
+        salt: faker.random.word(),
+        primaryKeySet: JSON.parse(faker.datatype.json()),
+        accountKeySet: JSON.parse(faker.datatype.json()),
         encKey: JSON.parse(faker.datatype.json()),
         encOverview: JSON.parse(faker.datatype.json()),
       };
@@ -61,6 +67,11 @@ describe('[Teams Module] [Service] ...', () => {
       jest.spyOn(teamsRepository, 'create').mockReturnValueOnce(<any>TEAM);
 
       jest.spyOn(teamsRepository, 'save').mockReturnValueOnce(<any>TEAM);
+
+      jest
+        .spyOn(keySetsService, 'create')
+        .mockReturnValueOnce(<any>{})
+        .mockReturnValueOnce(<any>{});
 
       jest
         .spyOn(rolesService, 'createRole')
@@ -74,8 +85,11 @@ describe('[Teams Module] [Service] ...', () => {
 
       expect(
         await teamsService.createTeam(ACCOUNT.id, {
+          salt: TEAM.salt,
           encKey: TEAM.encKey,
           encOverview: TEAM.encOverview,
+          primaryKeySet: TEAM.primaryKeySet,
+          accountKeySet: TEAM.accountKeySet,
         })
       ).toStrictEqual(TEAM);
 
@@ -91,6 +105,7 @@ describe('[Teams Module] [Service] ...', () => {
         creatorAccountId: ACCOUNT.id,
         invitationKey: (teamsRepository.create as any).mock.calls[0][0]
           .invitationKey,
+        salt: TEAM.salt,
       });
 
       expect(teamsRepository.save).toHaveBeenCalledTimes(1);

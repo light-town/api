@@ -12,6 +12,9 @@ import KeySetEntity from '~/db/entities/key-set.entity';
 import createAccountHelper from '~/../__tests__/helpers/create-account.helper';
 import createAndStartSessionHelper from '~/../__tests__/helpers/create-and-start-session.helper';
 import createVaultHelper from '~/../__tests__/helpers/create-vault.helper';
+import createTeamHelper from '~/../__tests__/helpers/create-team.helper';
+import createTeamVaultHelper from '~/../__tests__/helpers/create-team-vault.helper';
+import TeamMembersService from '~/modules/team-members/team-members.service';
 
 describe('[Vaults Module] [Controller] ...', () => {
   let app: INestApplication;
@@ -19,6 +22,7 @@ describe('[Vaults Module] [Controller] ...', () => {
   let connection: Connection;
   let vaultsRepository: Repository<VaultEntity>;
   let keySetsRepository: Repository<KeySetEntity>;
+  let teamMembersService: TeamMembersService;
 
   beforeAll(async () => {
     app = await createE2EModuleHelper();
@@ -36,6 +40,7 @@ describe('[Vaults Module] [Controller] ...', () => {
     keySetsRepository = app.get<Repository<KeySetEntity>>(
       getRepositoryToken(KeySetEntity)
     );
+    teamMembersService = app.get<TeamMembersService>(TeamMembersService);
   });
 
   beforeEach(async () => {
@@ -49,7 +54,7 @@ describe('[Vaults Module] [Controller] ...', () => {
     await connection.close();
   });
 
-  describe('', () => {
+  describe('[Account] ...', () => {
     let context;
 
     beforeEach(async () => {
@@ -106,7 +111,7 @@ describe('[Vaults Module] [Controller] ...', () => {
           data: {
             uuid: response.body?.data?.uuid,
             ...encVault,
-            accountUuid: context.account.id,
+            ownerAccountUuid: context.account.id,
             keySetUuid: context.primaryKeySet.id,
           },
           statusCode: 201,
@@ -149,7 +154,7 @@ describe('[Vaults Module] [Controller] ...', () => {
             uuid: v.id,
             encKey: v.encKey,
             encOverview: v.encOverview,
-            accountUuid: context.account.id,
+            ownerAccountUuid: context.account.id,
             keySetUuid: context.primaryKeySet.id,
           })),
           statusCode: 200,
@@ -171,7 +176,7 @@ describe('[Vaults Module] [Controller] ...', () => {
             uuid: vault.id,
             encKey: vault.encKey,
             encOverview: vault.encOverview,
-            accountUuid: context.account.id,
+            ownerAccountUuid: context.account.id,
             keySetUuid: context.primaryKeySet.id,
           },
           statusCode: 200,
@@ -200,7 +205,7 @@ describe('[Vaults Module] [Controller] ...', () => {
             uuid: v.id,
             encKey: v.encKey,
             encOverview: v.encOverview,
-            accountUuid: context.account.id,
+            ownerAccountUuid: context.account.id,
             keySetUuid: context.primaryKeySet.id,
           })),
           statusCode: 200,
@@ -226,7 +231,7 @@ describe('[Vaults Module] [Controller] ...', () => {
             uuid: vault.id,
             encKey: vault.encKey,
             encOverview: vault.encOverview,
-            accountUuid: context.account.id,
+            ownerAccountUuid: context.account.id,
             keySetUuid: context.primaryKeySet.id,
           },
           statusCode: 200,
@@ -262,6 +267,177 @@ describe('[Vaults Module] [Controller] ...', () => {
         );
 
         expect(await keySetsRepository.count()).toStrictEqual(1);
+      });
+    });
+  });
+
+  describe('[Team] ...', () => {
+    let userAccount;
+
+    beforeEach(async () => {
+      const {
+        account,
+        device,
+        password,
+        masterUnlockKey,
+        primaryKeySet,
+        primaryVault,
+      } = await createAccountHelper(app, { device: { os: OS.WINDOWS } });
+
+      const { token } = await createAndStartSessionHelper(app, {
+        accountKey: account.key,
+        deviceUuid: device.id,
+        password,
+      });
+
+      userAccount = {
+        token,
+        account,
+        device,
+        password,
+        masterUnlockKey,
+        primaryKeySet,
+        primaryVault,
+      };
+    });
+
+    describe('[Creating] ...', () => {
+      it('should create a vault', async () => {
+        const team = await createTeamHelper(app, {
+          accountId: userAccount.account.id,
+          publicKey: userAccount.primaryKeySet.publicKey,
+        });
+
+        const encVault = await core.helpers.vaults.createVaultHelper(
+          {
+            name: faker.random.word(),
+            desc: faker.random.word(),
+          },
+          userAccount.primaryKeySet.publicKey
+        );
+
+        const response = await api.createTeamVault(
+          team.id,
+          {
+            ...encVault,
+            encCategories: [],
+          },
+          userAccount.token
+        );
+
+        expect(response.status).toEqual(201);
+        expect(response.body).toStrictEqual({
+          data: {
+            uuid: response.body?.data?.uuid,
+            ...encVault,
+            ownerTeamUuid: team.id,
+            keySetUuid: response.body?.data?.keySetUuid,
+          },
+          statusCode: 201,
+        });
+
+        expect(await vaultsRepository.count()).toStrictEqual(2); // primary vault and previously created
+
+        const vault = await vaultsRepository.findOne({
+          where: { id: response.body.data.uuid },
+        });
+        expect(vault).toStrictEqual(
+          vaultsRepository.create({
+            id: vault.id,
+            ...encVault,
+            createdAt: vault.createdAt,
+            updatedAt: vault.updatedAt,
+            isDeleted: false,
+          })
+        );
+      });
+    });
+
+    describe('[Getting] ...', () => {
+      it('should get all vaults', async () => {
+        const team = await createTeamHelper(app, {
+          accountId: userAccount.account.id,
+          publicKey: userAccount.primaryKeySet.publicKey,
+        });
+
+        const teamMember = await teamMembersService.getTeamMember({
+          teamId: team.id,
+          accountId: userAccount.account.id,
+        });
+
+        const vaults = [];
+        for (let i = 0; i < 10; i++)
+          vaults.push(
+            await createTeamVaultHelper(app, {
+              accountId: userAccount.account.id,
+              teamMemberId: teamMember.id,
+              teamId: teamMember.teamId,
+              publicKey: userAccount.primaryKeySet.publicKey,
+              privateKey: userAccount.primaryKeySet.privateKey,
+            })
+          );
+
+        const response = await api.getTeamVaults(
+          teamMember.teamId,
+          userAccount.token
+        );
+
+        let i = 0;
+        expect(response.status).toEqual(200);
+        expect(response.body).toStrictEqual({
+          data: vaults.map(v => ({
+            uuid: v.id,
+            encKey: v.encKey,
+            encOverview: v.encOverview,
+            ownerTeamUuid: teamMember.teamId,
+            keySetUuid: response.body?.data[i++].keySetUuid,
+          })),
+          statusCode: 200,
+        });
+      });
+
+      it('should get one vault', async () => {
+        const team = await createTeamHelper(app, {
+          accountId: userAccount.account.id,
+          publicKey: userAccount.primaryKeySet.publicKey,
+        });
+
+        const teamMember = await teamMembersService.getTeamMember({
+          teamId: team.id,
+          accountId: userAccount.account.id,
+        });
+
+        const vaults = [];
+        for (let i = 0; i < 10; i++)
+          vaults.push(
+            await createTeamVaultHelper(app, {
+              accountId: userAccount.account.id,
+              teamMemberId: teamMember.id,
+              teamId: teamMember.teamId,
+              publicKey: userAccount.primaryKeySet.publicKey,
+              privateKey: userAccount.primaryKeySet.privateKey,
+            })
+          );
+
+        const VAULT = vaults[2];
+
+        const response = await api.getTeamVault(
+          teamMember.teamId,
+          VAULT.id,
+          userAccount.token
+        );
+
+        expect(response.status).toEqual(200);
+        expect(response.body).toStrictEqual({
+          data: {
+            uuid: VAULT.id,
+            encKey: VAULT.encKey,
+            encOverview: VAULT.encOverview,
+            ownerTeamUuid: teamMember.teamId,
+            keySetUuid: response.body?.data?.keySetUuid,
+          },
+          statusCode: 200,
+        });
       });
     });
   });

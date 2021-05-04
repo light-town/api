@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsNotEmpty } from '~/common/validation';
-import { IsUUID, ValidateNested } from 'class-validator';
+import { IsOptional, IsUUID, ValidateNested } from 'class-validator';
 import { CreateVaultItemCategoryOptions } from '../vault-item-categories/vault-item-categories.dto';
 
 export class EncVaultKey {
@@ -58,15 +58,25 @@ export class Vault {
   })
   @IsString()
   @IsUUID()
-  keySetUuid: any;
+  keySetUuid: string;
 
   @ApiProperty({
     description: 'The unique uuid of account',
-    required: true,
+    required: false,
   })
+  @IsOptional()
   @IsString()
   @IsUUID()
-  accountUuid: any;
+  ownerAccountUuid: string;
+
+  @ApiProperty({
+    description: 'The unique uuid of account',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  @IsUUID()
+  ownerTeamUuid: string;
 }
 
 export class CreateVaultPayload {

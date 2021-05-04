@@ -90,15 +90,17 @@ describe('[Invitations Module] [Controller] ...', () => {
 
         const {
           publicKey,
-          privateKey,
         } = await core.encryption.common.rsa.generateKeyPair();
+        const symmetricKey = core.encryption.common.generateCryptoRandomString(
+          32
+        );
         const encTeam = await core.helpers.teams.createTeamHelper(
           { name: faker.random.word(), desc: faker.random.words() },
-          publicKey
+          symmetricKey
         );
-        const decTeam = await core.helpers.teams.decryptTeamByPrivateKeyHelper(
+        const decTeam = await core.helpers.teams.decryptTeamBySecretKeyHelper(
           encTeam,
-          privateKey
+          symmetricKey
         );
         const encKeySet = await core.helpers.keySets.createKeySetHelper(
           decTeam.key,
@@ -167,15 +169,17 @@ describe('[Invitations Module] [Controller] ...', () => {
 
         const {
           publicKey,
-          privateKey,
         } = await core.encryption.common.rsa.generateKeyPair();
+        const symmetricKey = core.encryption.common.generateCryptoRandomString(
+          32
+        );
         const encTeam = await core.helpers.teams.createTeamHelper(
           { name: faker.random.word(), desc: faker.random.words() },
-          publicKey
+          symmetricKey
         );
-        const decTeam = await core.helpers.teams.decryptTeamByPrivateKeyHelper(
+        const decTeam = await core.helpers.teams.decryptTeamBySecretKeyHelper(
           encTeam,
-          privateKey
+          symmetricKey
         );
         const encKeySet = await core.helpers.keySets.createKeySetHelper(
           decTeam.key,
@@ -223,15 +227,17 @@ describe('[Invitations Module] [Controller] ...', () => {
 
         const {
           publicKey,
-          privateKey,
         } = await core.encryption.common.rsa.generateKeyPair();
+        const symmetricKey = core.encryption.common.generateCryptoRandomString(
+          32
+        );
         const encTeam = await core.helpers.teams.createTeamHelper(
           { name: faker.random.word(), desc: faker.random.words() },
-          publicKey
+          symmetricKey
         );
-        const decTeam = await core.helpers.teams.decryptTeamByPrivateKeyHelper(
+        const decTeam = await core.helpers.teams.decryptTeamBySecretKeyHelper(
           encTeam,
-          privateKey
+          symmetricKey
         );
         const encKeySet = await core.helpers.keySets.createKeySetHelper(
           decTeam.key,
@@ -267,15 +273,17 @@ describe('[Invitations Module] [Controller] ...', () => {
 
         const {
           publicKey,
-          privateKey,
         } = await core.encryption.common.rsa.generateKeyPair();
+        const symmetricKey = core.encryption.common.generateCryptoRandomString(
+          32
+        );
         const encTeam = await core.helpers.teams.createTeamHelper(
           { name: faker.random.word(), desc: faker.random.words() },
-          publicKey
+          symmetricKey
         );
-        const decTeam = await core.helpers.teams.decryptTeamByPrivateKeyHelper(
+        const decTeam = await core.helpers.teams.decryptTeamBySecretKeyHelper(
           encTeam,
-          privateKey
+          symmetricKey
         );
         const encKeySet = await core.helpers.keySets.createKeySetHelper(
           decTeam.key,
@@ -442,15 +450,17 @@ describe('[Invitations Module] [Controller] ...', () => {
         for (let i = 1; i < userAccounts.length; ++i) {
           const {
             publicKey,
-            privateKey,
           } = await core.encryption.common.rsa.generateKeyPair();
+          const symmetricKey = core.encryption.common.generateCryptoRandomString(
+            32
+          );
           const encTeam = await core.helpers.teams.createTeamHelper(
             { name: faker.random.word(), desc: faker.random.words() },
-            publicKey
+            symmetricKey
           );
-          const decTeam = await core.helpers.teams.decryptTeamByPrivateKeyHelper(
+          const decTeam = await core.helpers.teams.decryptTeamBySecretKeyHelper(
             encTeam,
-            privateKey
+            symmetricKey
           );
           const encKeySet = await core.helpers.keySets.createKeySetHelper(
             decTeam.key,
@@ -488,15 +498,17 @@ describe('[Invitations Module] [Controller] ...', () => {
         for (let i = 1; i < userAccounts.length; ++i) {
           const {
             publicKey,
-            privateKey,
           } = await core.encryption.common.rsa.generateKeyPair();
+          const symmetricKey = core.encryption.common.generateCryptoRandomString(
+            32
+          );
           const encTeam = await core.helpers.teams.createTeamHelper(
             { name: faker.random.word(), desc: faker.random.words() },
-            publicKey
+            symmetricKey
           );
-          const decTeam = await core.helpers.teams.decryptTeamByPrivateKeyHelper(
+          const decTeam = await core.helpers.teams.decryptTeamBySecretKeyHelper(
             encTeam,
-            privateKey
+            symmetricKey
           );
           const encKeySet = await core.helpers.keySets.createKeySetHelper(
             decTeam.key,
@@ -544,15 +556,17 @@ describe('[Invitations Module] [Controller] ...', () => {
         for (let i = 1; i < userAccounts.length; ++i) {
           const {
             publicKey,
-            privateKey,
           } = await core.encryption.common.rsa.generateKeyPair();
+          const symmetricKey = core.encryption.common.generateCryptoRandomString(
+            32
+          );
           const encTeam = await core.helpers.teams.createTeamHelper(
             { name: faker.random.word(), desc: faker.random.words() },
-            publicKey
+            symmetricKey
           );
-          const decTeam = await core.helpers.teams.decryptTeamByPrivateKeyHelper(
+          const decTeam = await core.helpers.teams.decryptTeamBySecretKeyHelper(
             encTeam,
-            privateKey
+            symmetricKey
           );
           const encKeySet = await core.helpers.keySets.createKeySetHelper(
             decTeam.key,
@@ -591,15 +605,17 @@ describe('[Invitations Module] [Controller] ...', () => {
         for (let i = 1; i < userAccounts.length; ++i) {
           const {
             publicKey,
-            privateKey,
           } = await core.encryption.common.rsa.generateKeyPair();
+          const symmetricKey = core.encryption.common.generateCryptoRandomString(
+            32
+          );
           const encTeam = await core.helpers.teams.createTeamHelper(
             { name: faker.random.word(), desc: faker.random.words() },
-            publicKey
+            symmetricKey
           );
-          const decTeam = await core.helpers.teams.decryptTeamByPrivateKeyHelper(
+          const decTeam = await core.helpers.teams.decryptTeamBySecretKeyHelper(
             encTeam,
-            privateKey
+            symmetricKey
           );
           const encKeySet = await core.helpers.keySets.createKeySetHelper(
             decTeam.key,
@@ -696,15 +712,17 @@ describe('[Invitations Module] [Controller] ...', () => {
 
         const {
           publicKey,
-          privateKey,
         } = await core.encryption.common.rsa.generateKeyPair();
+        const symmetricKey = core.encryption.common.generateCryptoRandomString(
+          32
+        );
         const encTeam = await core.helpers.teams.createTeamHelper(
           { name: faker.random.word(), desc: faker.random.words() },
-          publicKey
+          symmetricKey
         );
-        const decTeam = await core.helpers.teams.decryptTeamByPrivateKeyHelper(
+        const decTeam = await core.helpers.teams.decryptTeamBySecretKeyHelper(
           encTeam,
-          privateKey
+          symmetricKey
         );
         const encKeySet = await core.helpers.keySets.createKeySetHelper(
           decTeam.key,
@@ -779,15 +797,17 @@ describe('[Invitations Module] [Controller] ...', () => {
 
         const {
           publicKey,
-          privateKey,
         } = await core.encryption.common.rsa.generateKeyPair();
+        const symmetricKey = core.encryption.common.generateCryptoRandomString(
+          32
+        );
         const encTeam = await core.helpers.teams.createTeamHelper(
           { name: faker.random.word(), desc: faker.random.words() },
-          publicKey
+          symmetricKey
         );
-        const decTeam = await core.helpers.teams.decryptTeamByPrivateKeyHelper(
+        const decTeam = await core.helpers.teams.decryptTeamBySecretKeyHelper(
           encTeam,
-          privateKey
+          symmetricKey
         );
         const encKeySet = await core.helpers.keySets.createKeySetHelper(
           decTeam.key,

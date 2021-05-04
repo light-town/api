@@ -6,6 +6,8 @@ import VaultsController from './vaults.controller';
 import VaultsService from './vaults.service';
 import KeySetObjectsModule from '../key-set-objects/key-set-objects.module';
 import VaultItemCategoriesModule from '../vault-item-categories/vault-item-categories.module';
+import RolesModule from '../roles/roles.module';
+import TeamMembersModule from '../team-members/team-members.module';
 
 @Module({
   imports: [
@@ -13,6 +15,8 @@ import VaultItemCategoriesModule from '../vault-item-categories/vault-item-categ
     forwardRef(() => KeySetsModule),
     forwardRef(() => KeySetObjectsModule),
     forwardRef(() => VaultItemCategoriesModule),
+    forwardRef(() => RolesModule),
+    forwardRef(() => TeamMembersModule),
   ],
   controllers: [VaultsController],
   providers: [VaultsService],
