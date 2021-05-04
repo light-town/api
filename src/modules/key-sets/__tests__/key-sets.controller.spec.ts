@@ -23,8 +23,8 @@ describe('[Key Set Module] [Controller] ...', () => {
 
   describe('Getting key sets', () => {
     it('should return all key sets of the account', async () => {
-      const TEST_ACCOUNT_UUID = faker.datatype.uuid();
-      const TEST_KEY_SETS = [
+      const ACCOUNT_UUID = faker.datatype.uuid();
+      const KEY_SETS = [
         {
           id: faker.datatype.uuid(),
           creatorAccountId: faker.datatype.uuid(),
@@ -40,16 +40,19 @@ describe('[Key Set Module] [Controller] ...', () => {
           isPrimary: false,
         },
       ];
-      const TEST_IS_PRIMARY = false;
+      const IS_PRIMARY = false;
 
       const getKeySetFn = jest
         .spyOn(keySetsService, 'getKeySets')
-        .mockResolvedValueOnce(<any>TEST_KEY_SETS);
+        .mockResolvedValueOnce(<any>KEY_SETS);
 
       expect(
-        await keySetsController.getKeySets(TEST_ACCOUNT_UUID, TEST_IS_PRIMARY)
+        await keySetsController.getKeySets(
+          { id: ACCOUNT_UUID },
+          IS_PRIMARY.toString()
+        )
       ).toStrictEqual(
-        TEST_KEY_SETS.map(keySet => ({
+        KEY_SETS.map(keySet => ({
           uuid: keySet.id,
           creatorAccountUuid: keySet.creatorAccountId,
           ownerAccountUuid: keySet.ownerAccountId,
@@ -63,13 +66,13 @@ describe('[Key Set Module] [Controller] ...', () => {
 
       expect(getKeySetFn).toHaveBeenCalledTimes(1);
       expect(getKeySetFn).toHaveBeenCalledWith({
-        ownerAccountId: TEST_ACCOUNT_UUID,
+        ownerAccountId: ACCOUNT_UUID,
       });
     });
 
     it('should return the primary key set of the account', async () => {
-      const TEST_ACCOUNT_UUID = faker.datatype.uuid();
-      const TEST_KEY_SETS = [
+      const ACCOUNT_UUID = faker.datatype.uuid();
+      const KEY_SETS = [
         {
           id: faker.datatype.uuid(),
           creatorAccountId: faker.datatype.uuid(),
@@ -85,16 +88,19 @@ describe('[Key Set Module] [Controller] ...', () => {
           isPrimary: false,
         },
       ];
-      const TEST_IS_PRIMARY = true;
+      const IS_PRIMARY = true;
 
       const getKeySetFn = jest
         .spyOn(keySetsService, 'getKeySets')
-        .mockResolvedValueOnce(<any>TEST_KEY_SETS);
+        .mockResolvedValueOnce(<any>KEY_SETS);
 
       expect(
-        await keySetsController.getKeySets(TEST_ACCOUNT_UUID, TEST_IS_PRIMARY)
+        await keySetsController.getKeySets(
+          { id: ACCOUNT_UUID },
+          IS_PRIMARY.toString()
+        )
       ).toStrictEqual(
-        TEST_KEY_SETS.map(keySet => ({
+        KEY_SETS.map(keySet => ({
           uuid: keySet.id,
           creatorAccountUuid: keySet.creatorAccountId,
           ownerAccountUuid: keySet.ownerAccountId,
@@ -108,8 +114,8 @@ describe('[Key Set Module] [Controller] ...', () => {
 
       expect(getKeySetFn).toHaveBeenCalledTimes(1);
       expect(getKeySetFn).toHaveBeenCalledWith({
-        ownerAccountId: TEST_ACCOUNT_UUID,
-        isPrimary: TEST_IS_PRIMARY,
+        ownerAccountId: ACCOUNT_UUID,
+        isPrimary: IS_PRIMARY,
       });
     });
   });
