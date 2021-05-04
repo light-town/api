@@ -7,7 +7,7 @@ import TeamEntity from '~/db/entities/team.entity';
 import VaultFolderEntity from '~/db/entities/vault-folder.entity';
 import VaultItemEntity from '~/db/entities/vault-item.entity';
 import VaultEntity from '~/db/entities/vault.entity';
-import KeySetVaultsService from '../key-set-vaults/key-set-vaults.service';
+import KeySetObjectsService from '../key-set-objects/key-set-objects.service';
 import TeamsService from '../teams/teams.service';
 import VaultFoldersService from '../vault-folders/vault-folders.service';
 import VaultItemsService from '../vault-items/vault-items.service';
@@ -26,10 +26,14 @@ export class RouterService {
   public constructor(
     @Inject(forwardRef(() => TeamsService))
     private readonly teamsService: TeamsService,
+    @Inject(forwardRef(() => VaultsService))
     private readonly vaultsService: VaultsService,
+    @Inject(forwardRef(() => KeySetObjectsService))
+    private readonly keySetObjectsService: KeySetObjectsService,
+    @Inject(forwardRef(() => VaultFoldersService))
     private readonly vaultFoldersService: VaultFoldersService,
-    private readonly vaultItemsService: VaultItemsService,
-    private readonly keySetVaultsService: KeySetVaultsService
+    @Inject(forwardRef(() => VaultItemsService))
+    private readonly vaultItemsService: VaultItemsService
   ) {}
 
   public async buildRoute(
@@ -68,7 +72,7 @@ export class RouterService {
 
     if (!vault) throw new ApiNotFoundException(`The vault was not found`);
 
-    const keySet = await this.keySetVaultsService.getKeySet(vault.id);
+    const keySet = await this.keySetObjectsService.getKeySet(vault.id);
 
     if (!keySet.ownerTeamId)
       return [{ ...vault, routeObjectType: ObjectTypesEnum.VAULT }];

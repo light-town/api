@@ -70,7 +70,7 @@ describe('[Invitations Module] [Controller] ...', () => {
   });
 
   afterEach(async () => {
-    await connection.query('TRUNCATE invitations CASCADE');
+    await connection.query('TRUNCATE invitations, teams, team_members CASCADE');
   });
 
   afterAll(async () => {
@@ -423,7 +423,7 @@ describe('[Invitations Module] [Controller] ...', () => {
       let teamMemberCreator;
       let team;
 
-      beforeAll(async () => {
+      beforeEach(async () => {
         teamCreator = userAccounts[0];
         team = await createTeamHelper(app, {
           accountId: teamCreator.account.id,
@@ -643,9 +643,10 @@ describe('[Invitations Module] [Controller] ...', () => {
     describe('[In Account] ...', () => {
       let teamCreator;
       let account;
-      const teams = [];
+      let teams;
 
-      beforeAll(async () => {
+      beforeEach(async () => {
+        teams = [];
         teamCreator = userAccounts[0];
         account = userAccounts[1];
 

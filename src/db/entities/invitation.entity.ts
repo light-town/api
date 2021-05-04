@@ -48,6 +48,9 @@ export class InvitationEntity extends IEntity {
 
   @Column({ name: 'expires_at' })
   public expiresAt: Date;
+
+  @Column({ type: 'jsonb', name: 'payload', nullable: true })
+  public payload?: Record<string, any>;
 }
 
 export default InvitationEntity;

@@ -10,6 +10,7 @@ export const mockRepository = jest.fn(() => ({
       addSelect: jest.fn(() => builder),
       innerJoin: jest.fn(() => builder),
       innerJoinAndSelect: jest.fn(() => builder),
+      leftJoin: jest.fn(() => builder),
       leftJoinAndSelect: jest.fn(() => builder),
       where: jest.fn(() => builder),
       andWhere: jest.fn(() => builder),

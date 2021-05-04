@@ -7,6 +7,7 @@ import {
   Inject,
   forwardRef,
   UseInterceptors,
+  Delete,
 } from '@nestjs/common';
 import { ApiCreatedResponse, ApiTags } from '@nestjs/swagger';
 import AuthGuard from '../auth/auth.guard';
@@ -74,6 +75,22 @@ export class TeamsController {
     return this.teamsService.format(
       this.teamsService.getTeam({ id: teamUuid })
     );
+  }
+
+  @UseInterceptors(CurrentTeamMemberInterceptor)
+  @Delete('/:teamUuid/leave')
+  public async leaveTeam(
+    @CurrentTeamMember() teamMember,
+    @Param('teamUuid') teamUuid: string
+  ): Promise<void> {
+    await this.rolesService.validateOrFail(
+      teamMember.id,
+      teamUuid,
+      ObjectTypesEnum.TEAM,
+      PermissionTypesEnum.READ_ONLY
+    );
+
+    this.teamMembersService.deleteTeamMember(teamUuid);
   }
 }
 

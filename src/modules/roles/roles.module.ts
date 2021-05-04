@@ -1,7 +1,7 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import RoleEntity from '~/db/entities/role.entity';
-import KeySetVaultsModule from '../key-set-vaults/key-set-vaults.module';
+import KeySetObjectsModule from '../key-set-objects/key-set-objects.module';
 import PermissionsModule from '../permissions/permissions.module';
 import TeamMembersModule from '../team-members/team-members.module';
 import TeamsModule from '../teams/teams.module';
@@ -18,10 +18,10 @@ import RouterService from './router.service';
     forwardRef(() => TeamsModule),
     forwardRef(() => TeamMembersModule),
     forwardRef(() => PermissionsModule),
-    VaultsModule,
-    VaultFoldersModule,
-    VaultItemsModule,
-    KeySetVaultsModule,
+    forwardRef(() => KeySetObjectsModule),
+    forwardRef(() => VaultsModule),
+    forwardRef(() => VaultFoldersModule),
+    forwardRef(() => VaultItemsModule),
   ],
   controllers: [RolesController],
   providers: [RolesService, RouterService],

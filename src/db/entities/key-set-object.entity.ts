@@ -2,9 +2,10 @@ import { Column, Entity, ManyToOne, JoinColumn } from 'typeorm';
 import { IEntity } from './entity.interface';
 import VaultEntity from './vault.entity';
 import KeySetEntity from './key-set.entity';
+import TeamEntity from './team.entity';
 
-@Entity('key_set_vaults')
-export class KeySetVaultEntity extends IEntity {
+@Entity('key_set_objects')
+export class KeySetObjectEntity extends IEntity {
   @Column({ type: 'uuid', name: 'key_set_id' })
   public keySetId: string;
 
@@ -15,8 +16,8 @@ export class KeySetVaultEntity extends IEntity {
   })
   public keySet?: KeySetEntity;
 
-  @Column({ type: 'uuid', name: 'vault_id' })
-  public vaultId: string;
+  @Column({ type: 'uuid', name: 'vault_id', nullable: true })
+  public vaultId?: string;
 
   @ManyToOne(() => VaultEntity)
   @JoinColumn({
@@ -24,6 +25,16 @@ export class KeySetVaultEntity extends IEntity {
     referencedColumnName: 'id',
   })
   public vault?: VaultEntity;
+
+  @Column({ type: 'uuid', name: 'team_id', nullable: true })
+  public teamId?: string;
+
+  @ManyToOne(() => TeamEntity)
+  @JoinColumn({
+    name: 'team_id',
+    referencedColumnName: 'id',
+  })
+  public team?: TeamEntity;
 }
 
-export default KeySetEntity;
+export default KeySetObjectEntity;

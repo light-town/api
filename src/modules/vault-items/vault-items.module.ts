@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import VaultItemEntity from '~/db/entities/vault-item.entity';
 import AccountsModule from '../accounts/accounts.module';
@@ -11,10 +11,10 @@ import VaultItemsService from './vault-items.service';
 @Module({
   imports: [
     TypeOrmModule.forFeature([VaultItemEntity]),
-    VaultsModule,
+    forwardRef(() => VaultsModule),
     AccountsModule,
-    VaultFoldersModule,
-    VaultItemCategoriesModule,
+    forwardRef(() => VaultFoldersModule),
+    forwardRef(() => VaultItemCategoriesModule),
   ],
   controllers: [VaultItemsController],
   providers: [VaultItemsService],

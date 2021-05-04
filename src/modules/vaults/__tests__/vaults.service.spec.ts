@@ -2,7 +2,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import faker from 'faker';
 import { DeepPartial, In, Repository } from 'typeorm';
 import VaultEntity from '~/db/entities/vault.entity';
-import KeySetVaultsService from '~/modules/key-set-vaults/key-set-vaults.service';
+import KeySetObjectsService from '~/modules/key-set-objects/key-set-objects.service';
 import KeySetsService from '~/modules/key-sets/key-sets.service';
 import { CreateVaultPayload } from '../vaults.dto';
 import VaultsService from '../vaults.service';
@@ -11,13 +11,13 @@ import createModuleHelper from './helpers/create-module.helper';
 describe('[Vaults Module] [Service] ...', () => {
   let vaultsService: VaultsService;
   let keySetsService: KeySetsService;
-  let keySetVaultsService: KeySetVaultsService;
+  let keySetObjectsService: KeySetObjectsService;
   let vaultsRepository: Repository<VaultEntity>;
 
   beforeAll(async () => {
     const app = await createModuleHelper();
 
-    keySetVaultsService = app.get<KeySetVaultsService>(KeySetVaultsService);
+    keySetObjectsService = app.get<KeySetObjectsService>(KeySetObjectsService);
     vaultsService = app.get<VaultsService>(VaultsService);
     keySetsService = app.get<KeySetsService>(KeySetsService);
     vaultsRepository = app.get<Repository<VaultEntity>>(
@@ -63,7 +63,9 @@ describe('[Vaults Module] [Service] ...', () => {
         .spyOn(vaultsRepository, 'save')
         .mockResolvedValueOnce(<any>TEST_VAULT);
 
-      jest.spyOn(keySetVaultsService, 'create').mockResolvedValueOnce(<any>{});
+      jest
+        .spyOn(keySetObjectsService, 'createKeySetObject')
+        .mockResolvedValueOnce(<any>{});
 
       expect(
         await vaultsService.create(TEST_ACCOUNT.id, TEST_CREATE_VAULT_PAYLOAD)
@@ -104,28 +106,21 @@ describe('[Vaults Module] [Service] ...', () => {
       ];
 
       jest
-        .spyOn(keySetVaultsService, 'getVaultIds')
+        .spyOn(keySetObjectsService, 'getVaultIds')
         .mockResolvedValueOnce(TEST_VAULTS.map(v => v.id));
 
-      jest.spyOn(vaultsService, 'find').mockResolvedValueOnce(<any>TEST_VAULTS);
+      jest
+        .spyOn(vaultsService, 'getVaults')
+        .mockResolvedValueOnce(<any>TEST_VAULTS);
 
       expect(
         await vaultsService.getVaultsByKeySet(TEST_PRIMARY_KEY_SET)
       ).toStrictEqual(TEST_VAULTS);
 
-      expect(keySetVaultsService.getVaultIds).toHaveBeenCalledTimes(1);
-      expect(keySetVaultsService.getVaultIds).toHaveBeenCalledWith(
+      expect(keySetObjectsService.getVaultIds).toHaveBeenCalledTimes(1);
+      expect(keySetObjectsService.getVaultIds).toHaveBeenCalledWith(
         TEST_PRIMARY_KEY_SET
       );
-
-      expect(vaultsService.find).toHaveBeenCalledTimes(1);
-      expect(vaultsService.find).toHaveBeenCalledWith({
-        select: ['id', 'encKey', 'encOverview'],
-        where: {
-          id: In(TEST_VAULTS.map(v => v.id)),
-          isDeleted: false,
-        },
-      });
     });
   });
 });

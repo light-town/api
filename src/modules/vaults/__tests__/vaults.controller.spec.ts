@@ -1,6 +1,7 @@
 import faker from 'faker';
 import { DeepPartial } from 'typeorm';
 import VaultEntity from '~/db/entities/vault.entity';
+import KeySetObjectsService from '~/modules/key-set-objects/key-set-objects.service';
 import KeySetsService from '~/modules/key-sets/key-sets.service';
 import VaultsController from '../vaults.controller';
 import VaultsService from '../vaults.service';
@@ -10,6 +11,7 @@ describe('[Vaults Module] [Controller] ...', () => {
   let keySetsService: KeySetsService;
   let vaultsService: VaultsService;
   let vaultsController: VaultsController;
+  let keySetObjectsService: KeySetObjectsService;
 
   beforeAll(async () => {
     const app = await createModuleHelper();
@@ -17,6 +19,7 @@ describe('[Vaults Module] [Controller] ...', () => {
     keySetsService = app.get<KeySetsService>(KeySetsService);
     vaultsService = app.get<VaultsService>(VaultsService);
     vaultsController = app.get<VaultsController>(VaultsController);
+    keySetObjectsService = app.get<KeySetObjectsService>(KeySetObjectsService);
   });
 
   afterEach(() => {
@@ -71,6 +74,7 @@ describe('[Vaults Module] [Controller] ...', () => {
 
       expect(keySetsService.getKeySet).toHaveBeenCalledTimes(1);
       expect(keySetsService.getKeySet).toHaveBeenCalledWith({
+        creatorAccountId: TEST_ACCOUNT.id,
         ownerAccountId: TEST_ACCOUNT.id,
         isPrimary: true,
       });
@@ -85,62 +89,56 @@ describe('[Vaults Module] [Controller] ...', () => {
           id: faker.datatype.uuid(),
           encKey: faker.random.word(),
           encOverview: faker.random.word(),
+          accountId: TEST_ACCOUNT.id,
+          keySetId: faker.datatype.uuid(),
         },
         {
           id: faker.datatype.uuid(),
           encKey: faker.random.word(),
           encOverview: faker.random.word(),
+          accountId: TEST_ACCOUNT.id,
+          keySetId: faker.datatype.uuid(),
         },
         {
           id: faker.datatype.uuid(),
           encKey: faker.random.word(),
           encOverview: faker.random.word(),
+          accountId: TEST_ACCOUNT.id,
+          keySetId: faker.datatype.uuid(),
         },
       ];
       const TEST_KEY_SETS = [
-        { id: faker.datatype.uuid() },
-        { id: faker.datatype.uuid() },
-        { id: faker.datatype.uuid() },
+        { keySetId: TEST_VAULTS[0].keySetId },
+        { keySetId: TEST_VAULTS[1].keySetId },
+        { keySetId: TEST_VAULTS[2].keySetId },
       ];
 
       jest
-        .spyOn(keySetsService, 'getKeySets')
+        .spyOn(keySetObjectsService, 'getKeySetObjects')
         .mockResolvedValueOnce(<any>TEST_KEY_SETS);
 
       jest
-        .spyOn(vaultsService, 'getVaultsByKeySet')
-        .mockResolvedValueOnce(<any>TEST_VAULTS)
-        .mockResolvedValueOnce(<any>TEST_VAULTS)
-        .mockResolvedValueOnce(<any>TEST_VAULTS);
+        .spyOn(vaultsService, 'getVault')
+        .mockResolvedValueOnce(<any>TEST_VAULTS[0])
+        .mockResolvedValueOnce(<any>TEST_VAULTS[1])
+        .mockResolvedValueOnce(<any>TEST_VAULTS[2]);
 
       expect(await vaultsController.getVaults(TEST_ACCOUNT)).toStrictEqual(
-        TEST_KEY_SETS.reduce(
-          (prev, val) => [
-            ...prev,
-            ...TEST_VAULTS.map(v => ({
-              uuid: v.id,
-              encKey: v.encKey,
-              encOverview: v.encOverview,
-              accountUuid: TEST_ACCOUNT.id,
-              keySetUuid: val.id,
-            })),
-          ],
-          []
+        TEST_VAULTS.map(v =>
+          vaultsService.format(<any>v, v.accountId, v.keySetId)
         )
       );
 
       expect(
-        jest.spyOn(vaultsService, 'getVaultsByKeySet')
-      ).toHaveBeenCalledTimes(3);
+        jest.spyOn(keySetObjectsService, 'getKeySetObjects')
+      ).toHaveBeenCalledTimes(1);
+
       expect(
-        jest.spyOn(vaultsService, 'getVaultsByKeySet')
-      ).toHaveBeenNthCalledWith(1, TEST_KEY_SETS[0].id);
-      expect(
-        jest.spyOn(vaultsService, 'getVaultsByKeySet')
-      ).toHaveBeenNthCalledWith(2, TEST_KEY_SETS[1].id);
-      expect(
-        jest.spyOn(vaultsService, 'getVaultsByKeySet')
-      ).toHaveBeenNthCalledWith(3, TEST_KEY_SETS[2].id);
+        jest.spyOn(keySetObjectsService, 'getKeySetObjects')
+      ).toHaveBeenCalledWith({
+        creatorAccountId: TEST_ACCOUNT.id,
+        isVault: true,
+      });
     });
   });
 

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindManyOptions, FindOneOptions, IsNull, Repository } from 'typeorm';
 import { ApiNotFoundException } from '~/common/exceptions';
@@ -26,9 +26,12 @@ export class VaultItemsService {
   public constructor(
     @InjectRepository(VaultItemEntity)
     private readonly vaultItemsRepository: Repository<VaultItemEntity>,
+    @Inject(forwardRef(() => VaultsService))
     private readonly vaultsService: VaultsService,
     private readonly accountsService: AccountsService,
+    @Inject(forwardRef(() => VaultFoldersService))
     private readonly vaultFoldersService: VaultFoldersService,
+    @Inject(forwardRef(() => VaultItemCategoriesService))
     private readonly vaultItemCategoriesService: VaultItemCategoriesService
   ) {}
 

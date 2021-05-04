@@ -220,7 +220,7 @@ export class InvitationsService {
   }
 
   public async prepareQuery(
-    options: FindInvitationsOptions
+    options: FindInvitationsOptions = {}
   ): Promise<[string, SelectQueryBuilder<InvitationEntity>]> {
     const alias = 'invitations';
     const awatingStage = await this.invitationVerificationStagesService.getInvitationVerificationStage(
@@ -244,14 +244,14 @@ export class InvitationsService {
         { stageId: awatingStage.id }
       );
 
-    if (options?.id) query.andWhere(`${alias}.id = :id`, options);
+    if (options.id) query.andWhere(`${alias}.id = :id`, options);
 
-    if (options?.teamId) query.andWhere(`${alias}.teamId = :teamId`, options);
+    if (options.teamId) query.andWhere(`${alias}.teamId = :teamId`, options);
 
-    if (options?.accountId)
+    if (options.accountId)
       query.andWhere(`${alias}.accountId = :accountId`, options);
 
-    if (options?.expired)
+    if (options.expired)
       query.andWhere(`${alias}.expiresAt < :expiresAt`, {
         expiresAt: new Date(),
       });

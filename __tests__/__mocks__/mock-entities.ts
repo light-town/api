@@ -1,4 +1,5 @@
 import { getConnectionToken, getRepositoryToken } from '@nestjs/typeorm';
+import { TestingModuleBuilder } from '@nestjs/testing';
 import mockRepository from './mock-repository';
 import UserEntity from '~/db/entities/user.entity';
 import AccountEntity from '~/db/entities/account.entity';
@@ -11,8 +12,7 @@ import PushNotificationEntity from '~/db/entities/push-notification.entity';
 import VerificationDeviceEntity from '~/db/entities/verification-devices.entity';
 import KeySetEntity from '~/db/entities/key-set.entity';
 import VaultEntity from '~/db/entities/vault.entity';
-import { TestingModuleBuilder } from '@nestjs/testing';
-import { KeySetVaultEntity } from '~/db/entities/key-set-vaults.entity';
+import KeySetObjectEntity from '~/db/entities/key-set-object.entity';
 import VaultItemEntity from '~/db/entities/vault-item.entity';
 import VaultFolderEntity from '~/db/entities/vault-folder.entity';
 import VaultItemCategoryEntity from '~/db/entities/vault-item-category.entity';
@@ -36,9 +36,9 @@ export default (app: TestingModuleBuilder) => {
     SessionVerificationStageEntity,
     PushNotificationEntity,
     PushNotificationStageEntity,
-    KeySetEntity,
     VaultEntity,
-    KeySetVaultEntity,
+    KeySetEntity,
+    KeySetObjectEntity,
     VaultItemEntity,
     VaultFolderEntity,
     VaultItemCategoryEntity,

@@ -7,6 +7,8 @@ import {
 } from '~/common/exceptions';
 import TeamMemberEntity from '~/db/entities/team-member.entity';
 import AccountsService from '../accounts/accounts.service';
+import KeySetObjectsService from '../key-set-objects/key-set-objects.service';
+import KeySetsService from '../key-sets/key-sets.service';
 import RolesService from '../roles/roles.service';
 import TeamsService from '../teams/teams.service';
 import { TeamMember } from './team-members.dto';
@@ -32,7 +34,11 @@ export class TeamMembersService {
     @Inject(forwardRef(() => TeamsService))
     private readonly teamsService: TeamsService,
     @Inject(forwardRef(() => RolesService))
-    private readonly rolesService: RolesService
+    private readonly rolesService: RolesService,
+    @Inject(forwardRef(() => KeySetsService))
+    private readonly keySetsService: KeySetsService,
+    @Inject(forwardRef(() => KeySetObjectsService))
+    private readonly keySetObjectsService: KeySetObjectsService
   ) {}
 
   public async createMember(
@@ -145,6 +151,18 @@ export class TeamMembersService {
 
   public isMember(accountId: string, teamId: string): Promise<boolean> {
     return this.exists({ accountId, teamId });
+  }
+
+  public async deleteTeamMember(teamMemberId: string): Promise<void> {
+    const teamMember = await this.getTeamMember({ id: teamMemberId });
+
+    if (!teamMember)
+      throw new ApiNotFoundException(`The team member was not found`);
+
+    this.keySetObjectsService.getKeySetObject({
+      teamId: teamMember.teamId,
+      ownerAccountId: teamMember.accountId,
+    });
   }
 }
 

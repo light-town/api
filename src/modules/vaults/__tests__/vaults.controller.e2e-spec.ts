@@ -39,7 +39,9 @@ describe('[Vaults Module] [Controller] ...', () => {
   });
 
   beforeEach(async () => {
-    await connection.query('TRUNCATE vaults, key_sets, key_set_vaults CASCADE');
+    await connection.query(
+      'TRUNCATE vaults, key_sets, key_set_objects CASCADE'
+    );
   });
 
   afterAll(async () => {

@@ -3,13 +3,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { FindManyOptions, FindOneOptions, In, Repository } from 'typeorm';
 import { ApiNotFoundException } from '~/common/exceptions';
 import VaultEntity from '~/db/entities/vault.entity';
-import KeySetVaultsService from '../key-set-vaults/key-set-vaults.service';
+import KeySetObjectsService from '../key-set-objects/key-set-objects.service';
 import KeySetsService from '../key-sets/key-sets.service';
 import VaultItemCategoriesService from '../vault-item-categories/vault-item-categories.service';
 import { EncVaultKey, CreateVaultPayload, Vault } from './vaults.dto';
 
 export class FindVaultOptions {
   id?: string;
+  ids?: string[];
 }
 
 @Injectable()
@@ -17,8 +18,8 @@ export class VaultsService {
   public constructor(
     @InjectRepository(VaultEntity)
     private readonly vaultsRepository: Repository<VaultEntity>,
-    @Inject(forwardRef(() => KeySetVaultsService))
-    private readonly keySetVaultsService: KeySetVaultsService,
+    @Inject(forwardRef(() => KeySetObjectsService))
+    private readonly keySetObjectsService: KeySetObjectsService,
     @Inject(forwardRef(() => KeySetsService))
     private readonly keySetsService: KeySetsService,
     @Inject(forwardRef(() => VaultItemCategoriesService))
@@ -46,7 +47,6 @@ export class VaultsService {
       })
     );
 
-    /// [TODO] replace from here
     await Promise.all(
       payload.encCategories.map(c =>
         this.vaultItemCategoriesService.createVaultItemCategory(
@@ -57,8 +57,9 @@ export class VaultsService {
       )
     );
 
-    /// [TODO] replace from here
-    await this.keySetVaultsService.create(primaryKeySet.id, newVault.id);
+    await this.keySetObjectsService.createKeySetObject(primaryKeySet.id, {
+      vaultId: newVault.id,
+    });
 
     return newVault;
   }
@@ -130,23 +131,24 @@ export class VaultsService {
   }
 
   public async getVaults(options: FindVaultOptions): Promise<VaultEntity[]> {
-    return await this.find({
-      select: ['id', 'encKey', 'encOverview'],
-      where: {
-        ...options,
-        isDeleted: false,
-      },
-    });
+    const alias = 'vaults';
+    const query = this.vaultsRepository
+      .createQueryBuilder(alias)
+      .where(`${alias}.isDeleted = :isDeleted`, { isDeleted: false });
+
+    if (options.id) query.andWhere(`${alias}.id = :id`, options);
+    if (options.ids) query.andWhere(`${alias}.id IN (:...ids)`, options);
+
+    return query.getMany();
   }
 
   public async getVaultsByKeySet(keySetId: string): Promise<VaultEntity[]> {
-    const vaultIds = await this.keySetVaultsService.getVaultIds(keySetId);
-    return this.find({
-      select: ['id', 'encKey', 'encOverview'],
-      where: {
-        id: In(vaultIds),
-        isDeleted: false,
-      },
+    const vaultIds = await this.keySetObjectsService.getVaultIds(keySetId);
+
+    if (!vaultIds.length) return [];
+
+    return this.getVaults({
+      ids: vaultIds,
     });
   }
 }

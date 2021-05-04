@@ -1,3 +1,4 @@
+import core from '@light-town/core';
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, SelectQueryBuilder } from 'typeorm';
@@ -16,6 +17,10 @@ export class FindTeamsOptions {
   creatorAccountId?: string;
   memberId?: string;
   memberIds?: string[];
+}
+
+export class TeamUpdatableProps {
+  invitationKey?: string;
 }
 
 export enum TeamRolesEnum {
@@ -53,6 +58,9 @@ export class TeamsService {
         encKey: options.encKey,
         encOverview: options.encOverview,
         creatorAccountId: accountId,
+        invitationKey: core.encryption.common
+          .generateCryptoRandomString(32)
+          .toLowerCase(),
       })
     );
 
@@ -168,6 +176,26 @@ export class TeamsService {
   public async exists(options: FindTeamsOptions = {}): Promise<boolean> {
     const team = await this.getTeam(options);
     return team !== undefined;
+  }
+
+  public async updateTeams(
+    options: FindTeamsOptions,
+    props: TeamUpdatableProps
+  ): Promise<void> {
+    const q: Record<string, any> = {};
+
+    if (props.invitationKey) q.invitationKey = props.invitationKey;
+
+    const query = this.teamsRepository
+      .createQueryBuilder()
+      .update(TeamEntity)
+      .set(q);
+
+    if (options.id) query.andWhere('id = :id', options);
+    if (options.creatorAccountId)
+      query.andWhere('creatorAccountId = :creatorAccountId', options);
+
+    await query.execute();
   }
 }
 

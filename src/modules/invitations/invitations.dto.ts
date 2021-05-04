@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDateString, IsEnum, IsUUID, ValidateNested } from 'class-validator';
+import {
+  IsDateString,
+  IsEnum,
+  IsNotEmpty,
+  IsUUID,
+  ValidateNested,
+} from 'class-validator';
 import { IsString } from '~/common/validation';
 import { CreateKeySetPayload } from '../key-sets/key-sets.dto';
 
@@ -120,4 +126,24 @@ export class AcceptInvitationByTeamMemberPayload {
   })
   @ValidateNested()
   encKeySet: CreateKeySetPayload;
+}
+
+export class InvitationLink {
+  @ApiProperty({
+    description: 'The secrey invitation key',
+    required: true,
+  })
+  @IsString()
+  @IsNotEmpty()
+  secretKey: string;
+}
+
+export class UpdateInvitationLinkKey {
+  @ApiProperty({
+    description: 'The secrey invitation key',
+    required: true,
+  })
+  @IsString()
+  @IsNotEmpty()
+  secretKey: string;
 }

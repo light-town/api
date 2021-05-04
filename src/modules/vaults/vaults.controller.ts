@@ -9,13 +9,14 @@ import {
   forwardRef,
 } from '@nestjs/common';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { v3 } from 'uuid';
 import {
-  ApiInternalServerException,
+  ApiForbiddenException,
   ApiNotFoundException,
 } from '~/common/exceptions';
 import AuthGuard from '~/modules/auth/auth.guard';
 import CurrentAccount from '../auth/current-account';
-import KeySetVaultsService from '../key-set-vaults/key-set-vaults.service';
+import KeySetObjectsService from '../key-set-objects/key-set-objects.service';
 import KeySetsService from '../key-sets/key-sets.service';
 import { Vault, CreateVaultPayload } from './vaults.dto';
 import VaultsService from './vaults.service';
@@ -28,8 +29,8 @@ export class VaultsController {
     private readonly vaultsService: VaultsService,
     @Inject(forwardRef(() => KeySetsService))
     private readonly keySetsService: KeySetsService,
-    @Inject(forwardRef(() => KeySetVaultsService))
-    private readonly keySetVaultsService: KeySetVaultsService
+    @Inject(forwardRef(() => KeySetObjectsService))
+    private readonly keySetObjectsService: KeySetObjectsService
   ) {}
 
   @ApiOkResponse({ type: Vault })
@@ -38,10 +39,9 @@ export class VaultsController {
     @CurrentAccount() account,
     @Body() payload: CreateVaultPayload
   ): Promise<Vault> {
-    /// [TODO] check permitions
-
     const primaryKeySet = await this.keySetsService.getKeySet({
       ownerAccountId: account.id,
+      creatorAccountId: account.id,
       isPrimary: true,
     });
 
@@ -55,22 +55,21 @@ export class VaultsController {
   @ApiOkResponse({ type: [Vault] })
   @Get('/vaults')
   public async getVaults(@CurrentAccount() account): Promise<Vault[]> {
-    /// [TODO] check permitions
-
-    const foundKeySets = await this.keySetsService.getKeySets({
-      ownerAccountId: account.id,
+    const keySetObjects = await this.keySetObjectsService.getKeySetObjects({
+      creatorAccountId: account.id,
+      isVault: true,
     });
 
     const foundVaults: Vault[] = [];
 
-    for (const keySet of foundKeySets) {
-      const vaults = await this.vaultsService.getVaultsByKeySet(keySet.id);
+    for (const keySetObject of keySetObjects) {
+      const vault = await this.vaultsService.getVault({
+        id: keySetObject.vaultId,
+      });
 
-      for (const vault of vaults) {
-        foundVaults.push(
-          this.vaultsService.format(vault, account.id, keySet.id)
-        );
-      }
+      foundVaults.push(
+        this.vaultsService.format(vault, account.id, keySetObject.keySetId)
+      );
     }
 
     return foundVaults;
@@ -82,18 +81,18 @@ export class VaultsController {
     @CurrentAccount() account,
     @Param('vaultUuid') vaultUuid: string
   ): Promise<Vault> {
-    /// [TODO] check permitions
+    const keySetObject = await this.keySetObjectsService.getKeySetObject({
+      vaultId: vaultUuid,
+      ownerAccountId: account.id,
+      creatorAccountId: account.id,
+    });
+
+    if (!keySetObject)
+      throw new ApiForbiddenException('The key set object was not found');
 
     const vault = await this.vaultsService.getVault({ id: vaultUuid });
 
-    if (!vault) throw new ApiNotFoundException('The vault was not found');
-
-    const keySet = await this.keySetVaultsService.getKeySet(vault.id);
-
-    if (!keySet)
-      throw new ApiInternalServerException('The key set was not found');
-
-    return this.vaultsService.format(vault, account.id, keySet.id);
+    return this.vaultsService.format(vault, account.id, keySetObject.keySetId);
   }
 
   @Delete('/vaults/:vaultUuid')
@@ -101,14 +100,27 @@ export class VaultsController {
     @CurrentAccount() account,
     @Param('vaultUuid') vaultUuid: string
   ): Promise<void> {
-    /// [TODO] check permitions
+    const vault = await this.vaultsService.getVault({ id: vaultUuid });
 
-    const keySets = await this.keySetVaultsService.getKeySets(vaultUuid);
+    if (!vault) throw new ApiNotFoundException('The vault was not found');
+
+    const keySetObjects = await this.keySetObjectsService.getKeySetObjects({
+      vaultId: vault.id,
+      creatorAccountId: account.id,
+    });
+
+    if (!keySetObjects.length)
+      throw new ApiForbiddenException('The key set objects was not found');
+
+    const keySetIds = await keySetObjects.map(kso => kso.keySetId);
+    const keySets = await this.keySetsService.getKeySets({ ids: keySetIds });
 
     for (const keySet of keySets) {
       if (keySet.isPrimary) continue;
 
-      const vaultsCount = await this.keySetVaultsService.getVaultIds(keySet.id);
+      const vaultsCount = await this.keySetObjectsService.getVaultIds(
+        keySet.id
+      );
 
       if (vaultsCount.length !== 1) continue;
 
@@ -124,27 +136,20 @@ export class VaultsController {
     @CurrentAccount() account,
     @Param('keySetUuid') keySetUuid: string
   ): Promise<Vault[]> {
-    /// [TODO] check permitions
+    const keySetObjects = await this.keySetObjectsService.getKeySetObjects({
+      keySetId: keySetUuid,
+      ownerAccountId: account.id,
+    });
 
-    if (
-      !(await this.keySetsService.exists({
-        id: keySetUuid,
-        ownerAccountId: account.id,
-      }))
-    )
-      throw new ApiNotFoundException('The key set was not found');
+    const availableVaultIds = keySetObjects.map(kso => kso.vaultId);
 
-    const foundVaults = await this.vaultsService.getVaultsByKeySet(keySetUuid);
+    const vaults = await this.vaultsService.getVaults({
+      ids: availableVaultIds,
+    });
 
-    const formatedVaults: Vault[] = [];
-
-    for (const vault of foundVaults) {
-      formatedVaults.push(
-        this.vaultsService.format(vault, account.id, keySetUuid)
-      );
-    }
-
-    return formatedVaults;
+    return vaults.map(v =>
+      this.vaultsService.format(v, account.id, keySetUuid)
+    );
   }
 
   @ApiOkResponse({ type: Vault })
@@ -154,25 +159,20 @@ export class VaultsController {
     @Param('vaultUuid') vaultUuid: string,
     @Param('keySetUuid') keySetUuid: string
   ): Promise<Vault> {
-    /// [TODO] check permitions
+    const keySetObjects = await this.keySetObjectsService.getKeySetObjects({
+      keySetId: keySetUuid,
+      vaultId: vaultUuid,
+      creatorAccountId: account.id,
+    });
 
-    if (
-      !(await this.keySetsService.exists({
-        id: keySetUuid,
-        ownerAccountId: account.id,
-      }))
-    )
-      throw new ApiNotFoundException('The key set was not found');
+    const availableVaultIds = keySetObjects.map(kso => kso.vaultId);
 
-    const foundVault = await this.vaultsService.getVault({ id: vaultUuid });
-    const foundVaultIds = await this.keySetVaultsService.getVaultIds(
-      keySetUuid
-    );
+    const vault = await this.vaultsService.getVault({ id: vaultUuid });
 
-    if (!foundVaultIds.includes(foundVault?.id))
+    if (!availableVaultIds.includes(vault.id))
       throw new ApiNotFoundException('The vault was not found');
 
-    return this.vaultsService.format(foundVault, account.id, keySetUuid);
+    return this.vaultsService.format(vault, account.id, keySetUuid);
   }
 }
 

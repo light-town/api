@@ -89,6 +89,8 @@ describe('[Teams Module] [Service] ...', () => {
         encKey: TEAM.encKey,
         encOverview: TEAM.encOverview,
         creatorAccountId: ACCOUNT.id,
+        invitationKey: (teamsRepository.create as any).mock.calls[0][0]
+          .invitationKey,
       });
 
       expect(teamsRepository.save).toHaveBeenCalledTimes(1);

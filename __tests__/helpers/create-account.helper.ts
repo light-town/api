@@ -6,7 +6,7 @@ import core from '@light-town/core';
 import faker from 'faker';
 import AccountsService from '~/modules/accounts/accounts.service';
 import KeySetsService from '~/modules/key-sets/key-sets.service';
-import KeySetVaultsService from '~/modules/key-set-vaults/key-set-vaults.service';
+import KeySetObjectsService from '~/modules/key-set-objects/key-set-objects.service';
 import AccountEntity from '~/db/entities/account.entity';
 import DeviceEntity from '~/db/entities/device.entity';
 import { MasterUnlockKey } from '@light-town/core/dist/encryption/common';
@@ -38,7 +38,9 @@ export const createAccountHelper = async (
   const accountsService = app.get<AccountsService>(AccountsService);
   const authController = app.get<AuthController>(AuthController);
   const keySetsService = app.get<KeySetsService>(KeySetsService);
-  const keySetVaultsService = app.get<KeySetVaultsService>(KeySetVaultsService);
+  const keySetObjectsService = app.get<KeySetObjectsService>(
+    KeySetObjectsService
+  );
 
   const device = await createDeviceHelper(app, {
     os: options.device.os ?? OS.WINDOWS,
@@ -96,7 +98,7 @@ export const createAccountHelper = async (
     creatorAccountId: account.id,
     ownerAccountId: account.id,
   });
-  const primaryVault = await keySetVaultsService.getVault(primaryKeySet.id);
+  const primaryVault = await keySetObjectsService.getVault(primaryKeySet.id);
 
   return {
     account,

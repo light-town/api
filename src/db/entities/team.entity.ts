@@ -23,6 +23,9 @@ export class TeamEntity extends IEntity {
 
   @OneToMany(() => TeamMemberEntity, teamMember => teamMember.team)
   public members?: TeamMemberEntity[];
+
+  @Column({ length: 256, name: 'invitation_key' })
+  public invitationKey: string;
 }
 
 export default TeamEntity;
