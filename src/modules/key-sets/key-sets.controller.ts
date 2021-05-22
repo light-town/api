@@ -45,7 +45,7 @@ export class KeySetsController {
     );
   }
 
-  @ApiOkResponse({ type: KeySet })
+  @ApiOkResponse({ type: KeySet, description: 'Getting only primary key set' })
   @Get('/accounts/:accountUuid/key-sets')
   public async getAccountPrimaryKeySet(
     @Param('accountUuid') accountUuid: string

@@ -17,7 +17,7 @@ async function bootstrap() {
   const config = new DocumentBuilder()
     .setTitle('Light Town')
     .setDescription('A open-source password manager 🔑')
-    .setVersion('0.0.1')
+    .setVersion('0.5.4')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

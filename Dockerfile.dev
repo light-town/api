@@ -1,0 +1,22 @@
+FROM node
+
+ARG WORKDIR
+ARG NPM_TOKEN
+
+RUN mkdir ${WORKDIR}
+
+WORKDIR ${WORKDIR}
+
+RUN echo "//npm.pkg.github.com/:_authToken=$NPM_TOKEN\n@light-town:registry=https://npm.pkg.github.com" > .npmrc
+
+COPY package*.json ./
+RUN npm update
+RUN npm install
+
+RUN rm -f .npmrc
+
+COPY . .
+
+EXPOSE ${PORT}
+
+CMD npm run db:seeds:run && npm run start:dev 

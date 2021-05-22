@@ -161,7 +161,7 @@ export class TeamMembersService {
 
     this.keySetObjectsService.getKeySetObject({
       teamId: teamMember.teamId,
-      ownerAccountId: teamMember.accountId,
+      keySetOwnerAccountId: teamMember.accountId,
     });
   }
 }

@@ -110,7 +110,15 @@ export class VaultFoldersService {
       return qb
         .subQuery()
         .select('COUNT(f.id)', 'containedFoldersCount')
-        .where('f.parent_folder_id = folders.id')
+        .where('f.parentFolderId = folders.id')
+        .from(VaultFolderEntity, 'f');
+    });
+
+    query.addSelect(qb => {
+      return qb
+        .subQuery()
+        .select('COUNT(f.id)', 'containedFoldersCount')
+        .where('f.parentFolderId = folders.id')
         .from(VaultFolderEntity, 'f');
     });
 

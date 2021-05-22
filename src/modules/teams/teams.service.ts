@@ -5,6 +5,7 @@ import { Repository, SelectQueryBuilder } from 'typeorm';
 import { ApiNotFoundException } from '~/common/exceptions';
 import TeamEntity from '~/db/entities/team.entity';
 import AccountsService from '../accounts/accounts.service';
+import KeySetObjectsService from '../key-set-objects/key-set-objects.service';
 import KeySetsService from '../key-sets/key-sets.service';
 import { PermissionTypesEnum } from '../permissions/permissions.dto';
 import PermissionsService from '../permissions/permissions.service';
@@ -42,7 +43,9 @@ export class TeamsService {
     private readonly rolesService: RolesService,
     private readonly permissionsService: PermissionsService,
     @Inject(forwardRef(() => KeySetsService))
-    private readonly keySetsService: KeySetsService
+    private readonly keySetsService: KeySetsService,
+    @Inject(forwardRef(() => KeySetObjectsService))
+    private readonly keySetObjectsService: KeySetObjectsService
   ) {}
 
   public async createTeam(
@@ -75,12 +78,16 @@ export class TeamsService {
       { isTeamOwner: true, isPrimary: true }
     );
 
-    await this.keySetsService.create(
+    const accountKeySet = await this.keySetsService.create(
       accountId,
       accountId,
       options.accountKeySet,
       { isAccountOwner: true }
     );
+
+    await this.keySetObjectsService.createKeySetObject(accountKeySet.id, {
+      teamId: newTeam.id,
+    });
 
     const [creatorTeamRole, memberTeamRole, guestTeamRole] = await Promise.all([
       this.rolesService.createRole({
@@ -127,19 +134,25 @@ export class TeamsService {
     return newTeam;
   }
 
-  public async format(e: TeamEntity | Promise<TeamEntity>): Promise<Team> {
+  public async format(
+    e:
+      | (TeamEntity & { keySetUuid: string })
+      | Promise<TeamEntity & { keySetUuid: string }>
+  ): Promise<Team> {
     const entity = e instanceof Promise ? await e : e;
     return this.normalize(entity);
   }
 
   public async formatAll(
-    e: TeamEntity[] | Promise<TeamEntity[]>
+    e:
+      | (TeamEntity & { keySetUuid: string })[]
+      | Promise<(TeamEntity & { keySetUuid: string })[]>
   ): Promise<Team[]> {
     const entities = e instanceof Promise ? await e : e;
     return entities.map(e => this.normalize(e));
   }
 
-  public normalize(entity: TeamEntity): Team {
+  public normalize(entity: TeamEntity & { keySetUuid: string }): Team {
     if (!entity) return;
 
     return {
@@ -147,6 +160,7 @@ export class TeamsService {
       encKey: entity?.encKey,
       encOverview: entity?.encOverview,
       creatorAccountUuid: entity?.creatorAccountId,
+      keySetUuid: entity.keySetUuid,
       lastUpdatedAt: entity?.updatedAt.toISOString(),
       createdAt: entity?.createdAt.toISOString(),
       salt: entity?.salt,

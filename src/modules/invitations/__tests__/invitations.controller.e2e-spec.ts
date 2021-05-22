@@ -21,6 +21,7 @@ import TeamMembersService from '~/modules/team-members/team-members.service';
 import createInvitationByAccounHelper from '~/../__tests__/helpers/create-invitation-by-account.helper';
 import core from '@light-town/core';
 import faker from 'faker';
+import { Team } from '~/modules/teams/teams.dto';
 
 describe('[Invitations Module] [Controller] ...', () => {
   let app: INestApplication;
@@ -108,7 +109,7 @@ describe('[Invitations Module] [Controller] ...', () => {
         );
 
         const response = await api.createInvitationByTeamMember(
-          team.id,
+          team.uuid,
           {
             accountUuid: otherAccount.account.id,
             encKeySet,
@@ -121,7 +122,7 @@ describe('[Invitations Module] [Controller] ...', () => {
           data: {
             uuid: response.body?.data?.uuid,
             accountUuid: otherAccount.account.id,
-            teamUuid: team.id,
+            teamUuid: team.uuid,
             accountVerificationStage: {
               uuid: response.body?.data?.accountVerificationStage?.uuid,
               name: InvitationVerificationStagesEnum.AWAITING_ANSWER,
@@ -141,7 +142,7 @@ describe('[Invitations Module] [Controller] ...', () => {
         const invitation = await invitationsRepository.findOne({
           id: response.body.data.uuid,
         });
-        expect(invitation.teamId).toEqual(team.id);
+        expect(invitation.teamId).toEqual(team.uuid);
         expect(invitation.accountId).toEqual(otherAccount.account.id);
         expect(invitation.isDeleted).toBeFalsy();
       });
@@ -156,14 +157,14 @@ describe('[Invitations Module] [Controller] ...', () => {
         });
 
         const teamMemberRole = await rolesService.getRole({
-          teamId: team.id,
+          teamId: team.uuid,
           name: TeamRolesEnum.TEAM_MEMBER,
         });
 
         await createTeamMemberHelper(app, {
           creaorAccountId: userAccount.account.id,
           accountId: memberAccount.account.id,
-          teamId: team.id,
+          teamId: team.uuid,
           roleId: teamMemberRole.id,
         });
 
@@ -187,7 +188,7 @@ describe('[Invitations Module] [Controller] ...', () => {
         );
 
         const response = await api.createInvitationByTeamMember(
-          team.id,
+          team.uuid,
           {
             accountUuid: otherAccount.account.id,
             encKeySet,
@@ -214,14 +215,14 @@ describe('[Invitations Module] [Controller] ...', () => {
         });
 
         const teamMemberRole = await rolesService.getRole({
-          teamId: team.id,
+          teamId: team.uuid,
           name: TeamRolesEnum.TEAM_MEMBER,
         });
 
         await createTeamMemberHelper(app, {
           creaorAccountId: userAccount.account.id,
           accountId: memberAccount.account.id,
-          teamId: team.id,
+          teamId: team.uuid,
           roleId: teamMemberRole.id,
         });
 
@@ -245,7 +246,7 @@ describe('[Invitations Module] [Controller] ...', () => {
         );
 
         const response = await api.createInvitationByTeamMember(
-          team.id,
+          team.uuid,
           {
             accountUuid: memberAccount.account.id,
             encKeySet,
@@ -291,7 +292,7 @@ describe('[Invitations Module] [Controller] ...', () => {
         );
 
         await api.createInvitationByTeamMember(
-          team.id,
+          team.uuid,
           {
             accountUuid: otherAccount.account.id,
             encKeySet,
@@ -300,7 +301,7 @@ describe('[Invitations Module] [Controller] ...', () => {
         );
 
         const response = await api.createInvitationByTeamMember(
-          team.id,
+          team.uuid,
           {
             accountUuid: otherAccount.account.id,
             encKeySet,
@@ -331,7 +332,7 @@ describe('[Invitations Module] [Controller] ...', () => {
 
         const response = await api.createInvitationByAccount(
           {
-            teamUuid: team.id,
+            teamUuid: team.uuid,
           },
           otherAccount.token
         );
@@ -341,7 +342,7 @@ describe('[Invitations Module] [Controller] ...', () => {
           data: {
             uuid: response.body?.data?.uuid,
             accountUuid: otherAccount.account.id,
-            teamUuid: team.id,
+            teamUuid: team.uuid,
             accountVerificationStage: {
               uuid: response.body?.data?.accountVerificationStage?.uuid,
               name: InvitationVerificationStagesEnum.ACCEPTED,
@@ -361,7 +362,7 @@ describe('[Invitations Module] [Controller] ...', () => {
         const invitation = await invitationsRepository.findOne({
           id: response.body.data.uuid,
         });
-        expect(invitation.teamId).toEqual(team.id);
+        expect(invitation.teamId).toEqual(team.uuid);
         expect(invitation.accountId).toEqual(otherAccount.account.id);
         expect(invitation.isDeleted).toBeFalsy();
       });
@@ -376,14 +377,14 @@ describe('[Invitations Module] [Controller] ...', () => {
 
         await api.createInvitationByAccount(
           {
-            teamUuid: team.id,
+            teamUuid: team.uuid,
           },
           otherAccount.token
         );
 
         const response = await api.createInvitationByAccount(
           {
-            teamUuid: team.id,
+            teamUuid: team.uuid,
           },
           otherAccount.token
         );
@@ -408,7 +409,7 @@ describe('[Invitations Module] [Controller] ...', () => {
 
         const response = await api.createInvitationByAccount(
           {
-            teamUuid: team.id,
+            teamUuid: team.uuid,
           },
           userAccount.token
         );
@@ -440,7 +441,7 @@ describe('[Invitations Module] [Controller] ...', () => {
 
         teamMemberCreator = await teamMembersService.getTeamMember({
           accountId: teamCreator.account.id,
-          teamId: team.id,
+          teamId: team.uuid,
         });
       });
 
@@ -472,7 +473,7 @@ describe('[Invitations Module] [Controller] ...', () => {
               createInvitationByTeamMemberHelper(app, {
                 creatorAccountId: teamCreator.account.id,
                 accountId: userAccounts[i].account.id,
-                teamId: team.id,
+                teamId: team.uuid,
                 teaMemberId: teamMemberCreator.id,
                 encKeySet,
               })
@@ -481,7 +482,7 @@ describe('[Invitations Module] [Controller] ...', () => {
         }
 
         const response = await api.getTeamInvitations(
-          team.id,
+          team.uuid,
           teamCreator.token
         );
 
@@ -520,7 +521,7 @@ describe('[Invitations Module] [Controller] ...', () => {
               createInvitationByTeamMemberHelper(app, {
                 creatorAccountId: teamCreator.account.id,
                 accountId: userAccounts[i].account.id,
-                teamId: team.id,
+                teamId: team.uuid,
                 teaMemberId: teamMemberCreator.id,
                 encKeySet,
               })
@@ -539,7 +540,7 @@ describe('[Invitations Module] [Controller] ...', () => {
         );
 
         const response = await api.getTeamInvitations(
-          team.id,
+          team.uuid,
           teamCreator.token
         );
 
@@ -578,7 +579,7 @@ describe('[Invitations Module] [Controller] ...', () => {
               createInvitationByTeamMemberHelper(app, {
                 creatorAccountId: teamCreator.account.id,
                 accountId: userAccounts[i].account.id,
-                teamId: team.id,
+                teamId: team.uuid,
                 teaMemberId: teamMemberCreator.id,
                 encKeySet,
               })
@@ -587,7 +588,7 @@ describe('[Invitations Module] [Controller] ...', () => {
         }
 
         const response = await api.getTeamInvitation(
-          team.id,
+          team.uuid,
           invitations[1].uuid,
           teamCreator.token
         );
@@ -627,7 +628,7 @@ describe('[Invitations Module] [Controller] ...', () => {
               createInvitationByTeamMemberHelper(app, {
                 creatorAccountId: teamCreator.account.id,
                 accountId: userAccounts[i].account.id,
-                teamId: team.id,
+                teamId: team.uuid,
                 teaMemberId: teamMemberCreator.id,
                 encKeySet,
               })
@@ -641,7 +642,7 @@ describe('[Invitations Module] [Controller] ...', () => {
         );
 
         const response = await api.getTeamInvitation(
-          team.id,
+          team.uuid,
           invitations[0].uuid,
           teamCreator.token
         );
@@ -659,7 +660,7 @@ describe('[Invitations Module] [Controller] ...', () => {
     describe('[In Account] ...', () => {
       let teamCreator;
       let account;
-      let teams;
+      let teams: Team[];
 
       beforeEach(async () => {
         teams = [];
@@ -683,7 +684,7 @@ describe('[Invitations Module] [Controller] ...', () => {
             await invitationsService.format(
               createInvitationByAccounHelper(app, {
                 accountId: account.account.id,
-                teamId: teams[i].id,
+                teamId: teams[i].uuid,
               })
             )
           );
@@ -705,7 +706,7 @@ describe('[Invitations Module] [Controller] ...', () => {
             await invitationsService.format(
               createInvitationByAccounHelper(app, {
                 accountId: account.account.id,
-                teamId: teams[i].id,
+                teamId: teams[i].uuid,
               })
             )
           );
@@ -730,14 +731,14 @@ describe('[Invitations Module] [Controller] ...', () => {
         );
 
         await api.acceptTeamInvitation(
-          teams[0].id,
+          teams[0].uuid,
           invitations[0].uuid,
           { encKeySet },
           teamCreator.token
         );
 
         await api.acceptTeamInvitation(
-          teams[1].id,
+          teams[1].uuid,
           invitations[1].uuid,
           { encKeySet },
           teamCreator.token
@@ -760,7 +761,7 @@ describe('[Invitations Module] [Controller] ...', () => {
             await invitationsService.format(
               createInvitationByAccounHelper(app, {
                 accountId: account.account.id,
-                teamId: teams[i].id,
+                teamId: teams[i].uuid,
               })
             )
           );
@@ -787,7 +788,7 @@ describe('[Invitations Module] [Controller] ...', () => {
             await invitationsService.format(
               createInvitationByAccounHelper(app, {
                 accountId: account.account.id,
-                teamId: teams[i].id,
+                teamId: teams[i].uuid,
               })
             )
           );
@@ -815,7 +816,7 @@ describe('[Invitations Module] [Controller] ...', () => {
         );
 
         await api.acceptTeamInvitation(
-          TEAM.id,
+          TEAM.uuid,
           INVITATION.uuid,
           { encKeySet },
           teamCreator.token

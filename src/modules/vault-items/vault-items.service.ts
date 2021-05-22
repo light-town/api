@@ -19,6 +19,7 @@ export class FindVaultItemOptions {
   id?: string;
   vaultId?: string;
   folderId?: string;
+  root?: boolean;
 }
 
 @Injectable()
@@ -108,30 +109,29 @@ export class VaultItemsService {
 
   public getVaultItems(
     options: FindVaultItemOptions,
-    onlyOverview: boolean
+    onlyOverview = false
   ): Promise<VaultItemEntity[]> {
-    const select: (keyof VaultItemEntity)[] = [
-      'id',
-      'encOverview',
-      'encDetails',
-      'vaultId',
-      'folderId',
-      'categoryId',
-      'creatorAccountId',
-      'updatedAt',
-      'createdAt',
-    ];
+    const alias = 'vault_items';
+    const q = this.vaultItemsRepository
+      .createQueryBuilder(alias)
+      .select(`${alias}.id`, 'id')
+      .addSelect(`${alias}.encOverview`, 'encOverview')
+      .addSelect(`${alias}.vaultId`, 'vaultId')
+      .addSelect(`${alias}.folderId`, 'folderId')
+      .addSelect(`${alias}.categoryId`, 'categoryId')
+      .addSelect(`${alias}.creatorAccountId`, 'creatorAccountId')
+      .addSelect(`${alias}.updatedAt`, 'updatedAt')
+      .addSelect(`${alias}.createdAt`, 'createdAt')
+      .andWhere(`${alias}.isDeleted = :isDeleted`, { isDeleted: false });
 
-    if (onlyOverview) select.splice(select.indexOf('encDetails'), 1);
-    if (options.folderId === null) options.folderId = <any>IsNull();
+    if (!onlyOverview) q.addSelect(`${alias}.encDetails`, 'encDetails');
 
-    return this.find({
-      select,
-      where: {
-        ...options,
-        isDeleted: false,
-      },
-    });
+    if (options.id) q.andWhere(`${alias}.id = :id`, options);
+    if (options.vaultId) q.andWhere(`${alias}.vaultId = :vaultId`, options);
+    if (options.folderId) q.andWhere(`${alias}.folderId = :folderId`, options);
+    if (options.root) q.andWhere(`${alias}.folderId IS NULL`);
+
+    return q.getRawMany();
   }
 
   public async getVaultItem(

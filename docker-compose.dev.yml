@@ -1,0 +1,51 @@
+version: '3.9'
+
+services:
+  db:
+    image: 'postgres'
+    ports:
+      - ${TYPEORM_PORT}:${TYPEORM_PORT}
+    environment:
+      POSTGRES_USER: ${TYPEORM_USERNAME}
+      POSTGRES_PASSWORD: ${TYPEORM_PASSWORD}
+      POSTGRES_DB: ${TYPEORM_DATABASE}
+    container_name: lt_db_dev
+    networks:
+      - outside
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      args:
+        NPM_TOKEN: ${NPM_TOKEN}
+        WORKDIR: /usr/src/light-town-api
+    ports:
+      - ${PORT}:${PORT}
+    environment:
+      TYPEORM_HOST: 'lt_db_dev'
+      PORT: ${PORT}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      TYPEORM_CONNECTION: ${TYPEORM_CONNECTION}
+      TYPEORM_USERNAME: ${TYPEORM_USERNAME}
+      TYPEORM_PASSWORD: ${TYPEORM_PASSWORD}
+      TYPEORM_DATABASE: ${TYPEORM_DATABASE}
+      TYPEORM_PORT: ${TYPEORM_PORT}
+      TYPEORM_SYNCHRONIZE: ${TYPEORM_SYNCHRONIZE}
+      TYPEORM_ENTITIES: ${TYPEORM_ENTITIES}
+    depends_on:
+      - db
+    volumes:
+      - .:/usr/src/light-town-api
+      - node_modules:/usr/src/light-town-api/node_modules
+    container_name: lt_api_dev
+    networks:
+      - outside
+
+volumes:
+  node_modules:
+
+networks:
+  outside:
+    driver: bridge
+    external: true
+    name: outside

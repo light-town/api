@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { ApiNotFoundException } from '~/common/exceptions';
 import AuthGuard from '../auth/auth.guard';
 import CurrentAccount from '../auth/current-account';
@@ -17,6 +17,7 @@ export class VaultItemCategoriesController {
     private readonly vaultItemCategoriesService: VaultItemCategoriesService
   ) {}
 
+  @ApiCreatedResponse({ type: VaultItemCategory })
   @Post('/vaults/:vaultUuid/categories')
   public async createVaultItemCategories(
     @CurrentAccount() account,
@@ -32,6 +33,7 @@ export class VaultItemCategoriesController {
     );
   }
 
+  @ApiOkResponse({ type: [VaultItemCategory] })
   @Get('/vaults/:vaultUuid/categories')
   public async getVaultItemCategories(
     @Param('vaultUuid') vaultUuid: string,
@@ -47,6 +49,7 @@ export class VaultItemCategoriesController {
     );
   }
 
+  @ApiOkResponse({ type: VaultItemCategory })
   @Get('/vaults/:vaultUuid/categories/:categoryUuid')
   public async getVaultItemCategory(
     @Param('categoryUuid') categoryUuid: string,

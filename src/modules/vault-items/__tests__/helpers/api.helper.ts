@@ -50,6 +50,10 @@ export class Api {
       .get(`/vaults/${vaultId}/folders/${folderId}/items/${vaultItemId}`)
       .set('Authorization', `Bearer ${token}`);
   }
+
+  getItems(token: string) {
+    return this.handle.get('/items').set('Authorization', `Bearer ${token}`);
+  }
 }
 
 export default Api;

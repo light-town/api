@@ -23,6 +23,7 @@ export class FindKeySetObjectsOptions {
   keySetId?: string;
   vaultId?: string;
   teamId?: string;
+  teamIds?: string[];
   keySetOwnerAccountId?: string;
   keySetOwnerTeamId?: string;
   keySetCreatorAccountId?: string;
@@ -85,7 +86,6 @@ export class KeySetObjectsService {
 
     const keySetObjects = await query
       .select(`${alias}.vaultId`, 'vaultId')
-      .leftJoinAndSelect(`${alias}.keySet`, 'keySet')
       .getRawMany();
 
     return keySetObjects.map(k => k.vaultId);
@@ -99,57 +99,39 @@ export class KeySetObjectsService {
 
     const keySetObjects = await query
       .select(`${alias}.teamId`, 'teamId')
-      .leftJoinAndSelect(`${alias}.keySet`, 'keySet')
       .getRawMany();
 
     return keySetObjects.map(k => k.teamId);
   }
 
   public async getKeySetIds(
-    vaultId: string = null,
-    teamId: string = null
+    options: FindKeySetObjectsOptions = {}
   ): Promise<string[]> {
-    const [query, alias] = this.prepareQuery({
-      vaultId,
-      teamId,
-    });
+    const [query, alias] = this.prepareQuery(options);
 
     const keySetObjects = await query
       .select(`${alias}.keySetId`, 'keySetId')
-      .leftJoinAndSelect(`${alias}.keySet`, 'keySet')
       .getRawMany();
 
     return keySetObjects.map(k => k.keySetId);
   }
 
   public async getKeySet(
-    vaultId: string = null,
-    teamId: string = null
+    options: FindKeySetObjectsOptions = {}
   ): Promise<KeySetEntity> {
-    const [query, alias] = this.prepareQuery({
-      vaultId,
-      teamId,
-    });
+    const [query] = this.prepareQuery(options);
 
-    const keySetObject = await query
-      .leftJoinAndSelect(`${alias}.keySet`, 'keySet')
-      .getOne();
+    const keySetObject = await query.getOne();
 
     return keySetObject?.keySet;
   }
 
   public async getKeySets(
-    vaultId: string = null,
-    teamId: string = null
+    options: FindKeySetObjectsOptions = {}
   ): Promise<KeySetEntity[]> {
-    const [query, alias] = this.prepareQuery({
-      vaultId,
-      teamId,
-    });
+    const [query] = this.prepareQuery(options);
 
-    const keySetObjects = await query
-      .leftJoinAndSelect(`${alias}.keySet`, 'keySet')
-      .getMany();
+    const keySetObjects = await query.getMany();
 
     return keySetObjects.map(e => e.keySet);
   }
@@ -208,11 +190,13 @@ export class KeySetObjectsService {
 
   public getKeySetObject(options: FindKeySetObjectsOptions) {
     const [query] = this.prepareQuery(options);
+
     return query.getOne();
   }
 
   public getKeySetObjects(options: FindKeySetObjectsOptions = {}) {
     const [query] = this.prepareQuery(options);
+
     return query.getMany();
   }
 
@@ -222,7 +206,7 @@ export class KeySetObjectsService {
     const alias = 'key_set_objects';
     const query = this.keySetObjectsRepository
       .createQueryBuilder(alias)
-      .leftJoin(`${alias}.keySet`, 'keySet')
+      .leftJoinAndSelect(`${alias}.keySet`, 'keySet')
       .where(`${alias}.isDeleted = :isDeleted`, { isDeleted: false });
 
     if (options.id) query.andWhere(`${alias}.id = :id`, options);
@@ -230,6 +214,9 @@ export class KeySetObjectsService {
     if (options.vaultId) query.andWhere(`${alias}.vaultId = :vaultId`, options);
 
     if (options.teamId) query.andWhere(`${alias}.teamId = :teamId`, options);
+
+    if (options.teamIds)
+      query.andWhere(`${alias}.teamId IN (:...teamIds)`, options);
 
     if (options.keySetId)
       query.andWhere(`${alias}.keySetId = :keySetId`, options);

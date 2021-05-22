@@ -1,7 +1,6 @@
 import { getConnectionToken } from '@nestjs/typeorm';
 import faker from 'faker';
 import { Connection } from 'typeorm';
-import VaultItemsService from '../vault-items.service';
 import core from '@light-town/core';
 import { INestApplication } from '@nestjs/common';
 import createE2EModuleHelper from './helpers/create-e2e-module.helper';
@@ -13,13 +12,12 @@ import initDatabaseHelper from '~/../__tests__/helpers/init-database.helper';
 import createVaultItemHelper from '~/../__tests__/helpers/create-vault-item.helper';
 import createVaultFolderHelper from '~/../__tests__/helpers/create-vault-folder.helper';
 import createVaultItemCategoryHelper from '~/../__tests__/helpers/create-vault-item-category.helper';
+import { VaultItem } from '../vault-items.dto';
 
 describe('[Vault Items Module] [Service] ...', () => {
   let app: INestApplication;
   let api: Api;
   let connection: Connection;
-
-  let vaultItemsService: VaultItemsService;
 
   let context;
 
@@ -32,8 +30,6 @@ describe('[Vault Items Module] [Service] ...', () => {
     await connection.synchronize(true);
 
     await initDatabaseHelper();
-
-    vaultItemsService = app.get<VaultItemsService>(VaultItemsService);
 
     const {
       account,
@@ -163,18 +159,16 @@ describe('[Vault Items Module] [Service] ...', () => {
         },
       });
 
-      const vaultItems = [];
+      const vaultItems: VaultItem[] = [];
 
       for (let i = 0; i < 10; ++i) {
         vaultItems.push(
-          vaultItemsService.format(
-            await createVaultItemHelper(app, {
-              accountId: context.account.id,
-              vaultId: context.primaryVault.id,
-              vaultKey: context.primaryVault.key,
-              folderId: folder.id,
-            })
-          )
+          await createVaultItemHelper(app, {
+            accountId: context.account.id,
+            vaultId: context.primaryVault.id,
+            vaultKey: context.primaryVault.key,
+            folderId: folder.id,
+          })
         );
       }
 
@@ -211,13 +205,13 @@ describe('[Vault Items Module] [Service] ...', () => {
 
       const response = await api.getVaultItem(
         context.primaryVault.id,
-        vaultItem.id,
+        vaultItem.uuid,
         context.token
       );
 
       expect(response.status).toEqual(200);
       expect(response.body).toStrictEqual({
-        data: vaultItemsService.format(vaultItem),
+        data: vaultItem,
         statusCode: 200,
       });
     });
@@ -248,24 +242,20 @@ describe('[Vault Items Module] [Service] ...', () => {
 
       for (let i = 0; i < 10; ++i) {
         vaultItems.push(
-          vaultItemsService.format(
-            await createVaultItemHelper(app, {
-              accountId: context.account.id,
-              vaultId: context.primaryVault.id,
-              vaultKey: context.primaryVault.key,
-              folderId: folders[0].id,
-            })
-          )
+          await createVaultItemHelper(app, {
+            accountId: context.account.id,
+            vaultId: context.primaryVault.id,
+            vaultKey: context.primaryVault.key,
+            folderId: folders[0].id,
+          })
         );
         vaultItems.push(
-          vaultItemsService.format(
-            await createVaultItemHelper(app, {
-              accountId: context.account.id,
-              vaultId: context.primaryVault.id,
-              vaultKey: context.primaryVault.key,
-              folderId: folders[1].id,
-            })
-          )
+          await createVaultItemHelper(app, {
+            accountId: context.account.id,
+            vaultId: context.primaryVault.id,
+            vaultKey: context.primaryVault.key,
+            folderId: folders[1].id,
+          })
         );
       }
 
@@ -314,13 +304,35 @@ describe('[Vault Items Module] [Service] ...', () => {
       const response = await api.getVaultItemFromFolder(
         context.primaryVault.id,
         folders[1].id,
-        vaultItem.id,
+        vaultItem.uuid,
         context.token
       );
 
       expect(response.status).toEqual(200);
       expect(response.body).toStrictEqual({
-        data: vaultItemsService.format(vaultItem),
+        data: vaultItem,
+        statusCode: 200,
+      });
+    });
+
+    it('should return all available vault items', async () => {
+      const vaultItems: VaultItem[] = [];
+
+      for (let i = 0; i < 10; i++) {
+        vaultItems.push(
+          await createVaultItemHelper(app, {
+            accountId: context.account.id,
+            vaultId: context.primaryVault.id,
+            vaultKey: context.primaryVault.key,
+          })
+        );
+      }
+
+      const response = await api.getItems(context.token);
+
+      expect(response.status).toEqual(200);
+      expect(response.body).toStrictEqual({
+        data: vaultItems,
         statusCode: 200,
       });
     });

@@ -79,12 +79,12 @@ describe('[Team Members Module] [Controller] ...', () => {
         publicKey: userAccount.primaryKeySet.publicKey,
       });
       const teamRoleCreator = await rolesService.getRole({
-        teamId: team.id,
+        teamId: team.uuid,
         name: TeamRolesEnum.TEAM_CREATOR,
       });
 
       const response = await api.createTeamMember(
-        team.id,
+        team.uuid,
         {
           accountUuid: memberAccount.account.id,
           roleUuid: teamRoleCreator.id,
@@ -97,7 +97,7 @@ describe('[Team Members Module] [Controller] ...', () => {
         data: {
           uuid: response.body?.data?.uuid,
           accountUuid: memberAccount.account.id,
-          teamUuid: team.id,
+          teamUuid: team.uuid,
           lastUpdatedAt: response.body?.data?.lastUpdatedAt,
           createdAt: response.body?.data?.createdAt,
         },
@@ -109,7 +109,7 @@ describe('[Team Members Module] [Controller] ...', () => {
         id: response.body.data.uuid,
       });
       expect(teamMember.accountId).toEqual(memberAccount.account.id);
-      expect(teamMember.teamId).toEqual(team.id);
+      expect(teamMember.teamId).toEqual(team.uuid);
       expect(teamMember.isDeleted).toBeFalsy();
     });
 
@@ -121,12 +121,12 @@ describe('[Team Members Module] [Controller] ...', () => {
         publicKey: userAccount.primaryKeySet.publicKey,
       });
       const teamRoleCreator = await rolesService.getRole({
-        teamId: team.id,
+        teamId: team.uuid,
         name: TeamRolesEnum.TEAM_CREATOR,
       });
 
       const response = await api.createTeamMember(
-        team.id,
+        team.uuid,
         {
           accountUuid: otherUserAccount.account.id,
           roleUuid: teamRoleCreator.id,
@@ -155,12 +155,12 @@ describe('[Team Members Module] [Controller] ...', () => {
         publicKey: userAccount.primaryKeySet.publicKey,
       });
       const teamRoleMember = await rolesService.getRole({
-        teamId: team.id,
+        teamId: team.uuid,
         name: TeamRolesEnum.TEAM_MEMBER,
       });
 
       await api.createTeamMember(
-        team.id,
+        team.uuid,
         {
           accountUuid: memberUserAccount.account.id,
           roleUuid: teamRoleMember.id,
@@ -169,7 +169,7 @@ describe('[Team Members Module] [Controller] ...', () => {
       );
 
       const response = await api.createTeamMember(
-        team.id,
+        team.uuid,
         {
           accountUuid: otherUserAccount.account.id,
           roleUuid: teamRoleMember.id,
@@ -201,22 +201,22 @@ describe('[Team Members Module] [Controller] ...', () => {
 
       const creatorMember = await teamMembersService.getTeamMember({
         accountId: userAccount.account.id,
-        teamId: team.id,
+        teamId: team.uuid,
       });
 
       const teamRoleCreator = await rolesService.getRole({
-        teamId: team.id,
+        teamId: team.uuid,
         name: TeamRolesEnum.TEAM_MEMBER,
       });
 
       const teamMember = await createTeamMemberHelper(app, {
         creaorAccountId: userAccount.account.id,
         accountId: memberAccount.account.id,
-        teamId: team.id,
+        teamId: team.uuid,
         roleId: teamRoleCreator.id,
       });
 
-      const response = await api.getTeamMembers(team.id, userAccount.token);
+      const response = await api.getTeamMembers(team.uuid, userAccount.token);
 
       expect(response.status).toEqual(200);
       expect(response.body).toStrictEqual({
@@ -234,19 +234,19 @@ describe('[Team Members Module] [Controller] ...', () => {
       });
 
       const teamRoleCreator = await rolesService.getRole({
-        teamId: team.id,
+        teamId: team.uuid,
         name: TeamRolesEnum.TEAM_MEMBER,
       });
 
       const teamMember = await createTeamMemberHelper(app, {
         creaorAccountId: userAccount.account.id,
         accountId: memberAccount.account.id,
-        teamId: team.id,
+        teamId: team.uuid,
         roleId: teamRoleCreator.id,
       });
 
       const response = await api.getTeamMember(
-        team.id,
+        team.uuid,
         teamMember.id,
         userAccount.token
       );
@@ -267,7 +267,7 @@ describe('[Team Members Module] [Controller] ...', () => {
       });
 
       const response = await api.getTeamMembers(
-        team.id,
+        team.uuid,
         otherUserAccount.token
       );
 

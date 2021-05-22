@@ -2,7 +2,6 @@ import { INestApplication } from '@nestjs/common';
 import core from '@light-town/core';
 import faker from 'faker';
 import VaultItemsController from '~/modules/vault-items/vault-items.controller';
-import VaultItemsService from '~/modules/vault-items/vault-items.service';
 import createVaultItemCategoryHelper from './create-vault-item-category.helper';
 import {
   VaultItemOverview,
@@ -26,7 +25,6 @@ export const createVaultItemHelper = async (
   const vaultItemsController = app.get<VaultItemsController>(
     VaultItemsController
   );
-  const vaultItemsService = app.get<VaultItemsService>(VaultItemsService);
 
   const overview: VaultItemOverview = options.overview ?? {
     name: faker.random.word(),
@@ -92,7 +90,7 @@ export const createVaultItemHelper = async (
         }
       );
 
-  return vaultItemsService.getVaultItem({ id: vaultItem.uuid });
+  return vaultItem;
 };
 
 export default createVaultItemHelper;

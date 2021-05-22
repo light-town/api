@@ -72,7 +72,9 @@ export class RouterService {
 
     if (!vault) throw new ApiNotFoundException(`The vault was not found`);
 
-    const keySet = await this.keySetObjectsService.getKeySet(vault.id);
+    const keySet = await this.keySetObjectsService.getKeySet({
+      vaultId: vault.id,
+    });
 
     if (!keySet.ownerTeamId)
       return [{ ...vault, routeObjectType: ObjectTypesEnum.VAULT }];

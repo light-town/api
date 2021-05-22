@@ -317,7 +317,7 @@ describe('[Vaults Module] [Controller] ...', () => {
         );
 
         const response = await api.createTeamVault(
-          team.id,
+          team.uuid,
           {
             ...encVault,
             encCategories: [],
@@ -330,7 +330,7 @@ describe('[Vaults Module] [Controller] ...', () => {
           data: {
             uuid: response.body?.data?.uuid,
             ...encVault,
-            ownerTeamUuid: team.id,
+            ownerTeamUuid: team.uuid,
             keySetUuid: response.body?.data?.keySetUuid,
           },
           statusCode: 201,
@@ -361,7 +361,7 @@ describe('[Vaults Module] [Controller] ...', () => {
         });
 
         const teamMember = await teamMembersService.getTeamMember({
-          teamId: team.id,
+          teamId: team.uuid,
           accountId: userAccount.account.id,
         });
 
@@ -403,7 +403,7 @@ describe('[Vaults Module] [Controller] ...', () => {
         });
 
         const teamMember = await teamMembersService.getTeamMember({
-          teamId: team.id,
+          teamId: team.uuid,
           accountId: userAccount.account.id,
         });
 

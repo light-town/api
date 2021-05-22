@@ -83,6 +83,14 @@ export class Team {
   creatorAccountUuid: string;
 
   @ApiProperty({
+    description: 'The key set uuid',
+    required: true,
+  })
+  @IsString()
+  @IsUUID()
+  keySetUuid: string;
+
+  @ApiProperty({
     description: 'The datetime of last updating team',
     required: true,
   })

@@ -20,6 +20,7 @@ import { CurrentTeamMemberInterceptor } from '../team-members/current-team-membe
 import RolesService from '../roles/roles.service';
 import { ObjectTypesEnum } from '../roles/roles.dto';
 import { PermissionTypesEnum } from '../permissions/permissions.dto';
+import KeySetObjectsService from '../key-set-objects/key-set-objects.service';
 
 @AuthGuard()
 @ApiTags('/teams')
@@ -30,18 +31,24 @@ export class TeamsController {
     @Inject(forwardRef(() => TeamMembersService))
     private readonly teamMembersService: TeamMembersService,
     @Inject(forwardRef(() => RolesService))
-    private readonly rolesService: RolesService
+    private readonly rolesService: RolesService,
+    @Inject(forwardRef(() => KeySetObjectsService))
+    private readonly keySetObjectsService: KeySetObjectsService
   ) {}
 
   @ApiCreatedResponse({ type: Team })
   @Post()
-  public createTeam(
+  public async createTeam(
     @CurrentAccount() account,
     @Body() options: CreateTeamOptions
   ): Promise<Team> {
-    return this.teamsService.format(
-      this.teamsService.createTeam(account.id, options)
-    );
+    const newTeam = await this.teamsService.createTeam(account.id, options);
+    const keySet = await this.keySetObjectsService.getKeySet({
+      teamId: newTeam.id,
+      keySetOwnerAccountId: account.id,
+    });
+
+    return this.teamsService.format({ ...newTeam, keySetUuid: keySet.id });
   }
 
   @ApiCreatedResponse({ type: [Team] })
@@ -51,10 +58,22 @@ export class TeamsController {
       accountId: account.id,
     });
 
+    if (!currentTeamMembers.length) return [];
+
+    const foundTeams = await this.teamsService.getTeams({
+      memberIds: currentTeamMembers.map(m => m.id),
+    });
+
+    const keySetObjects = await this.keySetObjectsService.getKeySetObjects({
+      teamIds: foundTeams.map(t => t.id),
+      keySetOwnerAccountId: account.id,
+    });
+
     return this.teamsService.formatAll(
-      this.teamsService.getTeams({
-        memberIds: currentTeamMembers.map(m => m.id),
-      })
+      foundTeams.map(t => ({
+        ...t,
+        keySetUuid: keySetObjects.find(kso => kso.teamId === t.id)?.keySetId,
+      }))
     );
   }
 
@@ -62,6 +81,7 @@ export class TeamsController {
   @UseInterceptors(CurrentTeamMemberInterceptor)
   @Get('/:teamUuid')
   public async getTeam(
+    @CurrentAccount() account,
     @CurrentTeamMember() teamMember,
     @Param('teamUuid') teamUuid: string
   ): Promise<Team> {
@@ -72,9 +92,16 @@ export class TeamsController {
       PermissionTypesEnum.READ_ONLY
     );
 
-    return this.teamsService.format(
-      this.teamsService.getTeam({ id: teamUuid })
-    );
+    const foundTeam = await this.teamsService.getTeam({ id: teamUuid });
+    const keySet = await this.keySetObjectsService.getKeySet({
+      teamId: foundTeam.id,
+      keySetOwnerAccountId: account.id,
+    });
+
+    return this.teamsService.format({
+      ...foundTeam,
+      keySetUuid: keySet.id,
+    });
   }
 
   @UseInterceptors(CurrentTeamMemberInterceptor)

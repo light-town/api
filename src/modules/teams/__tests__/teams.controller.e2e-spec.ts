@@ -119,6 +119,7 @@ describe('[Teams Module] [Controller] ...', () => {
         data: {
           uuid: response.body?.data?.uuid,
           ...encTeam,
+          keySetUuid: response.body?.data?.keySetUuid,
           creatorAccountUuid: userAccount.account.id,
           lastUpdatedAt: response.body?.data?.lastUpdatedAt,
           createdAt: response.body?.data?.createdAt,
@@ -144,20 +145,16 @@ describe('[Teams Module] [Controller] ...', () => {
 
       for (let i = 0; i < 5; ++i) {
         teamsPromise.push(
-          teamsService.format(
-            createTeamHelper(app, {
-              accountId: firstUserAccount.account.id,
-              publicKey: firstUserAccount.primaryKeySet.publicKey,
-            })
-          )
+          createTeamHelper(app, {
+            accountId: firstUserAccount.account.id,
+            publicKey: firstUserAccount.primaryKeySet.publicKey,
+          })
         );
         teamsPromise.push(
-          teamsService.format(
-            createTeamHelper(app, {
-              accountId: secondUserAccount.account.id,
-              publicKey: secondUserAccount.primaryKeySet.publicKey,
-            })
-          )
+          createTeamHelper(app, {
+            accountId: secondUserAccount.account.id,
+            publicKey: secondUserAccount.primaryKeySet.publicKey,
+          })
         );
       }
 
@@ -183,20 +180,16 @@ describe('[Teams Module] [Controller] ...', () => {
 
       for (let i = 0; i < 2; ++i) {
         teamsPromise.push(
-          teamsService.format(
-            createTeamHelper(app, {
-              accountId: firstUserAccount.account.id,
-              publicKey: firstUserAccount.primaryKeySet.publicKey,
-            })
-          )
+          createTeamHelper(app, {
+            accountId: firstUserAccount.account.id,
+            publicKey: firstUserAccount.primaryKeySet.publicKey,
+          })
         );
         teamsPromise.push(
-          teamsService.format(
-            createTeamHelper(app, {
-              accountId: secondUserAccount.account.id,
-              publicKey: secondUserAccount.primaryKeySet.publicKey,
-            })
-          )
+          createTeamHelper(app, {
+            accountId: secondUserAccount.account.id,
+            publicKey: secondUserAccount.primaryKeySet.publicKey,
+          })
         );
       }
 
@@ -218,20 +211,16 @@ describe('[Teams Module] [Controller] ...', () => {
 
       for (let i = 0; i < 2; ++i) {
         teamsPromise.push(
-          teamsService.format(
-            createTeamHelper(app, {
-              accountId: firstUserAccount.account.id,
-              publicKey: firstUserAccount.primaryKeySet.publicKey,
-            })
-          )
+          createTeamHelper(app, {
+            accountId: firstUserAccount.account.id,
+            publicKey: firstUserAccount.primaryKeySet.publicKey,
+          })
         );
         teamsPromise.push(
-          teamsService.format(
-            createTeamHelper(app, {
-              accountId: secondUserAccount.account.id,
-              publicKey: secondUserAccount.primaryKeySet.publicKey,
-            })
-          )
+          createTeamHelper(app, {
+            accountId: secondUserAccount.account.id,
+            publicKey: secondUserAccount.primaryKeySet.publicKey,
+          })
         );
       }
 

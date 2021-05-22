@@ -4,6 +4,7 @@ import faker from 'faker';
 import TeamsController from '~/modules/teams/teams.controller';
 import TeamsService from '~/modules/teams/teams.service';
 import { PublicKey } from '@light-town/core/dist/encryption/common/rsa/definitions';
+import KeySetObjectsService from '~/modules/key-set-objects/key-set-objects.service';
 
 export interface CreateTeamOptions {
   accountId: string;
@@ -16,7 +17,6 @@ export const createTeamHelper = async (
   options: CreateTeamOptions
 ) => {
   const teamsController = app.get<TeamsController>(TeamsController);
-  const teamsService = app.get<TeamsService>(TeamsService);
 
   const overview = options.overview ?? {
     name: faker.random.word(),
@@ -49,7 +49,7 @@ export const createTeamHelper = async (
     options.publicKey
   );
 
-  const team = await teamsController.createTeam(
+  return teamsController.createTeam(
     { id: options.accountId },
     {
       salt: muk.salt,
@@ -59,8 +59,6 @@ export const createTeamHelper = async (
       accountKeySet,
     }
   );
-
-  return teamsService.getTeam({ id: team.uuid });
 };
 
 export default createTeamHelper;
