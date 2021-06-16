@@ -31,6 +31,12 @@ export class ApiConflictException extends ApiException {
   }
 }
 
+export class ApiBadRequestException extends ApiException {
+  constructor(message?: string) {
+    super({ type: 'Bad Request', message }, HttpStatus.BAD_REQUEST);
+  }
+}
+
 export class ApiInternalServerException extends ApiException {
   constructor(message?: string) {
     super(

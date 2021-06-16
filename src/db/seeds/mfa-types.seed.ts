@@ -1,4 +1,4 @@
-import * as faker from 'faker';
+import faker from 'faker';
 import { MFATypesEnum } from '~/modules/auth/auth.dto';
 import MFATypeEntity from '../entities/mfa-type.entity';
 import Factory from './factory';

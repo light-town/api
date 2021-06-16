@@ -1,4 +1,4 @@
-import * as faker from 'faker';
+import faker from 'faker';
 import AccountEntity from '~/db/entities/account.entity';
 import Factory from './factory';
 import Seeder from './seeder';

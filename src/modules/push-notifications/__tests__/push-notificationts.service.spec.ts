@@ -2,7 +2,7 @@ import { TestingModule } from '@nestjs/testing';
 import PushNotificationsGateway from '../push-notifications.gateway';
 import PushNotificationsService from '../push-notifications.service';
 import createTestingModule from './helpers/createTestingModule';
-import * as faker from 'faker';
+import faker from 'faker';
 import { PushNotificationStageEnum } from '../push-notifications.dto';
 import { Repository } from 'typeorm';
 import PushNotificationStageEntity from '~/db/entities/push-notification-stage.entity';

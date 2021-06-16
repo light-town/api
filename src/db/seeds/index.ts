@@ -11,7 +11,18 @@ import PushNotificationStagesSeeder, {
   PushNotificationStagesFactory,
 } from './push-notification-stages.seed';
 import { PushNotificationStageEnum } from '~/modules/push-notifications/push-notifications.dto';
-import AccountsSeeder, { AccountsFactory } from './accounts.seed';
+import PermissionObjectTypesSeeder, {
+  PermissionObjectTypesFactory,
+} from '~/db/seeds/permission-types.seed';
+import { ObjectTypesEnum } from '~/modules/roles/roles.dto';
+import PermissionTypesSeeder, {
+  PermissionTypesFactory,
+} from '~/db/seeds/permission-object-types.seed';
+import { PermissionTypesEnum } from '~/modules/permissions/permissions.dto';
+import InvitationVerificationStagesSeeder, {
+  InvitationVerificationStagesFactory,
+} from './invitation-verification-stages.seed';
+import { InvitationVerificationStagesEnum } from '~/modules/invitations/invitations.dto';
 
 dotenv.config();
 
@@ -20,83 +31,103 @@ createConnection().then(async (connection: Connection) => {
 
   const userSeeder = new UsersSeeder(new UsersFactory());
   const users = await userSeeder.run(10);
-
   console.log(users);
 
   const mfaTypesSeeder = new MFATypesSeeder(new MFATypesFactory());
-  const noneMFAType = await mfaTypesSeeder.run(1, { name: MFATypesEnum.NONE });
-  console.log(noneMFAType);
-
-  const fingerprintMFAType = await mfaTypesSeeder.run(1, {
-    name: MFATypesEnum.FINGERPRINT,
-  });
-  console.log(fingerprintMFAType);
-
-  const optMFAType = await mfaTypesSeeder.run(1, {
-    name: MFATypesEnum.ONE_TIME_PASSWORD,
-  });
-  console.log(optMFAType);
+  console.log(
+    await Promise.all([
+      mfaTypesSeeder.run(1, { name: MFATypesEnum.NONE }),
+      mfaTypesSeeder.run(1, { name: MFATypesEnum.ONE_TIME_PASSWORD }),
+      mfaTypesSeeder.run(1, { name: MFATypesEnum.FINGERPRINT }),
+    ])
+  );
 
   const verifySessionStagesSeeder = new VerifySessionStagesSeeder(
     new VerifySessionStagesFactory()
   );
   console.log(
-    await verifySessionStagesSeeder.run(1, {
-      name: SessionVerificationStageEnum.REQUIRED,
-    })
-  );
-
-  console.log(
-    await verifySessionStagesSeeder.run(1, {
-      name: SessionVerificationStageEnum.COMPLETED,
-    })
-  );
-
-  console.log(
-    await verifySessionStagesSeeder.run(1, {
-      name: SessionVerificationStageEnum.NOT_REQUIRED,
-    })
+    await Promise.all([
+      verifySessionStagesSeeder.run(1, {
+        name: SessionVerificationStageEnum.NOT_REQUIRED,
+      }),
+      verifySessionStagesSeeder.run(1, {
+        name: SessionVerificationStageEnum.REQUIRED,
+      }),
+      verifySessionStagesSeeder.run(1, {
+        name: SessionVerificationStageEnum.COMPLETED,
+      }),
+    ])
   );
 
   const pushNotificationStagesSeeder = new PushNotificationStagesSeeder(
     new PushNotificationStagesFactory()
   );
   console.log(
-    await pushNotificationStagesSeeder.run(1, {
-      name: PushNotificationStageEnum.CREATED,
-    })
-  );
-  console.log(
-    await pushNotificationStagesSeeder.run(1, {
-      name: PushNotificationStageEnum.SENT,
-    })
-  );
-  console.log(
-    await pushNotificationStagesSeeder.run(1, {
-      name: PushNotificationStageEnum.ARRIVED,
-    })
+    await Promise.all([
+      pushNotificationStagesSeeder.run(1, {
+        name: PushNotificationStageEnum.CREATED,
+      }),
+      pushNotificationStagesSeeder.run(1, {
+        name: PushNotificationStageEnum.SENT,
+      }),
+      pushNotificationStagesSeeder.run(1, {
+        name: PushNotificationStageEnum.ARRIVED,
+      }),
+    ])
   );
 
-  const accountsSeeder = new AccountsSeeder(new AccountsFactory());
-  console.log(
-    await accountsSeeder.run(1, {
-      userId: users[0].id,
-      mfaTypeId: noneMFAType[0].id,
-      password: '123',
-    })
+  const permissionObjectTypesSeeder = new PermissionObjectTypesSeeder(
+    new PermissionObjectTypesFactory()
+  );
+  await Promise.all([
+    permissionObjectTypesSeeder.run(1, { name: ObjectTypesEnum.TEAM }),
+    permissionObjectTypesSeeder.run(1, { name: ObjectTypesEnum.VAULT }),
+    permissionObjectTypesSeeder.run(1, { name: ObjectTypesEnum.FOLDER }),
+    permissionObjectTypesSeeder.run(1, { name: ObjectTypesEnum.ITEM }),
+  ]);
+
+  const permissionTypesSeeder = new PermissionTypesSeeder(
+    new PermissionTypesFactory()
   );
   console.log(
-    await accountsSeeder.run(1, {
-      userId: users[0].id,
-      mfaTypeId: fingerprintMFAType[0].id,
-      password: '123',
-    })
+    await Promise.all([
+      permissionTypesSeeder.run(1, {
+        name: PermissionTypesEnum.READ_ONLY,
+        level: 0.2,
+      }),
+      permissionTypesSeeder.run(1, {
+        name: PermissionTypesEnum.READ_AND_WRITE,
+        level: 0.4,
+      }),
+      permissionTypesSeeder.run(1, {
+        name: PermissionTypesEnum.DETELE,
+        level: 0.6,
+      }),
+      permissionTypesSeeder.run(1, {
+        name: PermissionTypesEnum.ADMINISTRATOR,
+        level: 0.8,
+      }),
+      permissionTypesSeeder.run(1, {
+        name: PermissionTypesEnum.CREATOR,
+        level: 1,
+      }),
+    ])
+  );
+
+  const invitationVerificationStagesSeeder = new InvitationVerificationStagesSeeder(
+    new InvitationVerificationStagesFactory()
   );
   console.log(
-    await accountsSeeder.run(1, {
-      userId: users[0].id,
-      mfaTypeId: optMFAType[0].id,
-      password: '123',
-    })
+    await Promise.all([
+      invitationVerificationStagesSeeder.run(1, {
+        name: InvitationVerificationStagesEnum.AWAITING_ANSWER,
+      }),
+      invitationVerificationStagesSeeder.run(1, {
+        name: InvitationVerificationStagesEnum.ACCEPTED,
+      }),
+      invitationVerificationStagesSeeder.run(1, {
+        name: InvitationVerificationStagesEnum.REJECTED,
+      }),
+    ])
   );
 });

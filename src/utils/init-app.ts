@@ -1,7 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import * as dotenv from 'dotenv';
-import * as csurf from 'csurf';
-import * as cookieParser from 'cookie-parser';
+import csurf from 'csurf';
+import cookieParser from 'cookie-parser';
 import ResponseFormatInterceptor from '~/common/response-format.interceptor';
 import WsAdapter from '~/common/ws-adapter';
 import ValidationPipe from '~/common/validation/pipe';
@@ -17,8 +17,9 @@ export const initApp = (
 
   if (useCors)
     app.enableCors({
+      methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
       credentials: true,
-      origin: process.env.FRONTEND_URL,
+      origin: true /* process.env.FRONTEND_URL */,
     });
 
   app.useGlobalFilters(new ApiExceptionFilter());
@@ -29,7 +30,9 @@ export const initApp = (
     app.use(
       csurf({
         cookie: true,
-        value: req => req?.headers['x-csrf-token'] || req?.cookies['_csrf'],
+        /* value: (req) => {
+         return req?.headers['X-CSRF-TOKEN'] || req?.cookies['_csrf'],
+        } */
       })
     );
 

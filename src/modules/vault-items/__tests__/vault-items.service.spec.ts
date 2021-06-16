@@ -1,6 +1,6 @@
 import { TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import * as faker from 'faker';
+import faker from 'faker';
 import { Repository } from 'typeorm';
 import VaultItemEntity from '~/db/entities/vault-item.entity';
 import VaultsService from '~/modules/vaults/vaults.service';
@@ -73,11 +73,15 @@ describe('[Vault Items Module] [Service] ...', () => {
         {
           fields: [
             {
+              position: 1,
               fieldName: 'username',
+              name: 'username',
               value: faker.internet.userName(),
             },
             {
+              position: 2,
               fieldName: 'password',
+              name: 'password',
               value: faker.internet.password(),
             },
           ],

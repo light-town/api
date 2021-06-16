@@ -1,6 +1,6 @@
 import { INestApplication } from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import * as faker from 'faker';
+import faker from 'faker';
 import { FindManyOptions, FindOneOptions, Repository } from 'typeorm';
 import UserEntity from '~/db/entities/user.entity';
 import UsersService from '../users.service';

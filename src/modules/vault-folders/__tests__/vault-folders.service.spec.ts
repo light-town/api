@@ -1,6 +1,6 @@
 import { TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import * as faker from 'faker';
+import faker from 'faker';
 import { Repository } from 'typeorm';
 import VaultsService from '~/modules/vaults/vaults.service';
 import createModuleHelper from './helpers/create-module.helper';
@@ -46,6 +46,7 @@ describe('[Vault Folders Module] [Service] ...', () => {
       };
       const TEST_VAULT_FOLDER = {
         id: faker.datatype.uuid(),
+        containedFoldersCount: 0,
       };
       const TEST_ENC_OVERVIEW = {
         name: faker.random.word(),

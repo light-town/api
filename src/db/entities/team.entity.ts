@@ -1,13 +1,34 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
+import AccountEntity from './account.entity';
 import { IEntity } from './entity.interface';
+import TeamMemberEntity from './team-member.entity';
 
 @Entity('teams')
 export class TeamEntity extends IEntity {
+  @Column({ name: 'salt' })
+  salt: string;
+
   @Column({ type: 'jsonb', name: 'enc_key' })
   encKey: Record<string, any>;
 
-  @Column({ type: 'jsonb', name: 'enc_metadata' })
-  encMetadata: Record<string, any>;
+  @Column({ type: 'jsonb', name: 'enc_overview' })
+  encOverview: Record<string, any>;
+
+  @Column({ type: 'uuid', name: 'creator_account_id' })
+  creatorAccountId: string;
+
+  @ManyToOne(() => AccountEntity)
+  @JoinColumn({
+    name: 'creator_account_id',
+    referencedColumnName: 'id',
+  })
+  creatorAccount?: AccountEntity;
+
+  @OneToMany(() => TeamMemberEntity, teamMember => teamMember.team)
+  members?: TeamMemberEntity[];
+
+  @Column({ length: 256, name: 'invitation_key' })
+  invitationKey: string;
 }
 
 export default TeamEntity;

@@ -1,4 +1,4 @@
-import * as WebSocket from 'ws';
+import WebSocket from 'ws';
 import NamespacesEnum from '~/common/gateway-namespaces';
 
 export class Payload<N = NamespacesEnum, E = string, D = any> {

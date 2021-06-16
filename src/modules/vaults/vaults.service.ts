@@ -1,15 +1,28 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindManyOptions, FindOneOptions, In, Repository } from 'typeorm';
-import { ApiNotFoundException } from '~/common/exceptions';
+import {
+  FindManyOptions,
+  FindOneOptions,
+  Repository,
+  SelectQueryBuilder,
+} from 'typeorm';
 import VaultEntity from '~/db/entities/vault.entity';
-import KeySetVaultsService from '../key-set-vaults/key-set-vaults.service';
+import KeySetObjectsService from '../key-set-objects/key-set-objects.service';
 import KeySetsService from '../key-sets/key-sets.service';
 import VaultItemCategoriesService from '../vault-item-categories/vault-item-categories.service';
 import { EncVaultKey, CreateVaultPayload, Vault } from './vaults.dto';
 
+export type ExtendedVault = VaultEntity & {
+  ownerTeamId?: string;
+  ownerAccountId?: string;
+  keySetId: string;
+  foldersCount: number;
+  itemsCount: number;
+};
+
 export class FindVaultOptions {
   id?: string;
+  ids?: string[];
 }
 
 @Injectable()
@@ -17,28 +30,19 @@ export class VaultsService {
   public constructor(
     @InjectRepository(VaultEntity)
     private readonly vaultsRepository: Repository<VaultEntity>,
-    @Inject(forwardRef(() => KeySetVaultsService))
-    private readonly keySetVaultsService: KeySetVaultsService,
+    @Inject(forwardRef(() => KeySetObjectsService))
+    private readonly keySetObjectsService: KeySetObjectsService,
     @Inject(forwardRef(() => KeySetsService))
     private readonly keySetsService: KeySetsService,
     @Inject(forwardRef(() => VaultItemCategoriesService))
     private readonly vaultItemCategoriesService: VaultItemCategoriesService
   ) {}
 
-  public async create(
-    accountId: string,
+  public async createVault(
+    creatorAccountId: string,
+    keySetId: string,
     payload: CreateVaultPayload
   ): Promise<VaultEntity> {
-    const primaryKeySet = await this.keySetsService.getKeySet({
-      ownerAccountId: accountId,
-      isPrimary: true,
-    });
-
-    if (!primaryKeySet)
-      throw new ApiNotFoundException(
-        'The primary key set of account was not found'
-      );
-
     const newVault = await this.vaultsRepository.save(
       this.vaultsRepository.create({
         encKey: payload.encKey,
@@ -46,19 +50,19 @@ export class VaultsService {
       })
     );
 
-    /// [TODO] replace from here
     await Promise.all(
       payload.encCategories.map(c =>
         this.vaultItemCategoriesService.createVaultItemCategory(
-          accountId,
+          creatorAccountId,
           newVault.id,
           { encOverview: c.encOverview, encDetails: c.encDetails }
         )
       )
     );
 
-    /// [TODO] replace from here
-    await this.keySetVaultsService.create(primaryKeySet.id, newVault.id);
+    await this.keySetObjectsService.createKeySetObject(keySetId, {
+      vaultId: newVault.id,
+    });
 
     return newVault;
   }
@@ -72,33 +76,26 @@ export class VaultsService {
     return vault !== undefined;
   }
 
-  public format(
-    vault: VaultEntity,
-    accountId: string,
-    keySetId: string
-  ): Vault {
-    return this.normalize(vault, accountId, keySetId);
+  public format(vault: ExtendedVault): Vault {
+    return this.normalize(vault);
   }
 
-  public formatAll(
-    vaults: VaultEntity[],
-    accountId: string,
-    keySetId: string
-  ): Vault[] {
-    return vaults.map(vault => this.normalize(vault, accountId, keySetId));
+  public formatAll(vaults: ExtendedVault[]): Vault[] {
+    return vaults.map(vault => this.normalize(vault));
   }
 
-  private normalize(
-    vault: VaultEntity,
-    accountId: string,
-    keySetId: string
-  ): Vault {
+  private normalize(vault: ExtendedVault): Vault {
     return {
       uuid: vault.id,
       encKey: <EncVaultKey>vault.encKey,
       encOverview: vault.encOverview,
-      accountUuid: accountId,
-      keySetUuid: keySetId,
+      ownerAccountUuid: vault.ownerAccountId,
+      ownerTeamUuid: vault.ownerTeamId,
+      keySetUuid: vault.keySetId,
+      lastUpdatedAt: vault.updatedAt.toISOString(),
+      createdAt: vault.createdAt.toISOString(),
+      foldersCount: vault.foldersCount,
+      itemsCount: vault.itemsCount,
     };
   }
 
@@ -120,34 +117,45 @@ export class VaultsService {
   }
 
   public async getVault(options: FindVaultOptions): Promise<VaultEntity> {
-    return await this.findOne({
-      select: ['id', 'encKey', 'encOverview'],
-      where: {
-        ...options,
-        isDeleted: false,
-      },
-    });
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [_, query] = this.prepareQuery(options);
+    return query.getOne();
   }
 
   public async getVaults(options: FindVaultOptions): Promise<VaultEntity[]> {
-    return await this.find({
-      select: ['id', 'encKey', 'encOverview'],
-      where: {
-        ...options,
-        isDeleted: false,
-      },
-    });
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [_, query] = this.prepareQuery(options);
+    return query.getMany();
   }
 
   public async getVaultsByKeySet(keySetId: string): Promise<VaultEntity[]> {
-    const vaultIds = await this.keySetVaultsService.getVaultIds(keySetId);
-    return this.find({
-      select: ['id', 'encKey', 'encOverview'],
-      where: {
-        id: In(vaultIds),
-        isDeleted: false,
-      },
+    const vaultIds = await this.keySetObjectsService.getVaultIds(keySetId);
+
+    if (!vaultIds.length) return [];
+
+    return this.getVaults({
+      ids: vaultIds,
     });
+  }
+
+  public prepareQuery(
+    options: FindVaultOptions
+  ): [string, SelectQueryBuilder<VaultEntity>] {
+    const alias = 'vaults';
+    const query = this.vaultsRepository
+      .createQueryBuilder(alias)
+      .where(`${alias}.isDeleted = :isDeleted`, { isDeleted: false });
+
+    if (options.id) query.andWhere(`${alias}.id = :id`, options);
+    if (options.ids) query.andWhere(`${alias}.id IN (:...ids)`, options);
+
+    return [alias, query];
+  }
+
+  public async getVaultsCount(options: FindVaultOptions): Promise<number> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [_, query] = this.prepareQuery(options);
+    return query.getCount();
   }
 }
 

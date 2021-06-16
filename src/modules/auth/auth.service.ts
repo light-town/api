@@ -71,14 +71,18 @@ export class AuthService {
       salt: srp.salt,
     });
 
-    await this.keySetsService.create(
+    const keySet = await this.keySetsService.create(
       newAccount.id,
       newAccount.id,
       primaryKeySet,
       { isAccountOwner: true, isPrimary: true }
     );
 
-    await this.vaultsService.create(newAccount.id, primaryVault);
+    await this.vaultsService.createVault(
+      newAccount.id,
+      keySet.id,
+      primaryVault
+    );
   }
 
   public async createSession(

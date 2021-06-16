@@ -4,7 +4,7 @@ import { getConnectionToken } from '@nestjs/typeorm';
 import { Api } from './helpers/api.helper';
 import { MFATypesEnum, SessionCreatePayload } from '../auth.dto';
 import core from '@light-town/core';
-import * as faker from 'faker';
+import faker from 'faker';
 import UserEntity from '~/db/entities/user.entity';
 import AccountEntity from '~/db/entities/account.entity';
 import { INestApplication } from '@nestjs/common';

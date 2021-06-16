@@ -4,7 +4,7 @@ import DeviceEntity from '~/db/entities/device.entity';
 import { OS } from '../devices.dto';
 import DevicesService, { DeviceCreateOptions } from '../devices.service';
 import createTestingModule from './helpers/createTestingModule';
-import * as faker from 'faker';
+import faker from 'faker';
 import { INestApplication } from '@nestjs/common';
 
 describe('[Devices Module] ...', () => {

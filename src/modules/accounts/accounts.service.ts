@@ -110,6 +110,18 @@ export class AccountsService {
     return account !== undefined;
   }
 
+  public async findOrThrow(
+    options: FindAccountOptions
+  ): Promise<AccountEntity> {
+    const account = await this.getAccount(options);
+
+    if (!account) {
+      throw new ApiNotFoundException(`The account was not found`);
+    }
+
+    return account;
+  }
+
   public async getAccount(options: FindAccountOptions): Promise<AccountEntity> {
     return this.findOne({
       select: ['id', 'key', 'mfaTypeId', 'userId'],

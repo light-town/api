@@ -1,13 +1,13 @@
 import { TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import * as faker from 'faker';
+import faker from 'faker';
 import { Repository } from 'typeorm';
 import {
   ApiConflictException,
   ApiForbiddenException,
   ApiNotFoundException,
 } from '~/common/exceptions';
-import KeySetEntity from '~/db/entities/key-sets.entity';
+import KeySetEntity from '~/db/entities/key-set.entity';
 import AccountsService from '~/modules/accounts/accounts.service';
 import KeySetsService from '../key-sets.service';
 import createModuleHelper from './helpers/create-module.helper';
@@ -31,134 +31,6 @@ describe('[Key Set Module] [Service] ...', () => {
   afterEach(() => {
     jest.clearAllMocks();
     jest.restoreAllMocks();
-  });
-
-  describe('Getting primary key set', () => {
-    it('should return primary key set', async () => {
-      const TEST_ACCOUNT_UUID = faker.datatype.uuid();
-      const TEST_KEY_SET = {
-        id: faker.datatype.uuid(),
-        publicKey: faker.datatype.uuid(),
-        encPrivateKey: {
-          key: faker.datatype.uuid(),
-        },
-        encSymmetricKey: {
-          key: faker.datatype.uuid(),
-        },
-      };
-
-      const findOneKeySetFn = jest
-        .spyOn(keySetsService, 'findOne')
-        .mockResolvedValueOnce(<any>TEST_KEY_SET);
-
-      expect(
-        await keySetsService.getKeySet({
-          ownerAccountId: TEST_ACCOUNT_UUID,
-          isPrimary: true,
-        })
-      ).toStrictEqual(TEST_KEY_SET);
-
-      expect(findOneKeySetFn).toHaveBeenCalledTimes(1);
-      expect(findOneKeySetFn).toHaveBeenCalledWith({
-        select: [
-          'id',
-          'creatorAccountId',
-          'ownerAccountId',
-          'ownerTeamId',
-          'publicKey',
-          'encPrivateKey',
-          'encSymmetricKey',
-          'isPrimary',
-        ],
-        where: {
-          ownerAccountId: TEST_ACCOUNT_UUID,
-          isPrimary: true,
-          isDeleted: false,
-        },
-      });
-    });
-
-    it('should throw an error when primary key set was not found', async () => {
-      const TEST_ACCOUNT_UUID = faker.datatype.uuid();
-
-      const findOneKeySetFn = jest
-        .spyOn(keySetsService, 'findOne')
-        .mockResolvedValueOnce(undefined);
-
-      try {
-        await keySetsService.getKeySet({
-          ownerAccountId: TEST_ACCOUNT_UUID,
-          isPrimary: true,
-        });
-      } catch (e) {
-        expect(e).toStrictEqual(
-          new ApiNotFoundException('The primary key set was not found')
-        );
-      }
-
-      expect(findOneKeySetFn).toHaveBeenCalledTimes(1);
-      expect(findOneKeySetFn).toHaveBeenCalledWith({
-        select: [
-          'id',
-          'creatorAccountId',
-          'ownerAccountId',
-          'ownerTeamId',
-          'publicKey',
-          'encPrivateKey',
-          'encSymmetricKey',
-          'isPrimary',
-        ],
-        where: {
-          ownerAccountId: TEST_ACCOUNT_UUID,
-          isPrimary: true,
-          isDeleted: false,
-        },
-      });
-    });
-  });
-
-  describe('Getting all key sets', () => {
-    it('should return all key sets', async () => {
-      const TEST_ACCOUNT_UUID = faker.datatype.uuid();
-      const TEST_KEY_SETS = [
-        {
-          id: faker.datatype.uuid(),
-          publicKey: faker.datatype.uuid(),
-          encPrivateKey: {
-            key: faker.datatype.uuid(),
-          },
-          encSymmetricKey: {
-            key: faker.datatype.uuid(),
-          },
-        },
-      ];
-
-      const findKeySetFn = jest
-        .spyOn(keySetsService, 'find')
-        .mockResolvedValueOnce(<any>TEST_KEY_SETS);
-
-      expect(
-        await keySetsService.getKeySets({ ownerAccountId: TEST_ACCOUNT_UUID })
-      ).toStrictEqual(TEST_KEY_SETS);
-
-      expect(findKeySetFn).toHaveBeenCalledTimes(1);
-      expect(findKeySetFn).toHaveBeenCalledWith({
-        select: [
-          'id',
-          'creatorAccountId',
-          'ownerAccountId',
-          'ownerTeamId',
-          'publicKey',
-          'encPrivateKey',
-          'encSymmetricKey',
-          'isPrimary',
-        ],
-        where: {
-          ownerAccountId: TEST_ACCOUNT_UUID,
-          isDeleted: false,
-        },
-      });
-    });
   });
 
   describe('Creating key set', () => {

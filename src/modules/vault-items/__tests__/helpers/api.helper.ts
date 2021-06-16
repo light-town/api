@@ -1,4 +1,4 @@
-import * as request from 'supertest';
+import request from 'supertest';
 import { INestApplication } from '@nestjs/common';
 import { CreateVaultItemPayload } from '../../vault-items.dto';
 
@@ -49,6 +49,10 @@ export class Api {
     return this.handle
       .get(`/vaults/${vaultId}/folders/${folderId}/items/${vaultItemId}`)
       .set('Authorization', `Bearer ${token}`);
+  }
+
+  getItems(token: string) {
+    return this.handle.get('/items').set('Authorization', `Bearer ${token}`);
   }
 }
 

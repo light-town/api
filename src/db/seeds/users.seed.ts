@@ -1,4 +1,4 @@
-import * as faker from 'faker';
+import faker from 'faker';
 import User from '~/db/entities/user.entity';
 import Factory from './factory';
 import Seeder from './seeder';

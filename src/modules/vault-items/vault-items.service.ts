@@ -1,6 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindManyOptions, FindOneOptions, IsNull, Repository } from 'typeorm';
+import {
+  FindManyOptions,
+  FindOneOptions,
+  Repository,
+  SelectQueryBuilder,
+} from 'typeorm';
 import { ApiNotFoundException } from '~/common/exceptions';
 import VaultItemEntity from '~/db/entities/vault-item.entity';
 import AccountsService from '../accounts/accounts.service';
@@ -19,6 +24,7 @@ export class FindVaultItemOptions {
   id?: string;
   vaultId?: string;
   folderId?: string;
+  root?: boolean;
 }
 
 @Injectable()
@@ -26,9 +32,12 @@ export class VaultItemsService {
   public constructor(
     @InjectRepository(VaultItemEntity)
     private readonly vaultItemsRepository: Repository<VaultItemEntity>,
+    @Inject(forwardRef(() => VaultsService))
     private readonly vaultsService: VaultsService,
     private readonly accountsService: AccountsService,
+    @Inject(forwardRef(() => VaultFoldersService))
     private readonly vaultFoldersService: VaultFoldersService,
+    @Inject(forwardRef(() => VaultItemCategoriesService))
     private readonly vaultItemCategoriesService: VaultItemCategoriesService
   ) {}
 
@@ -51,9 +60,6 @@ export class VaultItemsService {
 
     if (!vault) throw new ApiNotFoundException('The vault was not found');
 
-    if (!folder)
-      throw new ApiNotFoundException('The vault folder was not found');
-
     if (!category)
       throw new ApiNotFoundException('The vault item category was not found');
 
@@ -62,7 +68,7 @@ export class VaultItemsService {
         encOverview: payload.encOverview,
         encDetails: payload.encDetails,
         vaultId: vault.id,
-        folderId: folder.id,
+        folderId: folder?.id,
         categoryId: category.id,
         creatorAccountId: account.id,
       })
@@ -103,59 +109,66 @@ export class VaultItemsService {
     return this.vaultItemsRepository.findOne(options);
   }
 
-  public getVaultItems(
+  public getVaultItemsCount(
     options: FindVaultItemOptions,
-    onlyOverview: boolean
-  ): Promise<VaultItemEntity[]> {
-    const select: (keyof VaultItemEntity)[] = [
-      'id',
-      'encOverview',
-      'encDetails',
-      'vaultId',
-      'folderId',
-      'categoryId',
-      'creatorAccountId',
-      'updatedAt',
-      'createdAt',
-    ];
+    onlyOverview = false
+  ): Promise<number> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [_, query] = this.prepareQuery(options, onlyOverview);
 
-    if (onlyOverview) select.splice(select.indexOf('encDetails'), 1);
-    if (options.folderId === null) options.folderId = <any>IsNull();
-
-    return this.find({
-      select,
-      where: {
-        ...options,
-        isDeleted: false,
-      },
-    });
+    return query.getCount();
   }
 
-  public async getVaultItem(
+  public getVaultItems(
+    options: FindVaultItemOptions,
+    onlyOverview = false
+  ): Promise<VaultItemEntity[]> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [_, query] = this.prepareQuery(options, onlyOverview);
+
+    return query.getRawMany();
+  }
+
+  public getVaultItem(
     options: FindVaultItemOptions,
     onlyOverview = false
   ): Promise<VaultItemEntity> {
-    const select: (keyof VaultItemEntity)[] = [
-      'id',
-      'encOverview',
-      'encDetails',
-      'vaultId',
-      'folderId',
-      'categoryId',
-      'creatorAccountId',
-      'updatedAt',
-      'createdAt',
-    ];
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [_, query] = this.prepareQuery(options, onlyOverview);
 
-    if (onlyOverview) select.splice(select.indexOf('encDetails'), 1);
+    return query.getRawOne();
+  }
 
-    return this.findOne({
-      select,
-      where: {
-        ...options,
-        isDeleted: false,
-      },
-    });
+  public prepareQuery(
+    options: FindVaultItemOptions,
+    onlyOverview = false
+  ): [string, SelectQueryBuilder<VaultItemEntity>] {
+    const alias = 'vault_items';
+    const q = this.vaultItemsRepository
+      .createQueryBuilder(alias)
+      .select(`${alias}.id`, 'id')
+      .addSelect(`${alias}.encOverview`, 'encOverview')
+      .addSelect(`${alias}.vaultId`, 'vaultId')
+      .addSelect(`${alias}.folderId`, 'folderId')
+      .addSelect(`${alias}.categoryId`, 'categoryId')
+      .addSelect(`${alias}.creatorAccountId`, 'creatorAccountId')
+      .addSelect(`${alias}.updatedAt`, 'updatedAt')
+      .addSelect(`${alias}.createdAt`, 'createdAt')
+      .andWhere(`${alias}.isDeleted = :isDeleted`, { isDeleted: false });
+
+    if (!onlyOverview) q.addSelect(`${alias}.encDetails`, 'encDetails');
+
+    if (options.hasOwnProperty('id')) q.andWhere(`${alias}.id = :id`, options);
+
+    if (options.hasOwnProperty('vaultId'))
+      q.andWhere(`${alias}.vaultId = :vaultId`, options);
+
+    if (options.hasOwnProperty('folderId'))
+      q.andWhere(`${alias}.folderId = :folderId`, options);
+
+    if (options.hasOwnProperty('root')) q.andWhere(`${alias}.folderId IS NULL`);
+
+    return [alias, q];
   }
 }
 

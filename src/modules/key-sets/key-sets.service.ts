@@ -1,12 +1,17 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindManyOptions, FindOneOptions, Repository } from 'typeorm';
+import {
+  FindManyOptions,
+  FindOneOptions,
+  Repository,
+  SelectQueryBuilder,
+} from 'typeorm';
 import {
   ApiConflictException,
   ApiForbiddenException,
   ApiNotFoundException,
 } from '~/common/exceptions';
-import KeySetEntity from '~/db/entities/key-sets.entity';
+import KeySetEntity from '~/db/entities/key-set.entity';
 import AccountsService from '../accounts/accounts.service';
 import VaultsService from '../vaults/vaults.service';
 import { CreateKeySetPayload } from './key-sets.dto';
@@ -23,6 +28,7 @@ export class CreateKeySetOptions extends KeySetOptions {
 
 export class FindKeySetOptions extends KeySetOptions {
   id?: string;
+  ids?: string[];
   creatorAccountId?: string;
   ownerAccountId?: string;
   ownerTeamId?: string;
@@ -65,16 +71,19 @@ export class KeySetsService {
           'The only account owner can create a primary key set'
         );
 
-      if (!(await this.accountsService.exists({ id: ownerId })))
+      const isAccountExists = await this.accountsService.exists({
+        id: ownerId,
+      });
+
+      if (!isAccountExists)
         throw new ApiNotFoundException('The account was not found');
 
-      if (
-        options.isPrimary &&
-        (await this.exists({
-          ownerAccountId: ownerId,
-          isPrimary: true,
-        }))
-      )
+      const isAlreadyPrimaryKeySetExists = await this.exists({
+        ownerAccountId: ownerId,
+        isPrimary: true,
+      });
+
+      if (options.isPrimary && isAlreadyPrimaryKeySetExists)
         throw new ApiConflictException(
           'The account owner already has a primary key set'
         );
@@ -95,53 +104,44 @@ export class KeySetsService {
   }
 
   public getKeySet(options: FindKeySetOptions): Promise<KeySetEntity> {
-    return this.findOne({
-      select: [
-        'id',
-        'creatorAccountId',
-        'ownerAccountId',
-        'ownerTeamId',
-        'publicKey',
-        'encPrivateKey',
-        'encSymmetricKey',
-        'isPrimary',
-      ],
-      where: {
-        ...options,
-        isDeleted: false,
-      },
-    });
+    const [query] = this.prepareQuery(options);
+    return query.getOne();
   }
 
-  public async getKeySets(options: FindKeySetOptions): Promise<KeySetEntity[]> {
-    Object.keys(options).forEach(
-      key => options[key] === undefined && delete options[key]
-    );
+  public getKeySets(options: FindKeySetOptions): Promise<KeySetEntity[]> {
+    const [query] = this.prepareQuery(options);
+    return query.getMany();
+  }
 
-    return this.find({
-      select: [
-        'id',
-        'creatorAccountId',
-        'ownerAccountId',
-        'ownerTeamId',
-        'publicKey',
-        'encPrivateKey',
-        'encSymmetricKey',
-        'isPrimary',
-      ],
-      where: {
-        ...options,
-        isDeleted: false,
-      },
-    });
+  public prepareQuery(
+    options: FindKeySetOptions
+  ): [SelectQueryBuilder<KeySetEntity>, string] {
+    const alias = 'key_sets';
+    const query = this.keySetsRepository
+      .createQueryBuilder(alias)
+      .where(`${alias}.isDeleted = :isDeleted`, { isDeleted: false });
+
+    if (options.id) query.andWhere(`${alias}.id = :id`, options);
+
+    if (options.ids) query.andWhere(`${alias}.id = (:...ids)`, options);
+
+    if (options.creatorAccountId)
+      query.andWhere(`${alias}.creatorAccountId = :creatorAccountId`, options);
+
+    if (options.ownerAccountId)
+      query.andWhere(`${alias}.ownerAccountId = :ownerAccountId`, options);
+
+    if (options.ownerTeamId)
+      query.andWhere(`${alias}.ownerTeamId = :ownerTeamId`, options);
+
+    if (options.isPrimary)
+      query.andWhere(`${alias}.isPrimary = :isPrimary`, options);
+
+    return [query, alias];
   }
 
   public async exists(options: FindKeySetOptions): Promise<boolean> {
-    const keySet = await this.keySetsRepository.findOne({
-      select: ['id'],
-      where: { ...options, isDeleted: false },
-    });
-
+    const keySet = await this.getKeySet(options);
     return keySet !== undefined;
   }
 

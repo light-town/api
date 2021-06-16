@@ -1,4 +1,4 @@
-import * as faker from 'faker';
+import faker from 'faker';
 import { SessionVerificationStageEnum } from '~/modules/sessions/sessions.dto';
 import VerifySessionStageEntity from '../entities/session-verification-stage.entity';
 import Factory from './factory';

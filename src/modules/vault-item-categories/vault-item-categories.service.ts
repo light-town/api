@@ -58,6 +58,8 @@ export class VaultItemCategoriesService {
   }
 
   public normalize(entity: VaultItemCategoryEntity): VaultItemCategory {
+    if (!entity) return;
+
     return {
       uuid: entity.id,
       encOverview: entity.encOverview,

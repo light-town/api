@@ -1,6 +1,6 @@
 import { INestApplication } from '@nestjs/common';
 import core from '@light-town/core';
-import * as faker from 'faker';
+import faker from 'faker';
 import VaultItemCategoriesController from '~/modules/vault-item-categories/vault-item-categories.controller';
 import VaultItemCategoriesService from '~/modules/vault-item-categories/vault-item-categories.service';
 import {
@@ -33,7 +33,7 @@ export const createVaultItemCategoryHelper = async (
   };
   const details = options.details ?? {
     schema: {
-      fields: [],
+      fields: <any>[],
     },
   };
 

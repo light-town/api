@@ -2,7 +2,7 @@ import { INestApplication } from '@nestjs/common';
 import { DeviceCreatePayload, OS } from '../devices.dto';
 import DevicesService from '../devices.service';
 import createTestingModule from './helpers/createTestingModule';
-import * as faker from 'faker';
+import faker from 'faker';
 import Api from './helpers/api';
 
 describe('[Devices Module] ...', () => {

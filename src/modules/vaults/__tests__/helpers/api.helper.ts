@@ -1,4 +1,4 @@
-import * as request from 'supertest';
+import request from 'supertest';
 import { INestApplication } from '@nestjs/common';
 import { CreateVaultPayload } from '~/modules/vaults/vaults.dto';
 
@@ -43,6 +43,29 @@ export class Api {
   getKeySetVault(keySetUuid: string, vaultUuid: string, accessToken: string) {
     return this.handle
       .get(`/key-sets/${keySetUuid}/vaults/${vaultUuid}`)
+      .set('Authorization', `Bearer ${accessToken}`);
+  }
+
+  createTeamVault(
+    teamId: string,
+    payload: CreateVaultPayload,
+    accessToken: string
+  ) {
+    return this.handle
+      .post(`/teams/${teamId}/vaults`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send(payload);
+  }
+
+  getTeamVaults(teamUuid: string, accessToken: string) {
+    return this.handle
+      .get(`/teams/${teamUuid}/vaults`)
+      .set('Authorization', `Bearer ${accessToken}`);
+  }
+
+  getTeamVault(teamUuid: string, vaultUuid: string, accessToken: string) {
+    return this.handle
+      .get(`/teams/${teamUuid}/vaults/${vaultUuid}`)
       .set('Authorization', `Bearer ${accessToken}`);
   }
 }

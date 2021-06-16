@@ -3,10 +3,17 @@ import AuthController from '~/modules/auth/auth.controller';
 import { OS } from '~/modules/devices/devices.dto';
 import createDeviceHelper from './create-device.helper';
 import core from '@light-town/core';
-import * as faker from 'faker';
+import faker from 'faker';
 import AccountsService from '~/modules/accounts/accounts.service';
 import KeySetsService from '~/modules/key-sets/key-sets.service';
-import KeySetVaultsService from '~/modules/key-set-vaults/key-set-vaults.service';
+import KeySetObjectsService from '~/modules/key-set-objects/key-set-objects.service';
+import AccountEntity from '~/db/entities/account.entity';
+import DeviceEntity from '~/db/entities/device.entity';
+import { MasterUnlockKey } from '@light-town/core/dist/encryption/common';
+import { DecryptedPrimaryKeySet } from '@light-town/core/dist/helpers/key-sets/definitions';
+import { DecryptedVault } from '@light-town/core/dist/helpers/vaults/definitions';
+import KeySetEntity from '~/db/entities/key-set.entity';
+import VaultEntity from '~/db/entities/vault.entity';
 
 export interface createAccountOptions {
   device: {
@@ -15,14 +22,25 @@ export interface createAccountOptions {
   };
 }
 
+export interface Account {
+  account: AccountEntity;
+  device: DeviceEntity;
+  password: string;
+  masterUnlockKey: MasterUnlockKey;
+  primaryKeySet: KeySetEntity & DecryptedPrimaryKeySet;
+  primaryVault: VaultEntity & DecryptedVault;
+}
+
 export const createAccountHelper = async (
   app: INestApplication,
   options: createAccountOptions
-) => {
+): Promise<Account> => {
   const accountsService = app.get<AccountsService>(AccountsService);
   const authController = app.get<AuthController>(AuthController);
   const keySetsService = app.get<KeySetsService>(KeySetsService);
-  const keySetVaultsService = app.get<KeySetVaultsService>(KeySetVaultsService);
+  const keySetObjectsService = app.get<KeySetObjectsService>(
+    KeySetObjectsService
+  );
 
   const device = await createDeviceHelper(app, {
     os: options.device.os ?? OS.WINDOWS,
@@ -80,14 +98,14 @@ export const createAccountHelper = async (
     creatorAccountId: account.id,
     ownerAccountId: account.id,
   });
-  const primaryVault = await keySetVaultsService.getVault(primaryKeySet.id);
+  const primaryVault = await keySetObjectsService.getVault(primaryKeySet.id);
 
   return {
     account,
     device,
     password,
     masterUnlockKey,
-    primaryKeySet: {
+    primaryKeySet: <any>{
       ...primaryKeySet,
       ...decryptedPrimaryKeySet,
     },

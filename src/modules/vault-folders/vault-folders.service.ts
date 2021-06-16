@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Not, Repository, SelectQueryBuilder } from 'typeorm';
+import { Repository, SelectQueryBuilder } from 'typeorm';
 import { ApiNotFoundException } from '~/common/exceptions';
 import VaultFolderEntity from '~/db/entities/vault-folder.entity';
 import AccountsService from '../accounts/accounts.service';
@@ -10,6 +10,7 @@ import { CreateVaultFolderOptions, VaultFolder } from './vault-folders.dto';
 export interface FindVaultFoldersOptions {
   id?: string;
   vaultId?: string;
+  vaultIds?: string[];
   creatorAccountId?: string;
   root?: boolean;
   parentFolderId?: string;
@@ -21,6 +22,7 @@ export class VaultFoldersService {
     @InjectRepository(VaultFolderEntity)
     private readonly foldersRepository: Repository<VaultFolderEntity>,
     private readonly accountsService: AccountsService,
+    @Inject(forwardRef(() => VaultsService))
     private readonly vaultsService: VaultsService
   ) {}
 
@@ -60,6 +62,8 @@ export class VaultFoldersService {
   }
 
   public normalize(entity: any): VaultFolder {
+    if (!entity) return;
+
     return {
       uuid: entity?.id,
       encOverview: entity?.encOverview,
@@ -72,9 +76,18 @@ export class VaultFoldersService {
     };
   }
 
+  public async getVaultFoldersCount(
+    options: FindVaultFoldersOptions
+  ): Promise<number> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [_, query] = this.prepareQuery(options);
+    return query.getCount();
+  }
+
   public async getVaultFolders(
     options: FindVaultFoldersOptions
   ): Promise<VaultFolderEntity[]> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [_, query] = this.prepareQuery(options);
     return query.getRawMany();
   }
@@ -82,6 +95,7 @@ export class VaultFoldersService {
   public getVaultFolder(
     options: FindVaultFoldersOptions
   ): Promise<VaultFolderEntity> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [_, query] = this.prepareQuery(options);
     return query.getRawOne();
   }
@@ -105,22 +119,35 @@ export class VaultFoldersService {
       return qb
         .subQuery()
         .select('COUNT(f.id)', 'containedFoldersCount')
-        .where('f.parent_folder_id = folders.id')
+        .where('f.parentFolderId = folders.id')
         .from(VaultFolderEntity, 'f');
     });
 
-    if (options.id) query.andWhere(`${alias}.id = :id`, options);
+    query.addSelect(qb => {
+      return qb
+        .subQuery()
+        .select('COUNT(f.id)', 'containedFoldersCount')
+        .where('f.parentFolderId = folders.id')
+        .from(VaultFolderEntity, 'f');
+    });
 
-    if (options.parentFolderId)
+    if (options.hasOwnProperty('id'))
+      query.andWhere(`${alias}.id = :id`, options);
+
+    if (options.hasOwnProperty('parentFolderId'))
       query.andWhere(`${alias}.parent_folder_id = :parentFolderId`, options);
 
-    if (options.creatorAccountId)
+    if (options.hasOwnProperty('creatorAccountId'))
       query.andWhere(`${alias}.creator_accountId = :creatorAccountId`, options);
 
-    if (options.vaultId)
+    if (options.hasOwnProperty('vaultId'))
       query.andWhere(`${alias}.vault_id = :vaultId`, options);
 
-    if (options.root) query.andWhere(`${alias}.parent_folder_id IS NULL`);
+    if (options.hasOwnProperty('vaultIds'))
+      query.andWhere(`${alias}.vault_id IN (:...vaultIds)`, options);
+
+    if (options.hasOwnProperty('root'))
+      query.andWhere(`${alias}.parent_folder_id IS NULL`);
 
     return [alias, query];
   }

@@ -4,15 +4,23 @@ import VaultEntity from '~/db/entities/vault.entity';
 import KeySetsModule from '../key-sets/key-sets.module';
 import VaultsController from './vaults.controller';
 import VaultsService from './vaults.service';
-import KeySetVaultsModule from '../key-set-vaults/key-set-vaults.module';
+import KeySetObjectsModule from '../key-set-objects/key-set-objects.module';
 import VaultItemCategoriesModule from '../vault-item-categories/vault-item-categories.module';
+import RolesModule from '../roles/roles.module';
+import TeamMembersModule from '../team-members/team-members.module';
+import VaultFoldersModule from '../vault-folders/vault-folders.module';
+import VaultItemsModule from '../vault-items/vault-items.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([VaultEntity]),
     forwardRef(() => KeySetsModule),
-    forwardRef(() => KeySetVaultsModule),
+    forwardRef(() => KeySetObjectsModule),
     forwardRef(() => VaultItemCategoriesModule),
+    forwardRef(() => RolesModule),
+    forwardRef(() => TeamMembersModule),
+    forwardRef(() => VaultFoldersModule),
+    forwardRef(() => VaultItemsModule),
   ],
   controllers: [VaultsController],
   providers: [VaultsService],
