@@ -77,6 +77,7 @@ describe('[Team Members Module] [Controller] ...', () => {
       const team = await createTeamHelper(app, {
         accountId: userAccount.account.id,
         publicKey: userAccount.primaryKeySet.publicKey,
+        privateKey: userAccount.primaryKeySet.privateKey,
       });
       const teamRoleCreator = await rolesService.getRole({
         teamId: team.uuid,
@@ -119,6 +120,7 @@ describe('[Team Members Module] [Controller] ...', () => {
       const team = await createTeamHelper(app, {
         accountId: userAccount.account.id,
         publicKey: userAccount.primaryKeySet.publicKey,
+        privateKey: userAccount.primaryKeySet.privateKey,
       });
       const teamRoleCreator = await rolesService.getRole({
         teamId: team.uuid,
@@ -153,6 +155,7 @@ describe('[Team Members Module] [Controller] ...', () => {
       const team = await createTeamHelper(app, {
         accountId: userAccount.account.id,
         publicKey: userAccount.primaryKeySet.publicKey,
+        privateKey: userAccount.primaryKeySet.privateKey,
       });
       const teamRoleMember = await rolesService.getRole({
         teamId: team.uuid,
@@ -197,6 +200,7 @@ describe('[Team Members Module] [Controller] ...', () => {
       const team = await createTeamHelper(app, {
         accountId: userAccount.account.id,
         publicKey: userAccount.primaryKeySet.publicKey,
+        privateKey: userAccount.primaryKeySet.privateKey,
       });
 
       const creatorMember = await teamMembersService.getTeamMember({
@@ -231,6 +235,7 @@ describe('[Team Members Module] [Controller] ...', () => {
       const team = await createTeamHelper(app, {
         accountId: userAccount.account.id,
         publicKey: userAccount.primaryKeySet.publicKey,
+        privateKey: userAccount.primaryKeySet.privateKey,
       });
 
       const teamRoleCreator = await rolesService.getRole({
@@ -264,6 +269,7 @@ describe('[Team Members Module] [Controller] ...', () => {
       const team = await createTeamHelper(app, {
         accountId: userAccount.account.id,
         publicKey: userAccount.primaryKeySet.publicKey,
+        privateKey: userAccount.primaryKeySet.privateKey,
       });
 
       const response = await api.getTeamMembers(

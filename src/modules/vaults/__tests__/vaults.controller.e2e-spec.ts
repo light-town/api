@@ -306,6 +306,7 @@ describe('[Vaults Module] [Controller] ...', () => {
         const team = await createTeamHelper(app, {
           accountId: userAccount.account.id,
           publicKey: userAccount.primaryKeySet.publicKey,
+          privateKey: userAccount.primaryKeySet.privateKey,
         });
 
         const encVault = await core.helpers.vaults.createVaultHelper(
@@ -358,6 +359,7 @@ describe('[Vaults Module] [Controller] ...', () => {
         const team = await createTeamHelper(app, {
           accountId: userAccount.account.id,
           publicKey: userAccount.primaryKeySet.publicKey,
+          privateKey: userAccount.primaryKeySet.privateKey,
         });
 
         const teamMember = await teamMembersService.getTeamMember({
@@ -400,6 +402,7 @@ describe('[Vaults Module] [Controller] ...', () => {
         const team = await createTeamHelper(app, {
           accountId: userAccount.account.id,
           publicKey: userAccount.primaryKeySet.publicKey,
+          privateKey: userAccount.primaryKeySet.privateKey,
         });
 
         const teamMember = await teamMembersService.getTeamMember({

@@ -76,18 +76,14 @@ describe('[Teams Module] [Controller] ...', () => {
         decs: faker.random.words(),
       };
 
-      const symmetricKey = core.encryption.common.generateCryptoRandomString(
-        32
-      );
-
       const encTeam = await core.helpers.teams.createTeamHelper(
         overview,
-        symmetricKey
+        userAccount.primaryKeySet.publicKey
       );
 
-      const decTeam = await core.helpers.teams.decryptTeamBySecretKeyHelper(
+      const decTeam = await core.helpers.teams.decryptTeamByPrivateKeyHelper(
         encTeam,
-        symmetricKey
+        userAccount.primaryKeySet.privateKey
       );
 
       const muk = await core.helpers.masterUnlockKey.deriveMasterUnlockKeyHelper(
@@ -99,17 +95,11 @@ describe('[Teams Module] [Controller] ...', () => {
         muk
       );
 
-      const accountKeySet = await core.helpers.keySets.createKeySetHelper(
-        symmetricKey,
-        userAccount.primaryKeySet.publicKey
-      );
-
       const response = await api.createTeam(
         {
           ...encTeam,
           salt: muk.salt,
           primaryKeySet,
-          accountKeySet,
         },
         userAccount.token
       );
@@ -148,12 +138,14 @@ describe('[Teams Module] [Controller] ...', () => {
           createTeamHelper(app, {
             accountId: firstUserAccount.account.id,
             publicKey: firstUserAccount.primaryKeySet.publicKey,
+            privateKey: firstUserAccount.primaryKeySet.privateKey,
           })
         );
         teamsPromise.push(
           createTeamHelper(app, {
             accountId: secondUserAccount.account.id,
             publicKey: secondUserAccount.primaryKeySet.publicKey,
+            privateKey: secondUserAccount.primaryKeySet.privateKey,
           })
         );
       }
@@ -183,12 +175,14 @@ describe('[Teams Module] [Controller] ...', () => {
           createTeamHelper(app, {
             accountId: firstUserAccount.account.id,
             publicKey: firstUserAccount.primaryKeySet.publicKey,
+            privateKey: firstUserAccount.primaryKeySet.privateKey,
           })
         );
         teamsPromise.push(
           createTeamHelper(app, {
             accountId: secondUserAccount.account.id,
             publicKey: secondUserAccount.primaryKeySet.publicKey,
+            privateKey: secondUserAccount.primaryKeySet.privateKey,
           })
         );
       }
@@ -214,12 +208,14 @@ describe('[Teams Module] [Controller] ...', () => {
           createTeamHelper(app, {
             accountId: firstUserAccount.account.id,
             publicKey: firstUserAccount.primaryKeySet.publicKey,
+            privateKey: firstUserAccount.primaryKeySet.privateKey,
           })
         );
         teamsPromise.push(
           createTeamHelper(app, {
             accountId: secondUserAccount.account.id,
             publicKey: secondUserAccount.primaryKeySet.publicKey,
+            privateKey: secondUserAccount.primaryKeySet.privateKey,
           })
         );
       }
