@@ -9,18 +9,18 @@ services:
       POSTGRES_USER: ${TYPEORM_USERNAME}
       POSTGRES_PASSWORD: ${TYPEORM_PASSWORD}
       POSTGRES_DB: ${TYPEORM_DATABASE}
-    container_name: light_town_db_test
+    container_name: lt_db_dev
   api:
     build:
       context: .
-      dockerfile: Dockerfile.test
+      dockerfile: Dockerfile.dev
       args:
         NPM_TOKEN: ${NPM_TOKEN}
         WORKDIR: /usr/src/light-town-api
     ports:
       - ${PORT}:${PORT}
     environment:
-      TYPEORM_HOST: 'db'
+      TYPEORM_HOST: 'lt_db_dev'
       PORT: ${PORT}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
       TYPEORM_CONNECTION: ${TYPEORM_CONNECTION}
@@ -35,7 +35,7 @@ services:
     volumes:
       - .:/usr/src/light-town-api
       - node_modules:/usr/src/light-town-api/node_modules
-    container_name: light_town_api_test
+    container_name: lt_api_dev
 
 volumes:
   node_modules:
