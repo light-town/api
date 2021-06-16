@@ -11,7 +11,6 @@ import { OS } from '~/modules/devices/devices.dto';
 import createAndStartSessionHelper from '~/../__tests__/helpers/create-and-start-session.helper';
 import Api from './helpers/api.helper';
 import initDatabaseHelper from '~/../__tests__/helpers/init-database.helper';
-import TeamsService from '../teams.service';
 import TeamEntity from '~/db/entities/team.entity';
 import createTeamHelper from '~/../__tests__/helpers/create-team.helper';
 import { Team } from '../teams.dto';
@@ -21,7 +20,6 @@ describe('[Teams Module] [Controller] ...', () => {
   let api: Api;
   let connection: Connection;
 
-  let teamsService: TeamsService;
   let teamsRepository: Repository<TeamEntity>;
 
   const userAccounts: (Account & { token: string })[] = [];
@@ -36,7 +34,6 @@ describe('[Teams Module] [Controller] ...', () => {
 
     await initDatabaseHelper();
 
-    teamsService = app.get<TeamsService>(TeamsService);
     teamsRepository = app.get<Repository<TeamEntity>>(
       getRepositoryToken(TeamEntity)
     );
