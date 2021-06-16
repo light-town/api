@@ -1,4 +1,4 @@
-export const SESSION_EXPIRES_AT = 10 * 60 * 1000; // 10 minutes
+export const SESSION_EXPIRES_AT = 20 * 60 * 1000; // 20 minutes
 
 export enum SessionVerificationStageEnum {
   REQUIRED = 'REQUIRED',

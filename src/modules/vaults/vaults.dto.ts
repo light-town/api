@@ -1,6 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsNotEmpty } from '~/common/validation';
-import { IsOptional, IsUUID, ValidateNested } from 'class-validator';
+import {
+  IsDate,
+  IsNumber,
+  IsOptional,
+  IsPositive,
+  IsUUID,
+  ValidateNested,
+} from 'class-validator';
 import { CreateVaultItemCategoryOptions } from '../vault-item-categories/vault-item-categories.dto';
 
 export class EncVaultKey {
@@ -77,6 +84,36 @@ export class Vault {
   @IsString()
   @IsUUID()
   ownerTeamUuid: string;
+
+  @ApiProperty({
+    description: 'The vault folders count',
+    required: true,
+  })
+  @IsNumber()
+  @IsPositive()
+  foldersCount: number;
+
+  @ApiProperty({
+    description: 'The vault items count',
+    required: true,
+  })
+  @IsNumber()
+  @IsPositive()
+  itemsCount: number;
+
+  @ApiProperty({
+    description: 'The datetime of last updating the vault',
+    required: true,
+  })
+  @IsDate()
+  lastUpdatedAt: string;
+
+  @ApiProperty({
+    description: 'The datetime of creating the vault',
+    required: true,
+  })
+  @IsDate()
+  createdAt: string;
 }
 
 export class CreateVaultPayload {

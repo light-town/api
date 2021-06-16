@@ -22,6 +22,7 @@ export class FindKeySetObjectsOptions {
   id?: string;
   keySetId?: string;
   vaultId?: string;
+  vaultIds?: string[];
   teamId?: string;
   teamIds?: string[];
   keySetOwnerAccountId?: string;
@@ -50,8 +51,12 @@ export class KeySetObjectsService {
   ): Promise<KeySetObjectEntity> {
     const [isKeySetExists, vault, team] = await Promise.all([
       this.keySetsService.exists({ id: keySetId }),
-      this.vaultsService.getVault({ id: options.vaultId }),
-      this.teamsService.getTeam({ id: options.teamId }),
+      options.vaultId
+        ? this.vaultsService.getVault({ id: options.vaultId })
+        : Promise.resolve(undefined),
+      options.teamId
+        ? this.teamsService.getTeam({ id: options.teamId })
+        : Promise.resolve(undefined),
     ]);
 
     if (!isKeySetExists)
@@ -212,6 +217,9 @@ export class KeySetObjectsService {
     if (options.id) query.andWhere(`${alias}.id = :id`, options);
 
     if (options.vaultId) query.andWhere(`${alias}.vaultId = :vaultId`, options);
+
+    if (options.vaultIds)
+      query.andWhere(`${alias}.vaultId IN (:...vaultIds)`, options);
 
     if (options.teamId) query.andWhere(`${alias}.teamId = :teamId`, options);
 

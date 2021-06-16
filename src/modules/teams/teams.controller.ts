@@ -48,32 +48,49 @@ export class TeamsController {
       keySetOwnerAccountId: account.id,
     });
 
-    return this.teamsService.format({ ...newTeam, keySetUuid: keySet.id });
+    return this.teamsService.format({
+      ...newTeam,
+      keySetUuid: keySet.id,
+      membersCount: 1,
+      vaultsCount: 0,
+    });
   }
 
   @ApiCreatedResponse({ type: [Team] })
   @Get()
   public async getTeams(@CurrentAccount() account): Promise<Team[]> {
-    const currentTeamMembers = await this.teamMembersService.getTeamMembers({
+    const accountTeamMembers = await this.teamMembersService.getTeamMembers({
       accountId: account.id,
     });
 
-    if (!currentTeamMembers.length) return [];
+    if (!accountTeamMembers.length) return [];
 
     const foundTeams = await this.teamsService.getTeams({
-      memberIds: currentTeamMembers.map(m => m.id),
+      memberIds: accountTeamMembers.map(m => m.id),
     });
 
-    const keySetObjects = await this.keySetObjectsService.getKeySetObjects({
-      teamIds: foundTeams.map(t => t.id),
-      keySetOwnerAccountId: account.id,
-    });
+    return Promise.all(
+      foundTeams.map(async team => {
+        const [accountKeySet, membersCount, teamKeySetIds] = await Promise.all([
+          this.keySetObjectsService.getKeySet({
+            teamId: team.id,
+            keySetOwnerAccountId: account.id,
+          }),
+          this.teamMembersService.getTeamMembersCount({
+            teamId: team.id,
+          }),
+          this.keySetObjectsService.getKeySetIds({
+            keySetOwnerTeamId: team.id,
+          }),
+        ]);
 
-    return this.teamsService.formatAll(
-      foundTeams.map(t => ({
-        ...t,
-        keySetUuid: keySetObjects.find(kso => kso.teamId === t.id)?.keySetId,
-      }))
+        return this.teamsService.format({
+          ...team,
+          keySetUuid: accountKeySet.id,
+          membersCount,
+          vaultsCount: teamKeySetIds.length,
+        });
+      })
     );
   }
 
@@ -92,15 +109,24 @@ export class TeamsController {
       PermissionTypesEnum.READ_ONLY
     );
 
-    const foundTeam = await this.teamsService.getTeam({ id: teamUuid });
-    const keySet = await this.keySetObjectsService.getKeySet({
-      teamId: foundTeam.id,
+    const team = await this.teamsService.getTeam({ id: teamUuid });
+    const accountKeySet = await this.keySetObjectsService.getKeySet({
+      teamId: team.id,
       keySetOwnerAccountId: account.id,
+    });
+    const membersCount = await this.teamMembersService.getTeamMembersCount({
+      teamId: team.id,
+    });
+
+    const teamKeySetIds = await this.keySetObjectsService.getKeySetIds({
+      keySetOwnerTeamId: team.id,
     });
 
     return this.teamsService.format({
-      ...foundTeam,
-      keySetUuid: keySet.id,
+      ...team,
+      keySetUuid: accountKeySet.id,
+      membersCount,
+      vaultsCount: teamKeySetIds.length,
     });
   }
 

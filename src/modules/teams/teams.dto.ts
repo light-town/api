@@ -2,7 +2,9 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   IsDateString,
   IsNotEmpty,
+  IsNumber,
   IsObject,
+  IsPositive,
   IsString,
   IsUUID,
   ValidateNested,
@@ -42,13 +44,6 @@ export class CreateTeamOptions {
   })
   @ValidateNested()
   primaryKeySet: CreateKeySetPayload;
-
-  @ApiProperty({
-    description: 'The primary key set configuration',
-    required: true,
-  })
-  @ValidateNested()
-  accountKeySet: CreateTeamKeySetPayload;
 }
 
 export class Team {
@@ -89,6 +84,22 @@ export class Team {
   @IsString()
   @IsUUID()
   keySetUuid: string;
+
+  @ApiProperty({
+    description: 'The team members count',
+    required: true,
+  })
+  @IsNumber()
+  @IsPositive()
+  membersCount: number;
+
+  @ApiProperty({
+    description: 'The team vaults count',
+    required: true,
+  })
+  @IsNumber()
+  @IsPositive()
+  vaultsCount: number;
 
   @ApiProperty({
     description: 'The datetime of last updating team',

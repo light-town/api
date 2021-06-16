@@ -26,21 +26,23 @@ export const createVaultItemHelper = async (
     VaultItemsController
   );
 
-  const overview: VaultItemOverview = options.overview ?? {
+  const overview: VaultItemOverview & any = options.overview ?? {
     name: faker.random.word(),
-    decs: faker.random.words(),
+    desc: faker.random.words(),
     urls: [faker.internet.url(), faker.internet.url(), faker.internet.url()],
   };
 
   const details: VaultItemDetails = options.details ?? {
     fields: [
       {
+        id: '1',
         position: 1,
         fieldName: 'username',
         name: 'username',
         value: faker.internet.userName(),
       },
       {
+        id: '2',
         position: 2,
         fieldName: 'password',
         name: 'password',

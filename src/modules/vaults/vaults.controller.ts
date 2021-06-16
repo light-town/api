@@ -8,6 +8,7 @@ import {
   Inject,
   forwardRef,
   UseInterceptors,
+  Query,
 } from '@nestjs/common';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import {
@@ -23,6 +24,8 @@ import { ObjectTypesEnum } from '../roles/roles.dto';
 import RolesService from '../roles/roles.service';
 import CurrentTeamMember from '../team-members/current-team-member.decorator';
 import { CurrentTeamMemberInterceptor } from '../team-members/current-team-member.interceptor';
+import VaultFoldersService from '../vault-folders/vault-folders.service';
+import VaultItemsService from '../vault-items/vault-items.service';
 import { Vault, CreateVaultPayload } from './vaults.dto';
 import VaultsService from './vaults.service';
 
@@ -37,7 +40,11 @@ export class VaultsController {
     @Inject(forwardRef(() => KeySetObjectsService))
     private readonly keySetObjectsService: KeySetObjectsService,
     @Inject(forwardRef(() => RolesService))
-    private readonly rolesService: RolesService
+    private readonly rolesService: RolesService,
+    @Inject(forwardRef(() => VaultFoldersService))
+    private readonly vaultFoldersService: VaultFoldersService,
+    @Inject(forwardRef(() => VaultItemsService))
+    private readonly vaultItemsService: VaultItemsService
   ) {}
 
   @ApiOkResponse({ type: Vault })
@@ -46,7 +53,7 @@ export class VaultsController {
     @CurrentAccount() account,
     @Body() payload: CreateVaultPayload
   ): Promise<Vault> {
-    const primaryKeySet = await this.keySetsService.getKeySet({
+    const accountPrimaryKeySet = await this.keySetsService.getKeySet({
       ownerAccountId: account.id,
       creatorAccountId: account.id,
       isPrimary: true,
@@ -54,40 +61,60 @@ export class VaultsController {
 
     const newVault = await this.vaultsService.createVault(
       account.id,
-      primaryKeySet.id,
+      accountPrimaryKeySet.id,
       payload
     );
 
     return this.vaultsService.format({
       ...newVault,
       ownerAccountId: account.id,
-      keySetId: primaryKeySet.id,
+      keySetId: accountPrimaryKeySet.id,
+      foldersCount: 0,
+      itemsCount: 0,
     });
   }
 
   @ApiOkResponse({ type: [Vault] })
   @Get('/vaults')
-  public async getVaults(@CurrentAccount() account): Promise<Vault[]> {
+  public async getVaults(
+    @CurrentAccount() account,
+    @Query('ids') ids: string
+  ): Promise<Vault[]> {
     const keySetObjects = await this.keySetObjectsService.getKeySetObjects({
       keySetOwnerAccountId: account.id,
+      vaultIds: ids ? JSON.parse(ids) : undefined,
       isVault: true,
     });
 
-    const vaultsIds = keySetObjects.map(k => k.vaultId);
+    const vaultIds = keySetObjects.map(k => k.vaultId);
     const keySets = keySetObjects.reduce(
       (prev, val) => ({ ...prev, [val.vaultId]: val.keySetId }),
       {}
     );
 
     const vaults = await this.vaultsService.getVaults({
-      ids: vaultsIds,
+      ids: vaultIds,
     });
 
-    return vaults.map(v =>
-      this.vaultsService.format({
-        ...v,
-        ownerAccountId: account.id,
-        keySetId: keySets[v.id],
+    return Promise.all(
+      vaults.map(async v => {
+        const foldersCount = await this.vaultFoldersService.getVaultFoldersCount(
+          {
+            vaultId: v.id,
+          }
+        );
+
+        const itemsCount = await this.vaultItemsService.getVaultItemsCount({
+          vaultId: v.id,
+        });
+
+        return this.vaultsService.format({
+          ...v,
+          ownerAccountId: account.id,
+          keySetId: keySets[v.id],
+          foldersCount,
+          itemsCount,
+        });
       })
     );
   }
@@ -108,10 +135,20 @@ export class VaultsController {
 
     const vault = await this.vaultsService.getVault({ id: vaultUuid });
 
+    const foldersCount = await this.vaultFoldersService.getVaultFoldersCount({
+      vaultId: vault.id,
+    });
+
+    const itemsCount = await this.vaultItemsService.getVaultItemsCount({
+      vaultId: vault.id,
+    });
+
     return this.vaultsService.format({
       ...vault,
       ownerAccountId: account.id,
       keySetId: keySetObject.keySetId,
+      foldersCount,
+      itemsCount,
     });
   }
 
@@ -181,6 +218,8 @@ export class VaultsController {
       ...newVault,
       ownerTeamId: teamUuid,
       keySetId: primaryKeySet.id,
+      foldersCount: 0,
+      itemsCount: 0,
     });
   }
 
@@ -209,15 +248,31 @@ export class VaultsController {
       {}
     );
 
+    if (!vaultsIds.length) return [];
+
     const vaults = await this.vaultsService.getVaults({
       ids: vaultsIds,
     });
 
-    return vaults.map(v =>
-      this.vaultsService.format({
-        ...v,
-        ownerTeamId: teamUuid,
-        keySetId: keySets[v.id],
+    return Promise.all(
+      vaults.map(async v => {
+        const foldersCount = await this.vaultFoldersService.getVaultFoldersCount(
+          {
+            vaultId: v.id,
+          }
+        );
+
+        const itemsCount = await this.vaultItemsService.getVaultItemsCount({
+          vaultId: v.id,
+        });
+
+        return this.vaultsService.format({
+          ...v,
+          ownerTeamId: teamUuid,
+          keySetId: keySets[v.id],
+          foldersCount,
+          itemsCount,
+        });
       })
     );
   }
@@ -249,10 +304,20 @@ export class VaultsController {
       id: keySetObject.vaultId,
     });
 
+    const foldersCount = await this.vaultFoldersService.getVaultFoldersCount({
+      vaultId: vault.id,
+    });
+
+    const itemsCount = await this.vaultItemsService.getVaultItemsCount({
+      vaultId: vault.id,
+    });
+
     return this.vaultsService.format({
       ...vault,
       ownerTeamId: teamUuid,
       keySetId: keySetObject.keySetId,
+      foldersCount,
+      itemsCount,
     });
   }
 
@@ -278,11 +343,25 @@ export class VaultsController {
       ids: vaultsIds,
     });
 
-    return vaults.map(v =>
-      this.vaultsService.format({
-        ...v,
-        ownerAccountId: account.id,
-        keySetId: keySets[v.id],
+    return Promise.all(
+      vaults.map(async v => {
+        const foldersCount = await this.vaultFoldersService.getVaultFoldersCount(
+          {
+            vaultId: v.id,
+          }
+        );
+
+        const itemsCount = await this.vaultItemsService.getVaultItemsCount({
+          vaultId: v.id,
+        });
+
+        return this.vaultsService.format({
+          ...v,
+          ownerAccountId: account.id,
+          keySetId: keySets[v.id],
+          foldersCount,
+          itemsCount,
+        });
       })
     );
   }
@@ -307,10 +386,20 @@ export class VaultsController {
       id: keySetObject.vaultId,
     });
 
+    const foldersCount = await this.vaultFoldersService.getVaultFoldersCount({
+      vaultId: vault.id,
+    });
+
+    const itemsCount = await this.vaultItemsService.getVaultItemsCount({
+      vaultId: vault.id,
+    });
+
     return this.vaultsService.format({
       ...vault,
       ownerAccountId: account.id,
       keySetId: keySetObject.keySetId,
+      foldersCount,
+      itemsCount,
     });
   }
 }

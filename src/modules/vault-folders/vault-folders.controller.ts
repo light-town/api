@@ -8,11 +8,15 @@ import {
   Query,
 } from '@nestjs/common';
 import CurrentAccount from '../auth/current-account';
-import FoldersService from './vault-folders.service';
+import FoldersService, {
+  FindVaultFoldersOptions,
+} from './vault-folders.service';
 import { CreateVaultFolderOptions, VaultFolder } from './vault-folders.dto';
 import { ApiNotFoundException } from '~/common/exceptions';
 import AuthGuard from '../auth/auth.guard';
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { ParseUUIDPipe, ParseBoolPipe } from '~/common/pipes';
+import clearUndefinedProps from '~/utils/clear-undefined-props';
 
 @ApiTags('/folders')
 @AuthGuard()
@@ -24,7 +28,7 @@ export class VaultFoldersController {
   @Post('/vaults/:vaultUuid/folders')
   public async createVaultFolder(
     @CurrentAccount() account,
-    @Param('vaultUuid') vaultUuid: string,
+    @Param('vaultUuid', new ParseUUIDPipe()) vaultUuid: string,
     @Body() payload: CreateVaultFolderOptions
   ): Promise<VaultFolder> {
     return this.foldersService.format(
@@ -39,24 +43,29 @@ export class VaultFoldersController {
   @ApiOkResponse({ type: [VaultFolder] })
   @Get('/vaults/:vaultUuid/folders')
   public async getVaultFolders(
-    @Param('vaultUuid') vaultUuid: string,
-    @Query('root') root: boolean,
-    @Query('parentFolderUuid') parentFolderUuid: string
+    @Param('vaultUuid', new ParseUUIDPipe()) vaultUuid: string,
+    @Query('root', new ParseBoolPipe({ optional: true })) root: boolean,
+    @Query('parentFolderUuid', new ParseUUIDPipe({ optional: true }))
+    parentFolderUuid: string
   ): Promise<VaultFolder[]> {
+    const options: FindVaultFoldersOptions = {
+      vaultId: vaultUuid,
+      parentFolderId: parentFolderUuid,
+      root,
+    };
+
+    clearUndefinedProps(options);
+
     return this.foldersService.formatAll(
-      await this.foldersService.getVaultFolders({
-        vaultId: vaultUuid,
-        parentFolderId: parentFolderUuid,
-        root,
-      })
+      await this.foldersService.getVaultFolders(options)
     );
   }
 
   @ApiOkResponse({ type: VaultFolder })
   @Get('/vaults/:vaultUuid/folders/:folderUuid')
   public async getVaultFolder(
-    @Param('vaultUuid') vaultUuid: string,
-    @Param('folderUuid') folderUuid: string
+    @Param('vaultUuid', new ParseUUIDPipe()) vaultUuid: string,
+    @Param('folderUuid', new ParseUUIDPipe()) folderUuid: string
   ): Promise<VaultFolder> {
     const folder = await this.foldersService.getVaultFolder({
       id: folderUuid,
@@ -71,21 +80,26 @@ export class VaultFoldersController {
   @ApiOkResponse({ type: [VaultFolder] })
   @Get('/folders')
   public async getFolders(
-    @Query('root') root: boolean,
-    @Query('parentFolderUuid') parentFolderUuid: string
+    @Query('root', new ParseBoolPipe({ optional: true })) root: boolean,
+    @Query('parentFolderUuid', new ParseUUIDPipe({ optional: true }))
+    parentFolderUuid: string
   ): Promise<VaultFolder[]> {
+    const options: FindVaultFoldersOptions = {
+      parentFolderId: parentFolderUuid,
+      root,
+    };
+
+    clearUndefinedProps(options);
+
     return this.foldersService.formatAll(
-      await this.foldersService.getVaultFolders({
-        parentFolderId: parentFolderUuid,
-        root,
-      })
+      await this.foldersService.getVaultFolders(options)
     );
   }
 
   @ApiOkResponse({ type: VaultFolder })
   @Get('/folders/:folderUuid')
   public async getFolder(
-    @Param('folderUuid') folderUuid: string
+    @Param('folderUuid', new ParseUUIDPipe()) folderUuid: string
   ): Promise<VaultFolder> {
     const folder = await this.foldersService.getVaultFolder({
       id: folderUuid,
@@ -98,8 +112,8 @@ export class VaultFoldersController {
 
   @Delete('/vaults/:vaultUuid/folders/:folderUuid')
   public async deleteVaultFolder(
-    @Param('vaultUuid') vaultUuid: string,
-    @Param('folderUuid') folderUuid: string
+    @Param('vaultUuid', new ParseUUIDPipe()) vaultUuid: string,
+    @Param('folderUuid', new ParseUUIDPipe()) folderUuid: string
   ): Promise<void> {
     const folder = await this.foldersService.getVaultFolder({
       id: folderUuid,

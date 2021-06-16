@@ -10,6 +10,7 @@ import { CreateVaultFolderOptions, VaultFolder } from './vault-folders.dto';
 export interface FindVaultFoldersOptions {
   id?: string;
   vaultId?: string;
+  vaultIds?: string[];
   creatorAccountId?: string;
   root?: boolean;
   parentFolderId?: string;
@@ -75,6 +76,14 @@ export class VaultFoldersService {
     };
   }
 
+  public async getVaultFoldersCount(
+    options: FindVaultFoldersOptions
+  ): Promise<number> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [_, query] = this.prepareQuery(options);
+    return query.getCount();
+  }
+
   public async getVaultFolders(
     options: FindVaultFoldersOptions
   ): Promise<VaultFolderEntity[]> {
@@ -122,18 +131,23 @@ export class VaultFoldersService {
         .from(VaultFolderEntity, 'f');
     });
 
-    if (options.id) query.andWhere(`${alias}.id = :id`, options);
+    if (options.hasOwnProperty('id'))
+      query.andWhere(`${alias}.id = :id`, options);
 
-    if (options.parentFolderId)
+    if (options.hasOwnProperty('parentFolderId'))
       query.andWhere(`${alias}.parent_folder_id = :parentFolderId`, options);
 
-    if (options.creatorAccountId)
+    if (options.hasOwnProperty('creatorAccountId'))
       query.andWhere(`${alias}.creator_accountId = :creatorAccountId`, options);
 
-    if (options.vaultId)
+    if (options.hasOwnProperty('vaultId'))
       query.andWhere(`${alias}.vault_id = :vaultId`, options);
 
-    if (options.root) query.andWhere(`${alias}.parent_folder_id IS NULL`);
+    if (options.hasOwnProperty('vaultIds'))
+      query.andWhere(`${alias}.vault_id IN (:...vaultIds)`, options);
+
+    if (options.hasOwnProperty('root'))
+      query.andWhere(`${alias}.parent_folder_id IS NULL`);
 
     return [alias, query];
   }

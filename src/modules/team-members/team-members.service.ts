@@ -10,7 +10,7 @@ import AccountsService from '../accounts/accounts.service';
 import KeySetObjectsService from '../key-set-objects/key-set-objects.service';
 import KeySetsService from '../key-sets/key-sets.service';
 import RolesService from '../roles/roles.service';
-import TeamsService from '../teams/teams.service';
+import TeamsService, { TeamRolesEnum } from '../teams/teams.service';
 import { TeamMember } from './team-members.dto';
 
 export class FindTeamMembersOptions {
@@ -96,15 +96,22 @@ export class TeamMembersService {
     return entities.map(e => this.normalize(e));
   }
 
-  public normalize(entity: TeamMemberEntity): TeamMember {
-    if (!entity) return;
+  public normalize(e: TeamMemberEntity): TeamMember {
+    if (!e) return;
 
     return {
-      uuid: entity?.id,
-      accountUuid: entity?.accountId,
-      teamUuid: entity?.teamId,
-      lastUpdatedAt: entity?.updatedAt.toISOString(),
-      createdAt: entity?.createdAt.toISOString(),
+      uuid: e?.id,
+      accountUuid: e?.accountId,
+      accountName: e?.account?.user?.name,
+      accountAvatarUrl: e?.account?.user?.avatarUrl,
+      userUuid: e?.account?.userId,
+      userName: e?.account?.user?.name,
+      userAvatarUrl: e?.account?.user?.avatarUrl,
+      teamUuid: e?.teamId,
+      roleUuid: e?.role.id,
+      roleName: e?.role.name as TeamRolesEnum,
+      lastUpdatedAt: e?.updatedAt.toISOString(),
+      createdAt: e?.createdAt.toISOString(),
     };
   }
 
@@ -114,6 +121,9 @@ export class TeamMembersService {
     const alias = 'team_members';
     const query = this.teamMembersRepository
       .createQueryBuilder(alias)
+      .leftJoinAndSelect(`${alias}.account`, 'account')
+      .leftJoinAndSelect(`${alias}.role`, 'role')
+      .leftJoinAndSelect(`account.user`, 'user')
       .where(`${alias}.is_deleted = :isDeleted`, { isDeleted: false });
 
     if (options?.id) query.andWhere(`${alias}.id = :id`, options);
@@ -138,6 +148,14 @@ export class TeamMembersService {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [_, query] = this.prepareQuery(options);
     return query.getOne();
+  }
+
+  public async getTeamMembersCount(
+    options: FindTeamMembersOptions = {}
+  ): Promise<number> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [_, query] = this.prepareQuery(options);
+    return query.getCount();
   }
 
   public async exists(options: FindTeamMembersOptions = {}): Promise<boolean> {

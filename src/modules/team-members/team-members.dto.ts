@@ -1,5 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDateString, IsString, IsUUID } from 'class-validator';
+import {
+  IsDateString,
+  IsEnum,
+  IsNotEmpty,
+  IsString,
+  isUUID,
+  IsUUID,
+} from 'class-validator';
+import { TeamRolesEnum } from '../teams/teams.service';
 
 export class TeamMember {
   @ApiProperty({
@@ -17,6 +25,55 @@ export class TeamMember {
   @IsString()
   @IsUUID()
   accountUuid: string;
+
+  @ApiProperty({
+    description: 'The account name',
+  })
+  @IsString()
+  @IsNotEmpty()
+  accountName: string;
+
+  @ApiProperty({
+    description: 'The account avatar url',
+  })
+  @IsString()
+  @IsNotEmpty()
+  accountAvatarUrl: string;
+
+  @ApiProperty({
+    description: 'The user uuid',
+  })
+  @IsString()
+  @IsUUID()
+  userUuid: string;
+
+  @ApiProperty({
+    description: 'The user name',
+  })
+  @IsString()
+  @IsNotEmpty()
+  userName: string;
+
+  @ApiProperty({
+    description: 'The user avatar url',
+  })
+  @IsString()
+  @IsNotEmpty()
+  userAvatarUrl: string;
+
+  @ApiProperty({
+    description: 'The role uuid',
+  })
+  @IsString()
+  @IsUUID()
+  roleUuid: string;
+
+  @ApiProperty({
+    description: 'The role name',
+    enum: TeamRolesEnum,
+  })
+  @IsEnum(TeamRolesEnum)
+  roleName: TeamRolesEnum;
 
   @ApiProperty({
     description: 'The account uuid',

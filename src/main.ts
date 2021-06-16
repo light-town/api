@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import initApp from './utils/init-app';
 import * as dotenv from 'dotenv';
+import { name, version, description } from '../package.json';
 
 dotenv.config();
 
@@ -15,9 +16,9 @@ async function bootstrap() {
   });
 
   const config = new DocumentBuilder()
-    .setTitle('Light Town')
-    .setDescription('A open-source password manager 🔑')
-    .setVersion('0.5.4')
+    .setTitle(name)
+    .setDescription(description)
+    .setVersion(version)
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

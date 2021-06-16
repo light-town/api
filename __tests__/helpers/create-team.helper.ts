@@ -2,13 +2,15 @@ import { INestApplication } from '@nestjs/common';
 import core from '@light-town/core';
 import faker from 'faker';
 import TeamsController from '~/modules/teams/teams.controller';
-import TeamsService from '~/modules/teams/teams.service';
-import { PublicKey } from '@light-town/core/dist/encryption/common/rsa/definitions';
-import KeySetObjectsService from '~/modules/key-set-objects/key-set-objects.service';
+import {
+  PrivateKey,
+  PublicKey,
+} from '@light-town/core/dist/encryption/common/rsa/definitions';
 
 export interface CreateTeamOptions {
   accountId: string;
   publicKey: PublicKey;
+  privateKey: PrivateKey;
   overview?: any;
 }
 
@@ -23,16 +25,14 @@ export const createTeamHelper = async (
     desc: faker.random.words(),
   };
 
-  const symmetricKey = core.encryption.common.generateCryptoRandomString(32);
-
   const encTeam = await core.helpers.teams.createTeamHelper(
     overview,
-    symmetricKey
+    options.publicKey
   );
 
-  const decTeam = await core.helpers.teams.decryptTeamBySecretKeyHelper(
+  const decTeam = await core.helpers.teams.decryptTeamByPrivateKeyHelper(
     encTeam,
-    symmetricKey
+    options.privateKey
   );
 
   const muk = await core.helpers.masterUnlockKey.deriveMasterUnlockKeyHelper(
@@ -44,11 +44,6 @@ export const createTeamHelper = async (
     muk
   );
 
-  const accountKeySet = await core.helpers.keySets.createKeySetHelper(
-    symmetricKey,
-    options.publicKey
-  );
-
   return teamsController.createTeam(
     { id: options.accountId },
     {
@@ -56,7 +51,6 @@ export const createTeamHelper = async (
       encKey: encTeam.encKey,
       encOverview: encTeam.encOverview,
       primaryKeySet,
-      accountKeySet,
     }
   );
 };

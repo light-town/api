@@ -2,7 +2,6 @@ import core from '@light-town/core';
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, SelectQueryBuilder } from 'typeorm';
-import { ApiNotFoundException } from '~/common/exceptions';
 import TeamEntity from '~/db/entities/team.entity';
 import AccountsService from '../accounts/accounts.service';
 import KeySetObjectsService from '../key-set-objects/key-set-objects.service';
@@ -13,6 +12,12 @@ import { ObjectTypesEnum } from '../roles/roles.dto';
 import RolesService from '../roles/roles.service';
 import TeamMembersService from '../team-members/team-members.service';
 import { CreateTeamOptions, Team } from './teams.dto';
+
+export type ExtendedTeam = TeamEntity & {
+  keySetUuid: string;
+  membersCount: number;
+  vaultsCount: number;
+};
 
 export class FindTeamsOptions {
   id?: string;
@@ -52,18 +57,20 @@ export class TeamsService {
     accountId: string,
     options: CreateTeamOptions
   ): Promise<TeamEntity> {
-    const isExistsAccount = await this.accountsService.exists({
+    const account = await this.accountsService.findOrThrow({
       id: accountId,
     });
 
-    if (!isExistsAccount)
-      throw new ApiNotFoundException(`The account was not found`);
+    const accountPrimaryKeySet = await this.keySetsService.getKeySet({
+      ownerAccountId: account.id,
+      isPrimary: true,
+    });
 
     const newTeam = await this.teamsRepository.save(
       this.teamsRepository.create({
         encKey: options.encKey,
         encOverview: options.encOverview,
-        creatorAccountId: accountId,
+        creatorAccountId: account.id,
         invitationKey: core.encryption.common
           .generateCryptoRandomString(32)
           .toLowerCase(),
@@ -71,23 +78,25 @@ export class TeamsService {
       })
     );
 
+    /**
+     * Creating a team primary key set
+     */
     await this.keySetsService.create(
-      accountId,
+      account.id,
       newTeam.id,
       options.primaryKeySet,
       { isTeamOwner: true, isPrimary: true }
     );
 
-    const accountKeySet = await this.keySetsService.create(
-      accountId,
-      accountId,
-      options.accountKeySet,
-      { isAccountOwner: true }
+    /**
+     * Linking account primary key set with created team
+     */
+    await this.keySetObjectsService.createKeySetObject(
+      accountPrimaryKeySet.id,
+      {
+        teamId: newTeam.id,
+      }
     );
-
-    await this.keySetObjectsService.createKeySetObject(accountKeySet.id, {
-      teamId: newTeam.id,
-    });
 
     const [creatorTeamRole, memberTeamRole, guestTeamRole] = await Promise.all([
       this.rolesService.createRole({
@@ -126,7 +135,7 @@ export class TeamsService {
     ]);
 
     await this.teamMembersService.createMember({
-      accountId,
+      accountId: account.id,
       teamId: newTeam.id,
       roleId: creatorTeamRole.id,
     });
@@ -134,36 +143,32 @@ export class TeamsService {
     return newTeam;
   }
 
-  public async format(
-    e:
-      | (TeamEntity & { keySetUuid: string })
-      | Promise<TeamEntity & { keySetUuid: string }>
-  ): Promise<Team> {
+  public async format(e: ExtendedTeam | Promise<ExtendedTeam>): Promise<Team> {
     const entity = e instanceof Promise ? await e : e;
     return this.normalize(entity);
   }
 
   public async formatAll(
-    e:
-      | (TeamEntity & { keySetUuid: string })[]
-      | Promise<(TeamEntity & { keySetUuid: string })[]>
+    e: ExtendedTeam[] | Promise<ExtendedTeam[]>
   ): Promise<Team[]> {
     const entities = e instanceof Promise ? await e : e;
     return entities.map(e => this.normalize(e));
   }
 
-  public normalize(entity: TeamEntity & { keySetUuid: string }): Team {
-    if (!entity) return;
+  public normalize(e: ExtendedTeam): Team {
+    if (!e) return;
 
     return {
-      uuid: entity?.id,
-      encKey: entity?.encKey,
-      encOverview: entity?.encOverview,
-      creatorAccountUuid: entity?.creatorAccountId,
-      keySetUuid: entity.keySetUuid,
-      lastUpdatedAt: entity?.updatedAt.toISOString(),
-      createdAt: entity?.createdAt.toISOString(),
-      salt: entity?.salt,
+      uuid: e?.id,
+      encKey: e?.encKey,
+      encOverview: e?.encOverview,
+      creatorAccountUuid: e?.creatorAccountId,
+      keySetUuid: e.keySetUuid,
+      lastUpdatedAt: e?.updatedAt.toISOString(),
+      membersCount: e?.membersCount,
+      vaultsCount: e?.vaultsCount,
+      createdAt: e?.createdAt.toISOString(),
+      salt: e?.salt,
     };
   }
 
