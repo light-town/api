@@ -59,7 +59,7 @@ export class VaultsController {
       isPrimary: true,
     });
 
-    const newVault = await this.vaultsService.createVault(
+    const [newVault] = await this.vaultsService.createVault(
       account.id,
       accountPrimaryKeySet.id,
       payload
@@ -208,7 +208,7 @@ export class VaultsController {
       isPrimary: true,
     });
 
-    const newVault = await this.vaultsService.createVault(
+    const [newVault] = await this.vaultsService.createVault(
       account.id,
       primaryKeySet.id,
       payload

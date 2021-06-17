@@ -5,6 +5,8 @@ import { Device } from '../devices/devices.dto';
 import { IsEnum, ValidateNested } from 'class-validator';
 import { CreateKeySetPayload } from '~/modules/key-sets/key-sets.dto';
 import { CreateVaultPayload } from '~/modules/vaults/vaults.dto';
+import { CreateVaultItemPayload } from '../vault-items/vault-items.dto';
+import { CreateVaultItemCategoryOptions } from '../vault-item-categories/vault-item-categories.dto';
 
 export class SRP {
   @ApiProperty({
@@ -87,6 +89,17 @@ export class SignUpPayload {
   })
   @ValidateNested()
   primaryVault: CreateVaultPayload;
+
+  @ApiProperty({
+    description: 'The primary vault items',
+    required: false,
+    default: [],
+  })
+  primaryVaultItems: {
+    encOverview: Record<string, any>;
+    encDetails?: Record<string, any>;
+    category: CreateVaultItemCategoryOptions;
+  }[];
 }
 
 export class SessionCreatePayload {

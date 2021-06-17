@@ -6,6 +6,7 @@ import {
   Repository,
   SelectQueryBuilder,
 } from 'typeorm';
+import VaultItemCategoryEntity from '~/db/entities/vault-item-category.entity';
 import VaultEntity from '~/db/entities/vault.entity';
 import KeySetObjectsService from '../key-set-objects/key-set-objects.service';
 import KeySetsService from '../key-sets/key-sets.service';
@@ -42,7 +43,7 @@ export class VaultsService {
     creatorAccountId: string,
     keySetId: string,
     payload: CreateVaultPayload
-  ): Promise<VaultEntity> {
+  ): Promise<[VaultEntity, VaultItemCategoryEntity[]]> {
     const newVault = await this.vaultsRepository.save(
       this.vaultsRepository.create({
         encKey: payload.encKey,
@@ -50,7 +51,7 @@ export class VaultsService {
       })
     );
 
-    await Promise.all(
+    const newVaultCategories = await Promise.all(
       payload.encCategories.map(c =>
         this.vaultItemCategoriesService.createVaultItemCategory(
           creatorAccountId,
@@ -64,7 +65,7 @@ export class VaultsService {
       vaultId: newVault.id,
     });
 
-    return newVault;
+    return [newVault, newVaultCategories];
   }
 
   public async exists(options: FindVaultOptions): Promise<boolean> {

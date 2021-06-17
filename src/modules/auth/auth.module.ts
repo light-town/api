@@ -14,6 +14,7 @@ import AuthGateway from './auth.gateway';
 import JwtStrategy from './jwt.strategy';
 import KeySetsModule from '../key-sets/key-sets.module';
 import VaultsModule from '../vaults/vaults.module';
+import VaultItemsModule from '../vault-items/vault-items.module';
 
 dotenv.config();
 
@@ -32,6 +33,7 @@ dotenv.config();
     PushNotificationsModule,
     KeySetsModule,
     VaultsModule,
+    VaultItemsModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, AuthGateway, JwtStrategy],

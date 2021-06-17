@@ -32,6 +32,7 @@ import AuthGateway from './auth.gateway';
 import { OS } from '../devices/devices.dto';
 import KeySetsService from '../key-sets/key-sets.service';
 import VaultsService from '../vaults/vaults.service';
+import VaultItemsService from '../vault-items/vault-items.service';
 
 @Injectable()
 export class AuthService {
@@ -46,7 +47,8 @@ export class AuthService {
     private readonly authGateway: AuthGateway,
     private readonly pushNotificationsService: PushNotificationsService,
     private readonly keySetsService: KeySetsService,
-    private readonly vaultsService: VaultsService
+    private readonly vaultsService: VaultsService,
+    private readonly vaultItemsService: VaultItemsService
   ) {}
 
   public async signUp(options: SignUpPayload): Promise<void> {
@@ -78,10 +80,22 @@ export class AuthService {
       { isAccountOwner: true, isPrimary: true }
     );
 
-    await this.vaultsService.createVault(
+    const [vault, vaultCategories] = await this.vaultsService.createVault(
       newAccount.id,
       keySet.id,
       primaryVault
+    );
+
+    await Promise.all(
+      (options.primaryVaultItems ?? []).map(i =>
+        this.vaultItemsService.create(newAccount.id, vault.id, null, {
+          encOverview: i.encOverview,
+          encDetails: i.encDetails,
+          categoryId: vaultCategories.find(
+            c => c.encOverview.iv === i.category.encOverview.iv
+          )?.id,
+        })
+      )
     );
   }
 
