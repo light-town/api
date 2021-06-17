@@ -12,10 +12,12 @@ export default class ParseBoolPipe implements PipeTransform {
   public transform(value: any) {
     const validated = this.validate(value);
 
-    if (validated) return value;
-    else if (this.options?.optional) return value;
+    if (!validated && !this.options?.optional)
+      throw new ApiBadRequestException(
+        'The value passed as Bool is not a bool'
+      );
 
-    throw new ApiBadRequestException('The value passed as Bool is not a bool');
+    return value === 'true';
   }
 
   private validate(value: any): boolean {

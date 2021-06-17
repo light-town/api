@@ -1,3 +1,4 @@
+import { DefaultValuePipe } from '@nestjs/common';
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { ApiNotFoundException } from '~/common/exceptions';
@@ -63,7 +64,11 @@ export class VaultItemsController {
   public async getVaultItemsFromFolder(
     @Param('vaultUuid', new ParseUUIDPipe()) vaultUuid: string,
     @Param('folderUuid', new ParseUUIDPipe()) folderUuid: string,
-    @Query('only-overview', new ParseBoolPipe({ optional: true }))
+    @Query(
+      'only-overview',
+      new DefaultValuePipe(true),
+      new ParseBoolPipe({ optional: true })
+    )
     onlyOverview?: boolean
   ): Promise<VaultItem[]> {
     return this.vaultItemsService.formatAll(
@@ -83,7 +88,11 @@ export class VaultItemsController {
     @Param('vaultUuid', new ParseUUIDPipe()) vaultUuid: string,
     @Param('folderUuid', new ParseUUIDPipe()) folderUuid: string,
     @Param('vaultItemUuid', new ParseUUIDPipe()) vaultItemUuid: string,
-    @Query('only-overview', new ParseBoolPipe({ optional: true }))
+    @Query(
+      'only-overview',
+      new DefaultValuePipe(true),
+      new ParseBoolPipe({ optional: true })
+    )
     onlyOverview?: boolean
   ): Promise<VaultItem> {
     const vaultItem = await this.vaultItemsService.getVaultItem(
@@ -107,7 +116,8 @@ export class VaultItemsController {
     @Param('vaultUuid', new ParseUUIDPipe()) vaultUuid: string,
     @Query('folder-uuid', new ParseUUIDPipe({ optional: true }))
     folderUuid?: string,
-    @Query('only-overview', new ParseBoolPipe()) onlyOverview?: boolean
+    @Query('only-overview', new DefaultValuePipe(true), new ParseBoolPipe())
+    onlyOverview?: boolean
   ): Promise<VaultItem[]> {
     const options: FindVaultItemOptions = {
       vaultId: vaultUuid,
@@ -126,7 +136,8 @@ export class VaultItemsController {
   public async getVaultItem(
     @Param('vaultUuid', new ParseUUIDPipe()) vaultUuid: string,
     @Param('vaultItemUuid', new ParseUUIDPipe()) vaultItemUuid: string,
-    @Query('only-overview', new ParseBoolPipe()) onlyOverview?: boolean
+    @Query('only-overview', new DefaultValuePipe(true), new ParseBoolPipe())
+    onlyOverview?: boolean
   ): Promise<VaultItem> {
     const vaultItem = await this.vaultItemsService.getVaultItem(
       {
@@ -149,7 +160,11 @@ export class VaultItemsController {
     @Param('vaultUuid', new ParseUUIDPipe()) vaultUuid: string,
     @Query('folder-uuid', new ParseUUIDPipe({ optional: true }))
     folderUuid?: string,
-    @Query('only-overview', new ParseBoolPipe({ optional: true }))
+    @Query(
+      'only-overview',
+      new DefaultValuePipe(true),
+      new ParseBoolPipe({ optional: true })
+    )
     onlyOverview?: boolean
   ): Promise<VaultItem[]> {
     const options: FindVaultItemOptions = {
@@ -186,7 +201,11 @@ export class VaultItemsController {
     @CurrentTeamMember() teamMember,
     @Param('vaultUuid', new ParseUUIDPipe()) vaultUuid: string,
     @Param('vaultItemUuid', new ParseUUIDPipe()) vaultItemUuid: string,
-    @Query('only-overview', new ParseBoolPipe({ optional: true }))
+    @Query(
+      'only-overview',
+      new DefaultValuePipe(true),
+      new ParseBoolPipe({ optional: true })
+    )
     onlyOverview?: boolean
   ): Promise<VaultItem> {
     await this.rolesService.validateOrFail(
@@ -220,7 +239,11 @@ export class VaultItemsController {
     vaultUuid?: string,
     @Query('folder-uuid', new ParseUUIDPipe({ optional: true }))
     folderUuid?: string,
-    @Query('only-overview', new ParseBoolPipe({ optional: true }))
+    @Query(
+      'only-overview',
+      new DefaultValuePipe(true),
+      new ParseBoolPipe({ optional: true })
+    )
     onlyOverview?: boolean
   ): Promise<VaultItem[]> {
     const keySetObjects = await this.keySetObjectsService.getKeySetObjects({
@@ -303,7 +326,11 @@ export class VaultItemsController {
   @Get('/items/:vaultItemUuid')
   public async getItem(
     @Param('vaultItemUuid', new ParseUUIDPipe()) vaultItemUuid: string,
-    @Query('only-overview', new ParseBoolPipe({ optional: true }))
+    @Query(
+      'only-overview',
+      new DefaultValuePipe(true),
+      new ParseBoolPipe({ optional: true })
+    )
     onlyOverview?: boolean
   ): Promise<VaultItem> {
     const vaultItem = await this.vaultItemsService.getVaultItem(
