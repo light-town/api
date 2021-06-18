@@ -323,7 +323,7 @@ export class InvitationsController {
   @ApiTags('/teams/invitations')
   @ApiOkResponse({ type: InvitationLink })
   @UseInterceptors(CurrentTeamMemberInterceptor)
-  @Get('/teams/:teamUuid/invitations/link')
+  @Get('/teams/:teamUuid/invitation-link')
   public async getInvitationLink(
     @CurrentTeamMember() teamMember,
     @Param('teamUuid') teamUuid: string
